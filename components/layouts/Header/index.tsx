@@ -23,21 +23,9 @@ export default function Header() {
   const pageInfo = PAGE_TITLES[pathname] || { title: "Page", subtitle: "" };
 
   return (
-    <header className="h-16 bg-white rounded-2xl border border-slate-100  shadow-sm px-6 flex items-center justify-between sticky top-0 z-40">
-      {/* Left - Page Title */}
-      <div className="flex items-center gap-4">
-        <div>
-          <h1 className="text-lg font-semibold text-neutral-800">
-            {pageInfo.title}
-          </h1>
-          {pageInfo.subtitle && (
-            <p className="text-sm text-neutral-400">{pageInfo.subtitle}</p>
-          )}
-        </div>
-      </div>
-
+    <header className="p-3 bg-white rounded-2xl border border-slate-200  flex items-center justify-between sticky top-0 z-40">
       {/* Center - Search Bar */}
-      <div className="flex-1 max-w-md mx-8 hidden md:block">
+      <div className="flex-1 max-w-md  hidden md:block">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
           <input

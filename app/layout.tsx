@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { I18nProvider } from "@/context";
+import { CourseProvider, I18nProvider } from "@/context";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -15,7 +15,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-background-main text-sm ">
-        <I18nProvider>{children}</I18nProvider>
+        <I18nProvider>
+          <CourseProvider>{children}</CourseProvider>
+        </I18nProvider>
       </body>
     </html>
   );
