@@ -28,10 +28,10 @@ import {
 import { DifficultyDetailExam } from "@/types";
 import {
   attemptHistory,
-  colorMap,
+  colorMapExamDetail,
   examSections,
   leaderboard,
-} from "@/constants/examDetail";
+} from "@/constants";
 import { difficultyConfig } from "@/constants";
 
 // Mock data
@@ -68,7 +68,7 @@ export default function ExamDetailPage() {
     "overview" | "history" | "leaderboard"
   >("overview");
 
-  const colors = colorMap[examData.color];
+  const colors = colorMapExamDetail[examData.color];
   const difficulty = difficultyConfig[examData.difficulty];
   const Icon = examData.icon;
   const bestScore =

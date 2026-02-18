@@ -70,7 +70,7 @@ export const leaderboard: LeaderboardEntry[] = [
   { rank: 5, name: "Bạn", avatar: "ME", score: 92, date: "15/02" },
 ];
 
-export const colorMap: Record<
+export const colorMapExamDetail: Record<
   string,
   { bg: string; bgLight: string; text: string; gradient: string; ring: string }
 > = {
