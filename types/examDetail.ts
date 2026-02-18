@@ -1,5 +1,5 @@
 // Types
-export type Difficulty = "easy" | "medium" | "hard";
+export type DifficultyDetailExam = "easy" | "medium" | "hard";
 
 export type AttemptResult = {
   id: string;

@@ -25,7 +25,7 @@ import {
   Info,
   Sparkles,
 } from "lucide-react";
-import { Difficulty } from "@/types/examDetail";
+import { DifficultyDetailExam } from "@/types";
 import {
   attemptHistory,
   colorMap,
@@ -46,7 +46,7 @@ const examData = {
   duration: "30 phút",
   totalQuestions: 40,
   passingScore: 70,
-  difficulty: "medium" as Difficulty,
+  difficulty: "medium" as DifficultyDetailExam,
   attempts: 1250,
   avgScore: 78,
   isOfficial: true,

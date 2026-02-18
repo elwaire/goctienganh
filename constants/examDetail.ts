@@ -1,5 +1,5 @@
 import { AttemptResult, ExamSection, LeaderboardEntry } from "@/types";
-import { Difficulty } from "@/types/examDetail";
+import { DifficultyDetailExam } from "@/types";
 
 export const examSections: ExamSection[] = [
   {
@@ -97,7 +97,10 @@ export const colorMap: Record<
   },
 };
 
-const difficultyConfig: Record<Difficulty, { label: string; class: string }> = {
+const difficultyConfig: Record<
+  DifficultyDetailExam,
+  { label: string; class: string }
+> = {
   easy: { label: "Dễ", class: "text-emerald-600 bg-emerald-50" },
   medium: { label: "Trung bình", class: "text-amber-600 bg-amber-50" },
   hard: { label: "Khó", class: "text-rose-600 bg-rose-50" },
