@@ -5,11 +5,11 @@ import { Plus, FolderOpen } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { useCollections } from "@/hooks";
-import { Collection, CollectionFormData } from "@/types";
 import { CollectionCard, CollectionForm } from "@/components/pages/flashcards";
 import { Loading, TitleScreen } from "@/components/common";
 import { Badge, ButtonPrimary, EmptyState } from "@/components/ui";
 import { useTranslation } from "@/context";
+import { Collection, CollectionFormData } from "@/types";
 
 export default function FlashcardPage() {
   const { t } = useTranslation();
