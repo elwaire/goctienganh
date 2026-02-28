@@ -1,9 +1,19 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Bell, Search, ChevronDown, Sparkles } from "lucide-react";
+import {
+  Bell,
+  Search,
+  ChevronDown,
+  Sparkles,
+  LogOut,
+  User,
+  Award,
+  Settings,
+} from "lucide-react";
 import { useState } from "react";
 import { LanguageSwitcher } from "@/components/common/LanguageSwitcher";
+import { useAuth } from "@/context/AuthContext";
 
 // Map pathname to page title
 const PAGE_TITLES: Record<string, { title: string; subtitle?: string }> = {
@@ -16,11 +26,27 @@ const PAGE_TITLES: Record<string, { title: string; subtitle?: string }> = {
   "/help": { title: "Help Center", subtitle: "Get support" },
 };
 
+function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
+
 export default function Header() {
   const pathname = usePathname();
+  const { user, isLoading, logout } = useAuth();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const pageInfo = PAGE_TITLES[pathname] || { title: "Page", subtitle: "" };
+
+  const displayName = user?.fullname || user?.username || "User";
+  const displayEmail = user?.email || "";
+  const initials = displayName ? getInitials(displayName) : "?";
+  const roleName =
+    user?.roles && user.roles.length > 0 ? user.roles[0].name : "Student";
 
   return (
     <header className="p-3 bg-white rounded-2xl border border-slate-200  flex items-center justify-between sticky top-0 z-40">
@@ -69,12 +95,23 @@ export default function Header() {
             onClick={() => setIsProfileOpen(!isProfileOpen)}
             className="flex items-center gap-3 p-1.5 pr-3 hover:bg-neutral-50 rounded-xl transition-colors"
           >
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 flex items-center justify-center text-white font-medium text-sm shadow-sm">
-              M
-            </div>
+            {/* Avatar */}
+            {user?.avatar ? (
+              <img
+                src={user.avatar}
+                alt={displayName}
+                className="w-9 h-9 rounded-full object-cover shadow-sm"
+              />
+            ) : (
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 flex items-center justify-center text-white font-medium text-sm shadow-sm">
+                {isLoading ? "..." : initials}
+              </div>
+            )}
             <div className="hidden sm:block text-left">
-              <p className="text-sm font-medium text-neutral-700">Min</p>
-              <p className="text-xs text-neutral-400">Student</p>
+              <p className="text-sm font-medium text-neutral-700">
+                {isLoading ? "Loading..." : displayName}
+              </p>
+              <p className="text-xs text-neutral-400">{roleName}</p>
             </div>
             <ChevronDown
               className={`w-4 h-4 text-neutral-400 transition-transform ${isProfileOpen ? "rotate-180" : ""}`}
@@ -90,16 +127,37 @@ export default function Header() {
               />
               <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-neutral-200 rounded-xl shadow-lg py-2 z-50">
                 <div className="px-4 py-3 border-b border-neutral-100">
-                  <p className="text-sm font-medium text-neutral-800">Min</p>
-                  <p className="text-xs text-neutral-400">min@example.com</p>
+                  <p className="text-sm font-medium text-neutral-800">
+                    {displayName}
+                  </p>
+                  <p className="text-xs text-neutral-400 truncate">
+                    {displayEmail}
+                  </p>
                 </div>
                 <div className="py-1">
-                  <DropdownItem label="My Profile" />
-                  <DropdownItem label="Achievements" />
-                  <DropdownItem label="Settings" />
+                  <DropdownItem
+                    icon={<User className="w-4 h-4" />}
+                    label="My Profile"
+                  />
+                  <DropdownItem
+                    icon={<Award className="w-4 h-4" />}
+                    label="Achievements"
+                  />
+                  <DropdownItem
+                    icon={<Settings className="w-4 h-4" />}
+                    label="Settings"
+                  />
                 </div>
                 <div className="border-t border-neutral-100 pt-1">
-                  <DropdownItem label="Sign out" danger />
+                  <DropdownItem
+                    icon={<LogOut className="w-4 h-4" />}
+                    label="Sign out"
+                    danger
+                    onClick={() => {
+                      setIsProfileOpen(false);
+                      logout();
+                    }}
+                  />
                 </div>
               </div>
             </>
@@ -112,15 +170,20 @@ export default function Header() {
 
 function DropdownItem({
   label,
+  icon,
   danger = false,
+  onClick,
 }: {
   label: string;
+  icon?: React.ReactNode;
   danger?: boolean;
+  onClick?: () => void;
 }) {
   return (
     <button
+      onClick={onClick}
       className={`
-        w-full px-4 py-2 text-left text-sm transition-colors
+        w-full px-4 py-2 text-left text-sm transition-colors flex items-center gap-2.5
         ${
           danger
             ? "text-rose-600 hover:bg-rose-50"
@@ -128,6 +191,7 @@ function DropdownItem({
         }
       `}
     >
+      {icon}
       {label}
     </button>
   );

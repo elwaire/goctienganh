@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { CourseProvider, I18nProvider } from "@/context";
+import { AuthProvider, CourseProvider, I18nProvider } from "@/context";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -15,9 +16,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-background-main text-sm ">
-        <I18nProvider>
-          <CourseProvider>{children}</CourseProvider>
-        </I18nProvider>
+        <GoogleOAuthProvider
+          clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}
+        >
+          <I18nProvider>
+            <AuthProvider>
+              <CourseProvider>{children}</CourseProvider>
+            </AuthProvider>
+          </I18nProvider>
+        </GoogleOAuthProvider>
       </body>
     </html>
   );
