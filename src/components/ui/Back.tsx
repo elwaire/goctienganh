@@ -1,5 +1,7 @@
-import { useTranslation } from "@/context";
+"use client";
+
 import { ArrowLeft } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface BackProps {
   onExit: () => void;
@@ -8,7 +10,7 @@ interface BackProps {
 }
 
 export default function Back({ onExit, title, className }: BackProps) {
-  const { t } = useTranslation();
+  const t = useTranslations();
   return (
     <button
       onClick={onExit}

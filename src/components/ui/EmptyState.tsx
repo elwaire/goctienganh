@@ -1,6 +1,5 @@
 import { ButtonPrimary } from "@/components/ui";
-import { useTranslation } from "@/context";
-import { BookOpen, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 
 type EmptyStateProps = {
   onClick: () => void;
@@ -17,8 +16,6 @@ export default function EmptyState({
   description,
   buttonText,
 }: EmptyStateProps) {
-  const { t } = useTranslation();
-
   return (
     <div className="text-center py-16">
       <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
