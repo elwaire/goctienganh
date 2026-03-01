@@ -29,6 +29,7 @@ import {
   Sparkles,
   Loader2,
   AlertCircle,
+  Layers,
 } from "lucide-react";
 import { DifficultyDetailExam } from "@/types";
 import { colorMapExamDetail } from "@/constants";
@@ -233,34 +234,48 @@ export default function ExamDetailPage() {
             <div className="lg:w-80 shrink-0">
               <div className="bg-neutral-50 rounded-2xl p-5">
                 {/* Stats Grid */}
-                <div className="grid grid-cols-2 gap-4 mb-5">
-                  <div className="text-center p-3 bg-white rounded-xl">
-                    <Clock className="w-5 h-5 text-neutral-400 mx-auto mb-1" />
-                    <p className="text-lg font-bold text-neutral-800">
+                <div className="grid grid-cols-2 gap-3 mb-5">
+                  <div className="text-center p-3 bg-white rounded-xl border border-neutral-100/50">
+                    <Clock className="w-5 h-5 text-blue-500 mx-auto mb-1" />
+                    <p className="text-lg font-bold text-neutral-800 leading-tight">
                       {examData.duration_min} phút
                     </p>
-                    <p className="text-xs text-neutral-500">Thời gian</p>
+                    <p className="text-[10px] uppercase tracking-wider font-semibold text-neutral-400 mt-0.5">Thời gian</p>
                   </div>
-                  <div className="text-center p-3 bg-white rounded-xl">
-                    <FileText className="w-5 h-5 text-neutral-400 mx-auto mb-1" />
-                    <p className="text-lg font-bold text-neutral-800">
+                  <div className="text-center p-3 bg-white rounded-xl border border-neutral-100/50">
+                    <FileText className="w-5 h-5 text-indigo-500 mx-auto mb-1" />
+                    <p className="text-lg font-bold text-neutral-800 leading-tight">
                       {examData.question_count}
                     </p>
-                    <p className="text-xs text-neutral-500">Câu hỏi</p>
+                    <p className="text-[10px] uppercase tracking-wider font-semibold text-neutral-400 mt-0.5">Câu hỏi</p>
                   </div>
-                  <div className="text-center p-3 bg-white rounded-xl">
-                    <Target className="w-5 h-5 text-neutral-400 mx-auto mb-1" />
-                    <p className="text-lg font-bold text-neutral-800">
-                      {examData.total_score}
+                  <div className="text-center p-3 bg-white rounded-xl border border-neutral-100/50">
+                    <Target className="w-5 h-5 text-rose-500 mx-auto mb-1" />
+                    <p className="text-lg font-bold text-neutral-800 leading-tight">
+                      {examData.total_score}đ
                     </p>
-                    <p className="text-xs text-neutral-500">Tổng điểm</p>
+                    <p className="text-[10px] uppercase tracking-wider font-semibold text-neutral-400 mt-0.5">Tổng điểm</p>
                   </div>
-                  <div className="text-center p-3 bg-white rounded-xl">
-                    <Users className="w-5 h-5 text-neutral-400 mx-auto mb-1" />
-                    <p className="text-lg font-bold text-neutral-800">
+                  <div className="text-center p-3 bg-white rounded-xl border border-neutral-100/50">
+                    <Users className="w-5 h-5 text-emerald-500 mx-auto mb-1" />
+                    <p className="text-lg font-bold text-neutral-800 leading-tight">
+                      {examData.participant_count ?? 0}
+                    </p>
+                    <p className="text-[10px] uppercase tracking-wider font-semibold text-neutral-400 mt-0.5">Người tham gia</p>
+                  </div>
+                  <div className="text-center p-3 bg-white rounded-xl border border-neutral-100/50">
+                    <RotateCcw className="w-5 h-5 text-amber-500 mx-auto mb-1" />
+                    <p className="text-lg font-bold text-neutral-800 leading-tight">
+                      {examData.attempt_count ?? 0}
+                    </p>
+                    <p className="text-[10px] uppercase tracking-wider font-semibold text-neutral-400 mt-0.5">Lượt làm bài</p>
+                  </div>
+                  <div className="text-center p-3 bg-white rounded-xl border border-neutral-100/50">
+                    <Layers className="w-5 h-5 text-purple-500 mx-auto mb-1" />
+                    <p className="text-lg font-bold text-neutral-800 leading-tight">
                       {examData.categories?.length ?? 0}
                     </p>
-                    <p className="text-xs text-neutral-500">Danh mục</p>
+                    <p className="text-[10px] uppercase tracking-wider font-semibold text-neutral-400 mt-0.5">Danh mục</p>
                   </div>
                 </div>
 

@@ -370,7 +370,7 @@ export default function ExamResultPage() {
                   {/* Options */}
                   <div className="pl-12 space-y-2">
                     {sortedOptions.map((opt, idx) => {
-                      const isUserSelected = selectedOptionIds.includes(opt.id);
+                      const isUserSelected = opt.is_user_selected ?? selectedOptionIds.includes(opt.id);
                       const isCorrectOption = opt.is_correct;
                       const label = OPTION_LABELS[idx] ?? `${idx + 1}`;
 
@@ -378,7 +378,7 @@ export default function ExamResultPage() {
                       if (isCorrectOption) {
                         optionClass =
                           "bg-emerald-50 text-emerald-700 border-emerald-200";
-                      } else if (isUserSelected && !isCorrect) {
+                      } else if (isUserSelected && !isCorrectOption) { // Fix: use isCorrectOption instead of global isCorrect for styling
                         optionClass =
                           "bg-rose-50 text-rose-700 border-rose-200 line-through";
                       }
@@ -392,7 +392,7 @@ export default function ExamResultPage() {
                             className={`flex items-center justify-center w-8 h-8 rounded-lg font-semibold shrink-0 ${
                               isCorrectOption
                                 ? "bg-emerald-500 text-white"
-                                : isUserSelected && !isCorrect
+                                : isUserSelected
                                   ? "bg-rose-500 text-white"
                                   : "bg-neutral-100 text-neutral-500"
                             }`}
@@ -400,14 +400,14 @@ export default function ExamResultPage() {
                             {label}
                           </span>
                           <span className="flex-1">{opt.content}</span>
-                          {isCorrectOption && (
+                           {isCorrectOption && (
                             <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
                           )}
-                          {isUserSelected && !isCorrect && (
+                          {isUserSelected && !isCorrectOption && (
                             <X className="w-4 h-4 text-rose-500 shrink-0" />
                           )}
                           {isUserSelected && isCorrectOption && (
-                            <span className="text-xs text-emerald-500 shrink-0">
+                            <span className="text-xs text-emerald-500 shrink-0 font-medium">
                               Bạn chọn ✓
                             </span>
                           )}

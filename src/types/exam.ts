@@ -11,6 +11,8 @@ export type ExamSet = {
   status: "draft" | "published" | "archived" | string;
   duration_min: number;
   question_count: number;
+  participant_count: number;
+  attempt_count: number;
   total_score: number;
   auto_distribute_score: boolean;
   is_public: boolean;
@@ -139,6 +141,8 @@ export type ExamDetail = {
   auto_distribute_score: boolean;
   duration_min: number;
   question_count: number;
+  participant_count: number;
+  attempt_count: number;
   total_score: number;
   subject: ExamDetailSubject;
   subject_id: string;
@@ -165,6 +169,7 @@ export type ExamAttemptOption = {
   id: string;
   is_correct: boolean;
   order: number;
+  is_user_selected?: boolean;
 };
 
 export type ExamAttemptQuestionData = {
