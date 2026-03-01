@@ -5,6 +5,7 @@ import type {
   ExamDetail,
   ExamAttempt,
   ExamAttemptAnswer,
+  ExamAttemptQuestionData,
 } from "@/types/exam";
 import { AxiosError } from "axios";
 
@@ -92,6 +93,7 @@ export type AttemptResultAnswer = {
   question_id: string;
   score: number;
   selected_options: string[];
+  question: ExamAttemptQuestionData;
 };
 
 export type AttemptResultResponse = {

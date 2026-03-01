@@ -5,14 +5,9 @@
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { examsApi } from "@/api/examsApi";
-import type {
-  AttemptResultAnswer,
-  AttemptResultResponse,
-} from "@/api/examsApi";
+import type { AttemptResultAnswer } from "@/api/examsApi";
 import { queryKeys } from "@/lib/queryKeys";
 import type {
-  ExamAttempt,
-  ExamAttemptQuestion,
   ExamAttemptGroup,
   ExamAttemptOption,
 } from "@/types/exam";
@@ -23,19 +18,15 @@ import {
   X,
   Trophy,
   Target,
-  Zap,
   BookOpen,
   Loader2,
   AlertCircle,
-  Volume2,
   Home,
-  RotateCcw,
-  Clock,
   FileText,
 } from "lucide-react";
 import { useState, useMemo } from "react";
 
-// ─── Types for flattened questions (reused from start page) ───
+const OPTION_LABELS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
 type FlatQuestion = {
   id: string;
@@ -51,53 +42,6 @@ type FlatQuestion = {
   isFirstInGroup: boolean;
   orderLabel: number;
 };
-
-function flattenQuestions(
-  attemptQuestions: ExamAttemptQuestion[],
-): FlatQuestion[] {
-  const flat: FlatQuestion[] = [];
-  let orderCounter = 1;
-
-  for (const aq of attemptQuestions) {
-    if (aq.questions && aq.questions.length > 0) {
-      aq.questions.forEach((sub, idx) => {
-        flat.push({
-          id: sub.id,
-          questionId: sub.question.id,
-          stem: sub.question.stem,
-          options: sub.question.options,
-          explanation: sub.question.explanation,
-          type: sub.question.type,
-          audio_url: sub.question.audio_url,
-          image_url: sub.question.image_url,
-          score: sub.score,
-          group: aq.group,
-          isFirstInGroup: idx === 0,
-          orderLabel: orderCounter++,
-        });
-      });
-    } else if (aq.question) {
-      flat.push({
-        id: aq.id,
-        questionId: aq.question.id,
-        stem: aq.question.stem,
-        options: aq.question.options,
-        explanation: aq.question.explanation,
-        type: aq.question.type,
-        audio_url: aq.question.audio_url,
-        image_url: aq.question.image_url,
-        score: aq.score,
-        group: aq.group,
-        isFirstInGroup: aq.group !== null,
-        orderLabel: orderCounter++,
-      });
-    }
-  }
-
-  return flat;
-}
-
-const OPTION_LABELS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
 export default function ExamResultPage() {
   const router = useRouter();
@@ -121,23 +65,53 @@ export default function ExamResultPage() {
     enabled: !!attemptId,
   });
 
-  // Load attempt data from sessionStorage for question details
-  const attemptData = useMemo<ExamAttempt | null>(() => {
-    if (!slug) return null;
-    try {
-      const stored = sessionStorage.getItem(`exam_attempt_${slug}`);
-      if (stored) return JSON.parse(stored);
-    } catch {
-      // ignore
-    }
-    return null;
-  }, [slug]);
-
-  // Flatten questions
+  // Flatten questions from API result
   const questions = useMemo(() => {
-    if (!attemptData) return [];
-    return flattenQuestions(attemptData.questions);
-  }, [attemptData]);
+    if (!resultData) return [];
+
+    const flat: FlatQuestion[] = [];
+    let orderCounter = 1;
+    let lastGroupId: string | null = null;
+
+    // Sort answers by question order if available
+    const sortedAnswers = [...resultData.answers].sort(
+      (a, b) => (a.question.order || 0) - (b.question.order || 0),
+    );
+
+    for (const ans of sortedAnswers) {
+      const q = ans.question;
+      const groupId = q.group?.id || null;
+
+      flat.push({
+        id: q.id,
+        questionId: q.id,
+        stem: q.stem,
+        options: q.options,
+        explanation: q.explanation,
+        type: q.type,
+        audio_url: q.audio_url,
+        image_url: q.image_url,
+        score: ans.score,
+        group: q.group
+          ? ({
+              ...q.group,
+              text: (q.group as any).text || "",
+              audio_url: (q.group as any).audio_url || "",
+              image_url: (q.group as any).image_url || "",
+              status: "published",
+              subject: q.subject,
+              topic: q.topic as any,
+            } as ExamAttemptGroup)
+          : null,
+        isFirstInGroup: groupId !== null && groupId !== lastGroupId,
+        orderLabel: orderCounter++,
+      });
+
+      lastGroupId = groupId;
+    }
+
+    return flat;
+  }, [resultData]);
 
   // Build answer map: questionId -> AttemptResultAnswer
   const answerMap = useMemo(() => {
