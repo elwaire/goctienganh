@@ -113,6 +113,35 @@ type AttemptResultApiResponse = {
   data: AttemptResultResponse;
 };
 
+export type LeaderboardEntry = {
+  rank: number;
+  user_id: string;
+  fullname: string;
+  avatar: string;
+  best_score: number;
+  max_score: number;
+  attempt_count: number;
+  completed_at: string;
+};
+
+export type LeaderboardResponse = {
+  entries: LeaderboardEntry[];
+  total: number;
+  user_entry?: LeaderboardEntry | null;
+};
+
+export type LeaderboardParams = {
+  sort?: "score" | "attempts";
+  page?: number;
+  limit?: number;
+};
+
+type LeaderboardApiResponse = {
+  success: boolean;
+  message: string;
+  data: LeaderboardResponse;
+};
+
 const EMPTY_EXAMS_RESPONSE: ExamsResponse = { exam_sets: [], total: 0 };
 
 export const examsApi = {
@@ -189,6 +218,18 @@ export const examsApi = {
   ): Promise<AttemptResultResponse> => {
     const response = await axiosInstance.get<AttemptResultApiResponse>(
       `/exams/attempts/${attemptId}/result`,
+    );
+    return response.data.data;
+  },
+
+  /** GET /exams/:code/leaderboard - Get leaderboard for an exam */
+  getLeaderboard: async (
+    code: string,
+    params?: LeaderboardParams,
+  ): Promise<LeaderboardResponse> => {
+    const response = await axiosInstance.get<LeaderboardApiResponse>(
+      `/exams/${code}/leaderboard`,
+      { params },
     );
     return response.data.data;
   },

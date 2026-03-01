@@ -49,7 +49,6 @@ export default function ExamPage() {
         subject_id: subjectId || undefined,
         search: debouncedSearch || undefined,
       }),
-    staleTime: 2 * 60 * 1000,
   });
 
   const examSets = data?.exam_sets ?? [];

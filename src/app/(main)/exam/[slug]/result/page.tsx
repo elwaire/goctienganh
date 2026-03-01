@@ -24,7 +24,7 @@ import {
   Home,
   FileText,
 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 
 const OPTION_LABELS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
@@ -50,9 +50,16 @@ export default function ExamResultPage() {
   const slug = params.slug as string;
   const attemptId = searchParams.get("attempt_id") ?? "";
 
-  const [filterMode, setFilterMode] = useState<"all" | "correct" | "wrong">(
-    "all",
-  );
+  const filterMode =
+    (searchParams.get("filter") as "all" | "correct" | "wrong") || "all";
+
+  const handleFilterChange = (mode: "all" | "correct" | "wrong") => {
+    const current = new URLSearchParams(Array.from(searchParams.entries()));
+    current.set("filter", mode);
+    const search = current.toString();
+    const query = search ? `?${search}` : "";
+    router.replace(`/exam/${slug}/result${query}`, { scroll: false });
+  };
 
   // Fetch attempt result from API
   const {
@@ -180,8 +187,8 @@ export default function ExamResultPage() {
         <div
           className={`p-6 text-center ${
             isPassed
-              ? "bg-gradient-to-r from-emerald-500 to-emerald-600"
-              : "bg-gradient-to-r from-rose-500 to-rose-600"
+              ? "bg-linear-to-r from-emerald-500 to-emerald-600"
+              : "bg-linear-to-r from-rose-500 to-rose-600"
           }`}
         >
           <div className="flex items-center justify-center gap-3 mb-2">
@@ -236,22 +243,21 @@ export default function ExamResultPage() {
         </div>
       </div>
 
-      {/* Filter Tabs */}
       <div className="flex items-center gap-2 mb-6">
         <FilterButton
           active={filterMode === "all"}
-          onClick={() => setFilterMode("all")}
+          onClick={() => handleFilterChange("all")}
           label={`Tất cả (${questions.length})`}
         />
         <FilterButton
           active={filterMode === "correct"}
-          onClick={() => setFilterMode("correct")}
+          onClick={() => handleFilterChange("correct")}
           label={`Đúng (${resultData.correct_count})`}
           color="emerald"
         />
         <FilterButton
           active={filterMode === "wrong"}
-          onClick={() => setFilterMode("wrong")}
+          onClick={() => handleFilterChange("wrong")}
           label={`Sai (${resultData.total_questions - resultData.correct_count})`}
           color="rose"
         />

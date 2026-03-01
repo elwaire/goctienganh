@@ -2,19 +2,18 @@
 
 "use client";
 
-import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { examsApi } from "@/api/examsApi";
+import type { LeaderboardEntry } from "@/api/examsApi";
 import { queryKeys } from "@/lib/queryKeys";
-import type { ExamDetail, ExamDetailCategoryInfo } from "@/types/exam";
+import type { ExamDetailCategoryInfo } from "@/types/exam";
 import {
   ArrowLeft,
   Clock,
   FileText,
   Trophy,
   Users,
-  Star,
   Play,
   RotateCcw,
   ChevronRight,
@@ -32,18 +31,26 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { DifficultyDetailExam } from "@/types";
-import { colorMapExamDetail, leaderboard } from "@/constants";
+import { colorMapExamDetail } from "@/constants";
 import { difficultyConfig } from "@/constants";
-import type { AttemptHistoryItem } from "@/api/examsApi";
 
 export default function ExamDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const slug = params.slug as string;
 
-  const [activeTab, setActiveTab] = useState<
-    "overview" | "history" | "leaderboard"
-  >("overview");
+  const activeTab =
+    (searchParams.get("tab") as "overview" | "history" | "leaderboard") ||
+    "overview";
+
+  const handleTabChange = (tab: string) => {
+    const current = new URLSearchParams(Array.from(searchParams.entries()));
+    current.set("tab", tab);
+    const search = current.toString();
+    const query = search ? `?${search}` : "";
+    router.replace(`/exam/${slug}${query}`, { scroll: false });
+  };
 
   // Fetch exam detail from API
   const {
@@ -54,7 +61,6 @@ export default function ExamDetailPage() {
     queryKey: queryKeys.exams.detail(slug),
     queryFn: () => examsApi.getByCode(slug),
     enabled: !!slug,
-    staleTime: 2 * 60 * 1000,
   });
 
   // Fetch attempt history when history tab is active
@@ -62,10 +68,27 @@ export default function ExamDetailPage() {
     queryKey: queryKeys.attempts.byExamCode(slug),
     queryFn: () => examsApi.getAttemptHistory({ exam_code: slug }),
     enabled: !!slug && activeTab === "history",
-    staleTime: 30 * 1000,
   });
 
   const attemptList = historyData?.attempts ?? [];
+
+  // Fetch leaderboard when leaderboard tab is active
+  const { data: leaderboardData, isLoading: isLeaderboardLoading } = useQuery({
+    queryKey: queryKeys.exams.leaderboard(slug, { sort: "score" }),
+    queryFn: () => examsApi.getLeaderboard(slug, { sort: "score" }),
+    enabled: !!slug && activeTab === "leaderboard",
+  });
+
+  const leaderboardList = leaderboardData?.entries ?? [];
+  const userEntry = leaderboardData?.user_entry;
+
+  // Derive top 3 for podium
+  const top3 = [
+    leaderboardList.find((e: LeaderboardEntry) => e.rank === 1),
+    leaderboardList.find((e: LeaderboardEntry) => e.rank === 2),
+    leaderboardList.find((e: LeaderboardEntry) => e.rank === 3),
+  ];
+  const restOfLeaderboard = leaderboardList.filter((e: LeaderboardEntry) => e.rank > 3);
 
   // Mutation to start exam attempt
   const startAttemptMutation = useMutation({
@@ -149,7 +172,7 @@ export default function ExamDetailPage() {
       {/* Header */}
       <div className="bg-white rounded-2xl border border-neutral-200 overflow-hidden mb-6">
         {/* Gradient Bar */}
-        <div className={`h-2 bg-gradient-to-r ${colors.gradient}`} />
+        <div className={`h-2 bg-linear-to-r ${colors.gradient}`} />
 
         <div className="p-6">
           <div className="flex flex-col lg:flex-row lg:items-start gap-6">
@@ -269,7 +292,7 @@ export default function ExamDetailPage() {
                   className={`
                     w-full flex items-center justify-center gap-2 py-4 px-6
                     text-base font-semibold text-white rounded-xl
-                    bg-gradient-to-r ${colors.gradient}
+                    bg-linear-to-r ${colors.gradient}
                     hover:opacity-90 transition-opacity shadow-lg
                     disabled:opacity-70 disabled:cursor-not-allowed
                   `}
@@ -301,20 +324,20 @@ export default function ExamDetailPage() {
       <div className="flex items-center gap-2 border-b border-neutral-200 mb-6">
         <TabButton
           active={activeTab === "overview"}
-          onClick={() => setActiveTab("overview")}
+          onClick={() => handleTabChange("overview")}
           icon={<BookOpen className="w-4 h-4" />}
           label="Tổng quan"
         />
         <TabButton
           active={activeTab === "history"}
-          onClick={() => setActiveTab("history")}
+          onClick={() => handleTabChange("history")}
           icon={<RotateCcw className="w-4 h-4" />}
           label="Lịch sử"
           count={attemptList.length > 0 ? attemptList.length : undefined}
         />
         <TabButton
           active={activeTab === "leaderboard"}
-          onClick={() => setActiveTab("leaderboard")}
+          onClick={() => handleTabChange("leaderboard")}
           icon={<Trophy className="w-4 h-4" />}
           label="Bảng xếp hạng"
         />
@@ -594,98 +617,156 @@ export default function ExamDetailPage() {
           <h2 className="text-lg font-semibold text-neutral-800 mb-4">
             Bảng xếp hạng
           </h2>
-          <div className="bg-white rounded-xl border border-neutral-100 overflow-hidden">
-            {/* Top 3 Podium */}
-            <div className="p-6 bg-gradient-to-br from-amber-50 to-orange-50">
-              <div className="flex items-end justify-center gap-4">
-                {/* 2nd Place */}
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-neutral-200 rounded-full flex items-center justify-center mx-auto mb-2 text-lg font-bold text-neutral-600">
-                    {leaderboard[1].avatar}
-                  </div>
-                  <div className="w-8 h-8 bg-neutral-300 rounded-full flex items-center justify-center mx-auto -mt-4 mb-2 text-sm font-bold text-white">
-                    2
-                  </div>
-                  <p className="font-medium text-neutral-800 text-sm">
-                    {leaderboard[1].name}
-                  </p>
-                  <p className="text-lg font-bold text-neutral-600">
-                    {leaderboard[1].score}
-                  </p>
-                </div>
+          {isLeaderboardLoading ? (
+            <div className="flex flex-col items-center justify-center py-12 gap-3">
+              <Loader2 className="w-6 h-6 text-primary-500 animate-spin" />
+              <p className="text-sm text-neutral-400">Đang tải bảng xếp hạng...</p>
+            </div>
+          ) : leaderboardList.length > 0 ? (
+            <div className="bg-white rounded-xl border border-neutral-100 overflow-hidden">
+              {/* Top 3 Podium */}
+              <div className="p-6 bg-linear-to-br from-amber-50 to-orange-50">
+                <div className="flex items-end justify-center gap-4">
+                  {/* 2nd Place */}
+                  {top3[1] && (
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-neutral-200 rounded-full flex items-center justify-center mx-auto mb-2 text-lg font-bold text-neutral-600 overflow-hidden ring-2 ring-white shadow-md">
+                        {top3[1].avatar ? (
+                          <img src={top3[1].avatar} alt={top3[1].fullname} className="w-full h-full object-cover" />
+                        ) : (
+                          top3[1].fullname.charAt(0)
+                        )}
+                      </div>
+                      <div className="w-8 h-8 bg-neutral-300 rounded-full flex items-center justify-center mx-auto -mt-4 mb-2 text-sm font-bold text-white relative z-10 border-2 border-white shadow-sm">
+                        2
+                      </div>
+                      <p className="font-medium text-neutral-800 text-sm whitespace-nowrap overflow-hidden text-ellipsis max-w-[100px]">
+                        {top3[1].fullname}
+                      </p>
+                      <p className="text-lg font-bold text-neutral-600">
+                        {top3[1].best_score}/{top3[1].max_score}
+                      </p>
+                    </div>
+                  )}
 
-                {/* 1st Place */}
-                <div className="text-center -mt-4">
-                  <div className="w-20 h-20 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-2 text-xl font-bold text-white ring-4 ring-amber-200">
-                    {leaderboard[0].avatar}
-                  </div>
-                  <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center mx-auto -mt-4 mb-2 text-sm font-bold text-white">
-                    <Medal className="w-4 h-4" />
-                  </div>
-                  <p className="font-semibold text-neutral-800">
-                    {leaderboard[0].name}
-                  </p>
-                  <p className="text-2xl font-bold text-amber-600">
-                    {leaderboard[0].score}
-                  </p>
-                </div>
+                  {/* 1st Place */}
+                  {top3[0] && (
+                    <div className="text-center -mt-4">
+                      <div className="w-20 h-20 bg-linear-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-2 text-xl font-bold text-white ring-4 ring-amber-200 overflow-hidden shadow-lg">
+                        {top3[0].avatar ? (
+                          <img src={top3[0].avatar} alt={top3[0].fullname} className="w-full h-full object-cover" />
+                        ) : (
+                          top3[0].fullname.charAt(0)
+                        )}
+                      </div>
+                      <div className="w-8 h-8 bg-linear-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center mx-auto -mt-4 mb-2 text-sm font-bold text-white relative z-10 border-2 border-white shadow-md">
+                        <Medal className="w-4 h-4" />
+                      </div>
+                      <p className="font-semibold text-neutral-800 whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px]">
+                        {top3[0].fullname}
+                      </p>
+                      <p className="text-2xl font-bold text-amber-600">
+                        {top3[0].best_score}/{top3[0].max_score}
+                      </p>
+                    </div>
+                  )}
 
-                {/* 3rd Place */}
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-2 text-lg font-bold text-amber-700">
-                    {leaderboard[2].avatar}
-                  </div>
-                  <div className="w-8 h-8 bg-amber-200 rounded-full flex items-center justify-center mx-auto -mt-4 mb-2 text-sm font-bold text-amber-700">
-                    3
-                  </div>
-                  <p className="font-medium text-neutral-800 text-sm">
-                    {leaderboard[2].name}
-                  </p>
-                  <p className="text-lg font-bold text-amber-600">
-                    {leaderboard[2].score}
-                  </p>
+                  {/* 3rd Place */}
+                  {top3[2] && (
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-2 text-lg font-bold text-amber-700 overflow-hidden ring-2 ring-white shadow-md">
+                        {top3[2].avatar ? (
+                          <img src={top3[2].avatar} alt={top3[2].fullname} className="w-full h-full object-cover" />
+                        ) : (
+                          top3[2].fullname.charAt(0)
+                        )}
+                      </div>
+                      <div className="w-8 h-8 bg-amber-200 rounded-full flex items-center justify-center mx-auto -mt-4 mb-2 text-sm font-bold text-amber-700 relative z-10 border-2 border-white shadow-sm">
+                        3
+                      </div>
+                      <p className="font-medium text-neutral-800 text-sm whitespace-nowrap overflow-hidden text-ellipsis max-w-[100px]">
+                        {top3[2].fullname}
+                      </p>
+                      <p className="text-lg font-bold text-amber-600">
+                        {top3[2].best_score}/{top3[2].max_score}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
 
-            {/* Rest of leaderboard */}
-            <div className="divide-y divide-neutral-100">
-              {leaderboard.slice(3).map((entry) => (
-                <div
-                  key={entry.rank}
-                  className={`flex items-center gap-4 p-4 ${
-                    entry.avatar === "ME" ? "bg-blue-50" : "hover:bg-neutral-50"
-                  } transition-colors`}
-                >
-                  <span className="w-8 text-center font-semibold text-neutral-400">
-                    #{entry.rank}
-                  </span>
+              {/* Rest of leaderboard */}
+              <div className="divide-y divide-neutral-100">
+                {restOfLeaderboard.map((entry: LeaderboardEntry) => (
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold ${
-                      entry.avatar === "ME"
-                        ? "bg-blue-500 text-white"
-                        : "bg-neutral-200 text-neutral-600"
-                    }`}
+                    key={entry.user_id}
+                    className={`flex items-center gap-4 p-4 hover:bg-neutral-50 transition-colors`}
                   >
-                    {entry.avatar}
+                    <span className="w-8 text-center font-semibold text-neutral-400">
+                      #{entry.rank}
+                    </span>
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold bg-neutral-200 text-neutral-600 overflow-hidden ring-1 ring-neutral-100">
+                      {entry.avatar ? (
+                        <img src={entry.avatar} alt={entry.fullname} className="w-full h-full object-cover" />
+                      ) : (
+                        entry.fullname.charAt(0)
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-neutral-800">
+                        {entry.fullname}
+                      </p>
+                      <p className="text-xs text-neutral-400">
+                        {new Date(entry.completed_at).toLocaleDateString("vi-VN")} • {entry.attempt_count} lần làm
+                      </p>
+                    </div>
+                    <p className="text-lg font-bold text-neutral-800">
+                      {entry.best_score}/{entry.max_score}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Current user entry if not in list */}
+              {userEntry && !leaderboardList.some((e: LeaderboardEntry) => e.user_id === userEntry.user_id) && (
+                <div className="bg-blue-50 border-t border-blue-100 p-4 flex items-center gap-4">
+                  <span className="w-8 text-center font-bold text-blue-600">
+                    #{userEntry.rank}
+                  </span>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold bg-blue-500 text-white overflow-hidden ring-1 ring-blue-400 shadow-sm">
+                    {userEntry.avatar ? (
+                      <img src={userEntry.avatar} alt={userEntry.fullname} className="w-full h-full object-cover" />
+                    ) : (
+                      userEntry.fullname.charAt(0)
+                    )}
                   </div>
                   <div className="flex-1">
-                    <p
-                      className={`font-medium ${entry.avatar === "ME" ? "text-blue-600" : "text-neutral-800"}`}
-                    >
-                      {entry.name}
+                    <p className="font-bold text-blue-700">
+                      {userEntry.fullname} (Bạn)
                     </p>
-                    <p className="text-xs text-neutral-400">{entry.date}</p>
+                    <p className="text-xs text-blue-500">
+                      Kết quả tốt nhất • {userEntry.attempt_count} lần làm
+                    </p>
                   </div>
-                  <p
-                    className={`text-lg font-bold ${entry.avatar === "ME" ? "text-blue-600" : "text-neutral-800"}`}
-                  >
-                    {entry.score}
+                  <p className="text-lg font-bold text-blue-700">
+                    {userEntry.best_score}/{userEntry.max_score}
                   </p>
                 </div>
-              ))}
+              )}
             </div>
-          </div>
+          ) : (
+            <div className="text-center py-12 bg-white rounded-xl border border-neutral-100">
+              <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Trophy className="w-8 h-8 text-neutral-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-neutral-800 mb-2">
+                Chưa có xếp hạng
+              </h3>
+              <p className="text-neutral-500">
+                Hãy là người đầu tiên chinh服 bài thi này!
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>

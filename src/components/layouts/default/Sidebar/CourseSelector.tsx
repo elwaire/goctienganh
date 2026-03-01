@@ -39,8 +39,7 @@ export function CourseSelector() {
   // Fetch subjects from API
   const { data, isLoading, isError } = useQuery({
     queryKey: queryKeys.subjects.all,
-    queryFn: subjectsApi.getAll,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    queryFn: () => subjectsApi.getAll(),
   });
 
   const subjects = data?.subjects ?? [];

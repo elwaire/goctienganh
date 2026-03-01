@@ -13,6 +13,7 @@ export const queryKeys = {
       search?: string;
     }) => ["exams", "list", params] as const,
     detail: (id: string) => ["exams", "detail", id] as const,
+    leaderboard: (code: string, params?: Record<string, unknown>) => ["exams", "leaderboard", code, params] as const,
   },
   attempts: {
     byExamCode: (examCode: string) =>
