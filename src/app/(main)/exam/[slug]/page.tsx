@@ -1,9 +1,13 @@
-// app/(main)/exam/[id]/page.tsx
+// app/(main)/exam/[slug]/page.tsx
 
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { examsApi } from "@/api/examsApi";
+import { queryKeys } from "@/lib/queryKeys";
+import type { ExamDetail, ExamDetailCategoryInfo } from "@/types/exam";
 import {
   ArrowLeft,
   Clock,
@@ -24,65 +28,112 @@ import {
   Medal,
   Info,
   Sparkles,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { DifficultyDetailExam } from "@/types";
-import {
-  attemptHistory,
-  colorMapExamDetail,
-  examSections,
-  leaderboard,
-} from "@/constants";
+import { colorMapExamDetail, leaderboard } from "@/constants";
 import { difficultyConfig } from "@/constants";
-
-// Mock data
-const examData = {
-  id: "1",
-  title: "UI/UX Fundamentals",
-  description:
-    "Bài kiểm tra toàn diện về kiến thức nền tảng UI/UX Design. Bao gồm các chủ đề: User Research, Information Architecture, Wireframing, Prototyping và các nguyên tắc thiết kế cơ bản.",
-  category: "Nền tảng",
-  icon: BookOpen,
-  color: "blue",
-  duration: "30 phút",
-  totalQuestions: 40,
-  passingScore: 70,
-  difficulty: "medium" as DifficultyDetailExam,
-  attempts: 1250,
-  avgScore: 78,
-  isOfficial: true,
-  createdAt: "2024-01-15",
-  updatedAt: "2024-02-01",
-  topics: [
-    "User Research",
-    "Information Architecture",
-    "Wireframing",
-    "Visual Design",
-    "Prototyping",
-    "Usability Testing",
-  ],
-};
+import type { AttemptHistoryItem } from "@/api/examsApi";
 
 export default function ExamDetailPage() {
   const router = useRouter();
+  const params = useParams();
+  const slug = params.slug as string;
+
   const [activeTab, setActiveTab] = useState<
     "overview" | "history" | "leaderboard"
   >("overview");
 
-  const colors = colorMapExamDetail[examData.color];
-  const difficulty = difficultyConfig[examData.difficulty];
-  const Icon = examData.icon;
-  const bestScore =
-    attemptHistory.length > 0
-      ? Math.max(...attemptHistory.map((a) => a.score))
-      : null;
+  // Fetch exam detail from API
+  const {
+    data: examData,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: queryKeys.exams.detail(slug),
+    queryFn: () => examsApi.getByCode(slug),
+    enabled: !!slug,
+    staleTime: 2 * 60 * 1000,
+  });
+
+  // Fetch attempt history when history tab is active
+  const { data: historyData, isLoading: isHistoryLoading } = useQuery({
+    queryKey: queryKeys.attempts.byExamCode(slug),
+    queryFn: () => examsApi.getAttemptHistory({ exam_code: slug }),
+    enabled: !!slug && activeTab === "history",
+    staleTime: 30 * 1000,
+  });
+
+  const attemptList = historyData?.attempts ?? [];
+
+  // Mutation to start exam attempt
+  const startAttemptMutation = useMutation({
+    mutationFn: (code: string) => examsApi.startAttempt(code),
+    onSuccess: (attemptData) => {
+      // Store attempt data in sessionStorage for the start page
+      sessionStorage.setItem(
+        `exam_attempt_${examData?.code}`,
+        JSON.stringify(attemptData),
+      );
+      router.push(
+        `/exam/${examData?.code}/start?attempt_id=${attemptData.attempt_id}`,
+      );
+    },
+    onError: () => {
+      alert("Không thể bắt đầu bài thi. Vui lòng thử lại.");
+    },
+  });
 
   const handleStartExam = () => {
-    router.push(`/exam/${examData.id}/start`);
+    if (examData && !startAttemptMutation.isPending) {
+      startAttemptMutation.mutate(examData.code);
+    }
   };
 
   const handleBack = () => {
     router.push("/exam");
   };
+
+  // ─── Loading State ───
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3">
+        <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
+        <p className="text-sm text-neutral-400">Đang tải bộ đề...</p>
+      </div>
+    );
+  }
+
+  // ─── Error State ───
+  if (isError || !examData) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+        <AlertCircle className="w-10 h-10 text-rose-400" />
+        <p className="text-sm text-neutral-500">
+          Không thể tải thông tin bộ đề. Vui lòng thử lại.
+        </p>
+        <button
+          onClick={handleBack}
+          className="text-sm text-primary-500 hover:underline"
+        >
+          Quay lại danh sách
+        </button>
+      </div>
+    );
+  }
+
+  // ─── Derived data ───
+  const colorKey = "blue"; // default color, can be dynamic later
+  const colors = colorMapExamDetail[colorKey];
+  const difficulty =
+    difficultyConfig[examData.level as DifficultyDetailExam] ??
+    difficultyConfig.medium;
+
+  const bestScore =
+    attemptList.length > 0
+      ? Math.max(...attemptList.map((a) => a.score))
+      : null;
 
   return (
     <div className="min-h-screen pb-12">
@@ -108,14 +159,14 @@ export default function ExamDetailPage() {
                 <div
                   className={`w-16 h-16 ${colors.bgLight} rounded-2xl flex items-center justify-center shrink-0`}
                 >
-                  <Icon className={`w-8 h-8 ${colors.text}`} />
+                  <BookOpen className={`w-8 h-8 ${colors.text}`} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-2">
-                    {examData.isOfficial && (
+                    {examData.is_public && (
                       <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-lg">
                         <Sparkles className="w-3 h-3" />
-                        Official
+                        Public
                       </span>
                     )}
                     <span
@@ -123,30 +174,36 @@ export default function ExamDetailPage() {
                     >
                       {difficulty.label}
                     </span>
-                    <span className="text-xs font-medium text-neutral-500 bg-neutral-100 px-2.5 py-1 rounded-lg">
-                      {examData.category}
-                    </span>
+                    {examData.subject && (
+                      <span className="text-xs font-medium text-neutral-500 bg-neutral-100 px-2.5 py-1 rounded-lg">
+                        {examData.subject.name}
+                      </span>
+                    )}
                   </div>
                   <h1 className="text-2xl font-bold text-neutral-800 mb-2">
                     {examData.title}
                   </h1>
-                  <p className="text-neutral-500 leading-relaxed">
-                    {examData.description}
-                  </p>
+                  {examData.description && (
+                    <p className="text-neutral-500 leading-relaxed">
+                      {examData.description}
+                    </p>
+                  )}
                 </div>
               </div>
 
-              {/* Topics */}
-              <div className="flex flex-wrap gap-2 mt-4">
-                {examData.topics.map((topic) => (
-                  <span
-                    key={topic}
-                    className="text-xs font-medium text-neutral-600 bg-neutral-100 px-3 py-1.5 rounded-full"
-                  >
-                    {topic}
-                  </span>
-                ))}
-              </div>
+              {/* Tags */}
+              {examData.tags && examData.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-4">
+                  {examData.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="text-xs font-medium text-neutral-600 bg-neutral-100 px-3 py-1.5 rounded-full"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Right: Action Card */}
@@ -157,30 +214,30 @@ export default function ExamDetailPage() {
                   <div className="text-center p-3 bg-white rounded-xl">
                     <Clock className="w-5 h-5 text-neutral-400 mx-auto mb-1" />
                     <p className="text-lg font-bold text-neutral-800">
-                      {examData.duration}
+                      {examData.duration_min} phút
                     </p>
                     <p className="text-xs text-neutral-500">Thời gian</p>
                   </div>
                   <div className="text-center p-3 bg-white rounded-xl">
                     <FileText className="w-5 h-5 text-neutral-400 mx-auto mb-1" />
                     <p className="text-lg font-bold text-neutral-800">
-                      {examData.totalQuestions}
+                      {examData.question_count}
                     </p>
                     <p className="text-xs text-neutral-500">Câu hỏi</p>
                   </div>
                   <div className="text-center p-3 bg-white rounded-xl">
                     <Target className="w-5 h-5 text-neutral-400 mx-auto mb-1" />
                     <p className="text-lg font-bold text-neutral-800">
-                      {examData.passingScore}%
+                      {examData.total_score}
                     </p>
-                    <p className="text-xs text-neutral-500">Điểm đạt</p>
+                    <p className="text-xs text-neutral-500">Tổng điểm</p>
                   </div>
                   <div className="text-center p-3 bg-white rounded-xl">
                     <Users className="w-5 h-5 text-neutral-400 mx-auto mb-1" />
                     <p className="text-lg font-bold text-neutral-800">
-                      {examData.attempts.toLocaleString()}
+                      {examData.categories?.length ?? 0}
                     </p>
-                    <p className="text-xs text-neutral-500">Lượt thi</p>
+                    <p className="text-xs text-neutral-500">Danh mục</p>
                   </div>
                 </div>
 
@@ -208,22 +265,30 @@ export default function ExamDetailPage() {
                 {/* Start Button */}
                 <button
                   onClick={handleStartExam}
+                  disabled={startAttemptMutation.isPending}
                   className={`
                     w-full flex items-center justify-center gap-2 py-4 px-6
                     text-base font-semibold text-white rounded-xl
                     bg-gradient-to-r ${colors.gradient}
                     hover:opacity-90 transition-opacity shadow-lg
+                    disabled:opacity-70 disabled:cursor-not-allowed
                   `}
                 >
-                  <Play className="w-5 h-5" />
-                  {attemptHistory.length > 0
-                    ? "Làm lại bài thi"
-                    : "Bắt đầu làm bài"}
+                  {startAttemptMutation.isPending ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Play className="w-5 h-5" />
+                  )}
+                  {startAttemptMutation.isPending
+                    ? "Đang bắt đầu..."
+                    : attemptList.length > 0
+                      ? "Làm lại bài thi"
+                      : "Bắt đầu làm bài"}
                 </button>
 
-                {attemptHistory.length > 0 && (
+                {attemptList.length > 0 && (
                   <p className="text-xs text-neutral-400 text-center mt-3">
-                    Bạn đã làm bài này {attemptHistory.length} lần
+                    Bạn đã làm bài này {attemptList.length} lần
                   </p>
                 )}
               </div>
@@ -245,7 +310,7 @@ export default function ExamDetailPage() {
           onClick={() => setActiveTab("history")}
           icon={<RotateCcw className="w-4 h-4" />}
           label="Lịch sử"
-          count={attemptHistory.length}
+          count={attemptList.length > 0 ? attemptList.length : undefined}
         />
         <TabButton
           active={activeTab === "leaderboard"}
@@ -258,42 +323,49 @@ export default function ExamDetailPage() {
       {/* Tab Content */}
       {activeTab === "overview" && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Sections */}
+          {/* Sections (Categories from API) */}
           <div className="lg:col-span-2">
             <h2 className="text-lg font-semibold text-neutral-800 mb-4">
               Nội dung bài thi
             </h2>
             <div className="space-y-3">
-              {examSections.map((section, index) => (
-                <div
-                  key={section.id}
-                  className="flex items-center gap-4 p-4 bg-white rounded-xl border border-neutral-100 hover:border-neutral-200 transition-colors"
-                >
-                  <div
-                    className={`w-10 h-10 ${colors.bgLight} rounded-xl flex items-center justify-center shrink-0`}
-                  >
-                    <span className={`text-sm font-bold ${colors.text}`}>
-                      {index + 1}
-                    </span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-neutral-800">
-                      {section.title}
-                    </h3>
-                    <p className="text-sm text-neutral-500">
-                      {section.description}
-                    </p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-sm font-medium text-neutral-800">
-                      {section.questionsCount} câu
-                    </p>
-                    <p className="text-xs text-neutral-400">
-                      {section.duration}
-                    </p>
-                  </div>
+              {examData.categories && examData.categories.length > 0 ? (
+                examData.categories.map(
+                  (category: ExamDetailCategoryInfo, index: number) => (
+                    <div
+                      key={category.id}
+                      className="flex items-center gap-4 p-4 bg-white rounded-xl border border-neutral-100 hover:border-neutral-200 transition-colors"
+                    >
+                      <div
+                        className={`w-10 h-10 ${colors.bgLight} rounded-xl flex items-center justify-center shrink-0`}
+                      >
+                        <span className={`text-sm font-bold ${colors.text}`}>
+                          {index + 1}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-neutral-800">
+                          {category.name}
+                        </h3>
+                        {category.description && (
+                          <p className="text-sm text-neutral-500">
+                            {category.description}
+                          </p>
+                        )}
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-sm font-medium text-neutral-800">
+                          {category.question_count} câu
+                        </p>
+                      </div>
+                    </div>
+                  ),
+                )
+              ) : (
+                <div className="text-center py-8 text-neutral-400 text-sm">
+                  Chưa có phân loại nào cho bộ đề này
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
@@ -307,23 +379,27 @@ export default function ExamDetailPage() {
               </h3>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-neutral-500">
-                    Điểm trung bình
-                  </span>
+                  <span className="text-sm text-neutral-500">Số câu hỏi</span>
                   <span className="text-sm font-semibold text-neutral-800">
-                    {examData.avgScore}%
+                    {examData.question_count}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-neutral-500">Tỷ lệ đạt</span>
+                  <span className="text-sm text-neutral-500">Tổng điểm</span>
+                  <span className="text-sm font-semibold text-neutral-800">
+                    {examData.total_score}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-neutral-500">Thời gian</span>
+                  <span className="text-sm font-semibold text-neutral-800">
+                    {examData.duration_min} phút
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-neutral-500">Tự phân điểm</span>
                   <span className="text-sm font-semibold text-emerald-600">
-                    72%
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-neutral-500">Thời gian TB</span>
-                  <span className="text-sm font-semibold text-neutral-800">
-                    24 phút
+                    {examData.auto_distribute_score ? "Có" : "Không"}
                   </span>
                 </div>
               </div>
@@ -360,8 +436,17 @@ export default function ExamDetailPage() {
               <div className="space-y-2 text-sm text-neutral-600">
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-neutral-400" />
-                  <span>Cập nhật: {examData.updatedAt}</span>
+                  <span>
+                    Cập nhật:{" "}
+                    {new Date(examData.updated_at).toLocaleDateString("vi-VN")}
+                  </span>
                 </div>
+                {examData.topic && (
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="w-4 h-4 text-neutral-400" />
+                    <span>Chủ đề: {examData.topic.name}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -373,80 +458,120 @@ export default function ExamDetailPage() {
           <h2 className="text-lg font-semibold text-neutral-800 mb-4">
             Lịch sử làm bài
           </h2>
-          {attemptHistory.length > 0 ? (
+          {isHistoryLoading ? (
+            <div className="flex flex-col items-center justify-center py-12 gap-3">
+              <Loader2 className="w-6 h-6 text-primary-500 animate-spin" />
+              <p className="text-sm text-neutral-400">Đang tải lịch sử...</p>
+            </div>
+          ) : attemptList.length > 0 ? (
             <div className="space-y-3">
-              {attemptHistory.map((attempt, index) => (
-                <div
-                  key={attempt.id}
-                  className="flex items-center gap-4 p-4 bg-white rounded-xl border border-neutral-100 hover:border-neutral-200 transition-colors"
-                >
-                  {/* Status Icon */}
+              {attemptList.map((attempt, index) => {
+                const isPassed =
+                  attempt.max_score > 0
+                    ? (attempt.score / attempt.max_score) * 100 >= 70
+                    : false;
+                const completedDate = attempt.completed_at
+                  ? new Date(attempt.completed_at).toLocaleDateString("vi-VN", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : "Chưa hoàn thành";
+
+                // Calculate duration
+                let durationText = "—";
+                if (attempt.started_at && attempt.completed_at) {
+                  const startMs = new Date(attempt.started_at).getTime();
+                  const endMs = new Date(attempt.completed_at).getTime();
+                  const diffSec = Math.max(
+                    0,
+                    Math.floor((endMs - startMs) / 1000),
+                  );
+                  const mins = Math.floor(diffSec / 60);
+                  const secs = diffSec % 60;
+                  durationText = `${mins}:${secs.toString().padStart(2, "0")}`;
+                }
+
+                return (
                   <div
-                    className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-                      attempt.isPassed ? "bg-emerald-50" : "bg-rose-50"
-                    }`}
+                    key={attempt.id}
+                    onClick={() =>
+                      router.push(
+                        `/exam/${slug}/result?attempt_id=${attempt.id}`,
+                      )
+                    }
+                    className="flex items-center gap-4 p-4 bg-white rounded-xl border border-neutral-100 hover:border-neutral-200 transition-colors cursor-pointer"
                   >
-                    {attempt.isPassed ? (
-                      <CheckCircle2 className="w-6 h-6 text-emerald-500" />
-                    ) : (
-                      <XCircle className="w-6 h-6 text-rose-500" />
-                    )}
-                  </div>
-
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium text-neutral-800">
-                        Lần {attemptHistory.length - index}
-                      </span>
-                      {index === 0 && (
-                        <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
-                          Gần nhất
-                        </span>
-                      )}
-                      {attempt.score === bestScore && (
-                        <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
-                          Điểm cao nhất
-                        </span>
+                    {/* Status Icon */}
+                    <div
+                      className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
+                        isPassed ? "bg-emerald-50" : "bg-rose-50"
+                      }`}
+                    >
+                      {isPassed ? (
+                        <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                      ) : (
+                        <XCircle className="w-6 h-6 text-rose-500" />
                       )}
                     </div>
-                    <p className="text-sm text-neutral-500">{attempt.date}</p>
-                  </div>
 
-                  {/* Stats */}
-                  <div className="flex items-center gap-6 text-sm">
-                    <div className="text-center">
-                      <p className="text-neutral-400">Đúng</p>
-                      <p className="font-semibold text-neutral-800">
-                        {attempt.correctAnswers}/{attempt.totalQuestions}
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-medium text-neutral-800">
+                          Lần {attemptList.length - index}
+                        </span>
+                        {index === 0 && (
+                          <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                            Gần nhất
+                          </span>
+                        )}
+                        {attempt.score === bestScore && (
+                          <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+                            Điểm cao nhất
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-neutral-500">
+                        {completedDate}
                       </p>
                     </div>
-                    <div className="text-center">
-                      <p className="text-neutral-400">Thời gian</p>
-                      <p className="font-semibold text-neutral-800">
-                        {attempt.duration}
-                      </p>
+
+                    {/* Stats */}
+                    <div className="flex items-center gap-6 text-sm">
+                      <div className="text-center">
+                        <p className="text-neutral-400">Đúng</p>
+                        <p className="font-semibold text-neutral-800">
+                          {attempt.correct_count}/{attempt.total_questions}
+                        </p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-neutral-400">Thời gian</p>
+                        <p className="font-semibold text-neutral-800">
+                          {durationText}
+                        </p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-neutral-400">Điểm</p>
+                        <p
+                          className={`text-2xl font-bold ${
+                            isPassed ? "text-emerald-600" : "text-rose-600"
+                          }`}
+                        >
+                          {attempt.score}/{attempt.max_score}
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-center">
-                      <p className="text-neutral-400">Điểm</p>
-                      <p
-                        className={`text-2xl font-bold ${
-                          attempt.isPassed
-                            ? "text-emerald-600"
-                            : "text-rose-600"
-                        }`}
-                      >
-                        {attempt.score}
-                      </p>
+
+                    {/* Action */}
+                    <div className="p-2 text-neutral-400">
+                      <ChevronRight className="w-5 h-5" />
                     </div>
                   </div>
-
-                  {/* Action */}
-                  <button className="p-2 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors">
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-12">

@@ -1,9 +1,2 @@
-import { authApi } from "./authApi";
-
-const apiServices = {
-  auth: authApi,
-};
-
-export default apiServices;
-
-export * from "./authApi";
+export { subjectsApi } from "./subjectsApi";
+export { examsApi } from "./examsApi";

@@ -1,4 +1,4 @@
-import { Difficulty, ExamCategory } from "@/types";
+import { ExamCategory } from "@/types";
 import { Plus, Sparkles } from "lucide-react";
 import { useState } from "react";
 

@@ -1,9 +1,11 @@
-// app/(main)/exam/[id]/start/page.tsx
+// app/(main)/exam/[slug]/start/page.tsx
 
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
+import { examsApi, type ExamSubmitResult } from "@/api/examsApi";
 import {
   Clock,
   ChevronLeft,
@@ -19,17 +21,43 @@ import {
   Target,
   Zap,
   BookOpen,
+  Loader2,
+  Volume2,
+  ImageIcon,
 } from "lucide-react";
+import type {
+  ExamAttempt,
+  ExamAttemptQuestion,
+  ExamAttemptQuestionData,
+  ExamAttemptGroup,
+  ExamAttemptOption,
+} from "@/types/exam";
 
-// Types
-type Answer = "A" | "B" | "C" | "D";
+// ─── Derived types for flattened questions ───
 
-type Question = {
+type FlatQuestion = {
+  /** Unique ID used for tracking answers */
   id: string;
-  question: string;
-  options: { key: Answer; text: string }[];
-  correctAnswer: Answer;
-  explanation?: string;
+  /** The question stem text */
+  stem: string;
+  /** Options for this question */
+  options: ExamAttemptOption[];
+  /** Explanation (shown after submit) */
+  explanation: string;
+  /** Question type */
+  type: string;
+  /** Audio URL if any */
+  audio_url: string;
+  /** Image URL if any */
+  image_url: string;
+  /** Score for this question */
+  score: number;
+  /** Group info (for grouped questions) */
+  group: ExamAttemptGroup | null;
+  /** Whether this is the first question in a group (to show group header) */
+  isFirstInGroup: boolean;
+  /** Original question index label (1-based) */
+  orderLabel: number;
 };
 
 type QuestionStatus =
@@ -38,170 +66,180 @@ type QuestionStatus =
   | "flagged"
   | "flagged-answered";
 
-// Mock data - Câu hỏi mẫu
-const questions: Question[] = [
-  {
-    id: "1",
-    question: "UX Design viết tắt của từ gì?",
-    options: [
-      { key: "A", text: "User Experience Design" },
-      { key: "B", text: "User Extension Design" },
-      { key: "C", text: "Universal Experience Design" },
-      { key: "D", text: "User External Design" },
-    ],
-    correctAnswer: "A",
-    explanation: "UX là viết tắt của User Experience - Trải nghiệm người dùng.",
-  },
-  {
-    id: "2",
-    question: "Nguyên tắc nào sau đây KHÔNG thuộc về Design Principles cơ bản?",
-    options: [
-      { key: "A", text: "Contrast (Tương phản)" },
-      { key: "B", text: "Alignment (Căn chỉnh)" },
-      { key: "C", text: "Animation (Hoạt ảnh)" },
-      { key: "D", text: "Proximity (Khoảng cách)" },
-    ],
-    correctAnswer: "C",
-    explanation:
-      "4 nguyên tắc cơ bản là: Contrast, Repetition, Alignment, Proximity (CRAP).",
-  },
-  {
-    id: "3",
-    question: "Wireframe là gì trong quy trình thiết kế UI/UX?",
-    options: [
-      { key: "A", text: "Bản thiết kế hoàn chỉnh với màu sắc" },
-      { key: "B", text: "Bản phác thảo cấu trúc cơ bản của giao diện" },
-      { key: "C", text: "Phiên bản cuối cùng của sản phẩm" },
-      { key: "D", text: "Báo cáo nghiên cứu người dùng" },
-    ],
-    correctAnswer: "B",
-    explanation:
-      "Wireframe là bản phác thảo low-fidelity thể hiện cấu trúc và layout cơ bản.",
-  },
-  {
-    id: "4",
-    question:
-      "Phương pháp nghiên cứu nào sau đây thuộc loại Qualitative Research?",
-    options: [
-      { key: "A", text: "A/B Testing" },
-      { key: "B", text: "User Interview" },
-      { key: "C", text: "Analytics Data" },
-      { key: "D", text: "Survey với câu hỏi đóng" },
-    ],
-    correctAnswer: "B",
-    explanation:
-      "User Interview là phương pháp định tính (qualitative), giúp hiểu sâu về người dùng.",
-  },
-  {
-    id: "5",
-    question: "Persona trong UX Design dùng để làm gì?",
-    options: [
-      { key: "A", text: "Đại diện cho đội ngũ thiết kế" },
-      { key: "B", text: "Mô tả chi tiết kỹ thuật của sản phẩm" },
-      { key: "C", text: "Đại diện cho nhóm người dùng mục tiêu" },
-      { key: "D", text: "Liệt kê các tính năng của sản phẩm" },
-    ],
-    correctAnswer: "C",
-    explanation:
-      "Persona là nhân vật hư cấu đại diện cho nhóm người dùng mục tiêu.",
-  },
-  {
-    id: "6",
-    question: "Affordance trong thiết kế UI có nghĩa là gì?",
-    options: [
-      { key: "A", text: "Khả năng chi trả của người dùng" },
-      { key: "B", text: "Gợi ý trực quan về cách sử dụng một đối tượng" },
-      { key: "C", text: "Kích thước của các phần tử UI" },
-      { key: "D", text: "Tốc độ tải trang" },
-    ],
-    correctAnswer: "B",
-    explanation:
-      "Affordance là thuộc tính gợi ý cách sử dụng, ví dụ nút bấm trông có thể click được.",
-  },
-  {
-    id: "7",
-    question: "Heuristic Evaluation là phương pháp đánh giá dựa trên?",
-    options: [
-      { key: "A", text: "Dữ liệu người dùng thực tế" },
-      { key: "B", text: "Các nguyên tắc thiết kế đã được công nhận" },
-      { key: "C", text: "Đánh giá của khách hàng" },
-      { key: "D", text: "Số liệu doanh thu" },
-    ],
-    correctAnswer: "B",
-    explanation:
-      "Heuristic Evaluation dựa trên các nguyên tắc usability đã được công nhận (Nielsen's Heuristics).",
-  },
-  {
-    id: "8",
-    question: "Information Architecture (IA) tập trung vào điều gì?",
-    options: [
-      { key: "A", text: "Màu sắc và typography" },
-      { key: "B", text: "Cấu trúc và tổ chức thông tin" },
-      { key: "C", text: "Animation và transition" },
-      { key: "D", text: "Code và development" },
-    ],
-    correctAnswer: "B",
-    explanation:
-      "IA tập trung vào cách tổ chức, cấu trúc và gán nhãn nội dung một cách hiệu quả.",
-  },
-  {
-    id: "9",
-    question: "User Flow diagram thể hiện điều gì?",
-    options: [
-      { key: "A", text: "Doanh thu của sản phẩm" },
-      {
-        key: "B",
-        text: "Các bước người dùng thực hiện để hoàn thành một task",
-      },
-      { key: "C", text: "Cấu trúc database" },
-      { key: "D", text: "Lịch sử phát triển sản phẩm" },
-    ],
-    correctAnswer: "B",
-    explanation:
-      "User Flow mô tả các bước và quyết định của người dùng khi sử dụng sản phẩm.",
-  },
-  {
-    id: "10",
-    question: "Micro-interaction là gì?",
-    options: [
-      { key: "A", text: "Tương tác rất nhỏ, chi tiết trong giao diện" },
-      { key: "B", text: "Tương tác giữa các microservice" },
-      { key: "C", text: "Cuộc họp ngắn của team" },
-      { key: "D", text: "Font chữ nhỏ" },
-    ],
-    correctAnswer: "A",
-    explanation:
-      "Micro-interaction là những tương tác nhỏ như hover effect, loading animation, toggle switch...",
-  },
-];
+/**
+ * Flatten attempt questions into a linear list of FlatQuestion.
+ * - If a question has sub-questions (grouped), each sub-question becomes a FlatQuestion.
+ * - If a question has a direct question (single), it becomes a single FlatQuestion.
+ */
+function flattenQuestions(
+  attemptQuestions: ExamAttemptQuestion[],
+): FlatQuestion[] {
+  const flat: FlatQuestion[] = [];
+  let orderCounter = 1;
 
-const examInfo = {
-  title: "UI/UX Fundamentals",
-  totalTime: 30 * 60, // 30 phút tính bằng giây
-  passingScore: 70,
-};
+  for (const aq of attemptQuestions) {
+    if (aq.questions && aq.questions.length > 0) {
+      // Grouped question — flatten sub-questions
+      aq.questions.forEach((sub, idx) => {
+        flat.push({
+          id: sub.id,
+          stem: sub.question.stem,
+          options: sub.question.options,
+          explanation: sub.question.explanation,
+          type: sub.question.type,
+          audio_url: sub.question.audio_url,
+          image_url: sub.question.image_url,
+          score: sub.score,
+          group: aq.group,
+          isFirstInGroup: idx === 0,
+          orderLabel: orderCounter++,
+        });
+      });
+    } else if (aq.question) {
+      // Single question
+      flat.push({
+        id: aq.id,
+        stem: aq.question.stem,
+        options: aq.question.options,
+        explanation: aq.question.explanation,
+        type: aq.question.type,
+        audio_url: aq.question.audio_url,
+        image_url: aq.question.image_url,
+        score: aq.score,
+        group: aq.group,
+        isFirstInGroup: aq.group !== null,
+        orderLabel: orderCounter++,
+      });
+    }
+  }
+
+  return flat;
+}
+
+/** Map option index to letter label */
+const OPTION_LABELS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
 export default function StartExamPage() {
   const router = useRouter();
+  const params = useParams();
+  const slug = params.slug as string;
 
-  // State
+  // ─── Load attempt data from sessionStorage ───
+  const [attemptData, setAttemptData] = useState<ExamAttempt | null>(null);
+  const [isLoadingAttempt, setIsLoadingAttempt] = useState(true);
+
+  useEffect(() => {
+    if (!slug) return;
+    try {
+      const stored = sessionStorage.getItem(`exam_attempt_${slug}`);
+      if (stored) {
+        const parsed: ExamAttempt = JSON.parse(stored);
+        setAttemptData(parsed);
+      }
+    } catch {
+      // ignore parse errors
+    }
+    setIsLoadingAttempt(false);
+  }, [slug]);
+
+  // ─── Flatten questions ───
+  const questions = useMemo(() => {
+    if (!attemptData) return [];
+    return flattenQuestions(attemptData.questions);
+  }, [attemptData]);
+
+  // ─── State ───
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, Answer | null>>({});
+  // answers: questionId -> selected option id
+  const [answers, setAnswers] = useState<Record<string, string | null>>({});
   const [flaggedQuestions, setFlaggedQuestions] = useState<Set<string>>(
     new Set(),
   );
-  const [timeLeft, setTimeLeft] = useState(examInfo.totalTime);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [isTimerReady, setIsTimerReady] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitResult, setSubmitResult] = useState<ExamSubmitResult | null>(
+    null,
+  );
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [showQuestionNav, setShowQuestionNav] = useState(false);
 
-  const currentQuestion = questions[currentIndex];
+  // Initialize timer from attempt data, accounting for elapsed time
+  useEffect(() => {
+    if (attemptData && !isTimerReady) {
+      const totalSeconds = attemptData.duration_min * 60;
+      if (attemptData.started_at) {
+        const startedMs = new Date(attemptData.started_at).getTime();
+        const nowMs = Date.now();
+        const elapsedSec = Math.floor((nowMs - startedMs) / 1000);
+        setTimeLeft(Math.max(0, totalSeconds - elapsedSec));
+      } else {
+        setTimeLeft(totalSeconds);
+      }
+      setIsTimerReady(true);
+    }
+  }, [attemptData, isTimerReady]);
+
+  // ─── Fullscreen ───
+  const examContainerRef = useRef<HTMLDivElement>(null);
+  const isExitingIntentionally = useRef(false);
+
+  // Enter fullscreen when exam starts
+  useEffect(() => {
+    if (!attemptData || isSubmitted || isLoadingAttempt) return;
+
+    const enterFullscreen = async () => {
+      try {
+        if (!document.fullscreenElement) {
+          await document.documentElement.requestFullscreen();
+        }
+      } catch {
+        // Fullscreen not supported or blocked by browser
+      }
+    };
+
+    enterFullscreen();
+  }, [attemptData, isSubmitted, isLoadingAttempt]);
+
+  // Detect fullscreen exit → show confirm modal
+  useEffect(() => {
+    if (!attemptData || isSubmitted) return;
+
+    const handleFullscreenChange = () => {
+      if (
+        !document.fullscreenElement &&
+        !isExitingIntentionally.current &&
+        !isSubmitted
+      ) {
+        setShowExitModal(true);
+      }
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () =>
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, [attemptData, isSubmitted]);
+
+  // Warn before closing tab/navigating away
+  useEffect(() => {
+    if (!attemptData || isSubmitted) return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [attemptData, isSubmitted]);
+
+  const currentQuestion = questions[currentIndex] ?? null;
   const totalQuestions = questions.length;
 
-  // Timer
+  // ─── Timer ───
   useEffect(() => {
-    if (isSubmitted || timeLeft <= 0) return;
+    if (!isTimerReady || isSubmitted || timeLeft <= 0) return;
 
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
@@ -214,7 +252,7 @@ export default function StartExamPage() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isSubmitted, timeLeft]);
+  }, [isTimerReady, isSubmitted, timeLeft]);
 
   // Format time
   const formatTime = (seconds: number) => {
@@ -235,13 +273,49 @@ export default function StartExamPage() {
     return "unanswered";
   };
 
-  // Handlers
-  const handleSelectAnswer = (answer: Answer) => {
-    if (isSubmitted) return;
-    setAnswers((prev) => ({ ...prev, [currentQuestion.id]: answer }));
-  };
+  // ─── Submit answer mutation ───
+  const submitAnswerMutation = useMutation({
+    mutationFn: (params: { questionId: string; optionId: string }) =>
+      examsApi.submitAnswer(attemptData!.attempt_id, {
+        question_id: params.questionId,
+        selected_options: [params.optionId],
+      }),
+    onError: (error) => {
+      // Silently log - don't interrupt the exam experience
+      console.error("Failed to submit answer:", error);
+    },
+  });
+
+  // ─── Handlers ───
+  const handleSelectAnswer = useCallback(
+    (optionId: string) => {
+      if (isSubmitted || !currentQuestion || !attemptData) return;
+      // Update local state immediately for responsive UI
+      setAnswers((prev) => ({ ...prev, [currentQuestion.id]: optionId }));
+      // Call API in the background
+      submitAnswerMutation.mutate({
+        questionId: currentQuestion.id,
+        optionId,
+      });
+    },
+    [isSubmitted, currentQuestion, attemptData],
+  );
+
+  const handleSelectByIndex = useCallback(
+    (index: number) => {
+      if (!currentQuestion) return;
+      const sortedOptions = [...currentQuestion.options].sort(
+        (a, b) => a.order - b.order,
+      );
+      if (index < sortedOptions.length) {
+        handleSelectAnswer(sortedOptions[index].id);
+      }
+    },
+    [currentQuestion, handleSelectAnswer],
+  );
 
   const handleToggleFlag = () => {
+    if (!currentQuestion) return;
     setFlaggedQuestions((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(currentQuestion.id)) {
@@ -270,33 +344,63 @@ export default function StartExamPage() {
     setShowQuestionNav(false);
   };
 
+  // ─── Submit exam mutation ───
+  const submitExamMutation = useMutation({
+    mutationFn: (attemptId: string) => examsApi.submitExam(attemptId),
+    onSuccess: (data) => {
+      setSubmitResult(data);
+      setIsSubmitted(true);
+      setIsSubmitting(false);
+      setShowConfirmModal(false);
+      setShowExitModal(false);
+      // Exit fullscreen when showing results
+      isExitingIntentionally.current = true;
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
+    },
+    onError: () => {
+      setIsSubmitting(false);
+      alert("Không thể nộp bài. Vui lòng thử lại.");
+    },
+  });
+
   const handleSubmit = () => {
-    setIsSubmitted(true);
+    if (!attemptData || isSubmitting) return;
+    setIsSubmitting(true);
     setShowConfirmModal(false);
+    submitExamMutation.mutate(attemptData.attempt_id);
   };
 
   const handleExit = () => {
+    isExitingIntentionally.current = true;
+    // Exit fullscreen
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    }
+    // Clean up sessionStorage
+    if (slug) {
+      sessionStorage.removeItem(`exam_attempt_${slug}`);
+    }
     router.push("/exam");
   };
 
-  // Calculate results
-  const calculateResults = () => {
-    let correct = 0;
-    questions.forEach((q) => {
-      if (answers[q.id] === q.correctAnswer) {
-        correct++;
+  const handleReEnterFullscreen = () => {
+    setShowExitModal(false);
+    try {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
       }
-    });
-    const score = Math.round((correct / totalQuestions) * 100);
-    const isPassed = score >= examInfo.passingScore;
-    return { correct, score, isPassed };
+    } catch {
+      // ignore
+    }
   };
 
-  const results = isSubmitted ? calculateResults() : null;
   const answeredCount = Object.values(answers).filter((a) => a !== null).length;
-  const progress = (answeredCount / totalQuestions) * 100;
+  const progress =
+    totalQuestions > 0 ? (answeredCount / totalQuestions) * 100 : 0;
 
-  // Keyboard shortcuts
+  // ─── Keyboard shortcuts ───
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isSubmitted || showConfirmModal || showExitModal) return;
@@ -311,22 +415,22 @@ export default function StartExamPage() {
         case "1":
         case "a":
         case "A":
-          handleSelectAnswer("A");
+          handleSelectByIndex(0);
           break;
         case "2":
         case "b":
         case "B":
-          handleSelectAnswer("B");
+          handleSelectByIndex(1);
           break;
         case "3":
         case "c":
         case "C":
-          handleSelectAnswer("C");
+          handleSelectByIndex(2);
           break;
         case "4":
         case "d":
         case "D":
-          handleSelectAnswer("D");
+          handleSelectByIndex(3);
           break;
         case "f":
         case "F":
@@ -337,27 +441,82 @@ export default function StartExamPage() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentIndex, isSubmitted, showConfirmModal, showExitModal]);
+  }, [currentIndex, isSubmitted, showConfirmModal, showExitModal, questions]);
 
-  // Result Screen
-  if (isSubmitted && results) {
+  // ─── Loading State ───
+  if (isLoadingAttempt) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3">
+        <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
+        <p className="text-sm text-neutral-400">Đang tải bài thi...</p>
+      </div>
+    );
+  }
+
+  // ─── Submitting State ───
+  if (isSubmitting) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3">
+        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+        <p className="text-sm text-neutral-500">Đang nộp bài...</p>
+      </div>
+    );
+  }
+
+  // ─── No Data State ───
+  if (!attemptData || questions.length === 0) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+        <AlertCircle className="w-10 h-10 text-rose-400" />
+        <p className="text-sm text-neutral-500">
+          Không tìm thấy dữ liệu bài thi. Vui lòng quay lại và thử lại.
+        </p>
+        <button
+          onClick={() => router.push("/exam")}
+          className="text-sm text-primary-500 hover:underline"
+        >
+          Quay lại danh sách
+        </button>
+      </div>
+    );
+  }
+
+  // ─── Result Screen ───
+  if (isSubmitted && submitResult) {
     return (
       <ResultScreen
-        results={results}
+        submitResult={submitResult}
         questions={questions}
         answers={answers}
-        examTitle={examInfo.title}
+        examTitle={attemptData.title}
+        slug={slug}
+        attemptId={attemptData.attempt_id}
         onRetry={() => {
           setIsSubmitted(false);
+          setSubmitResult(null);
           setAnswers({});
           setFlaggedQuestions(new Set());
           setCurrentIndex(0);
-          setTimeLeft(examInfo.totalTime);
+          const totalSec = attemptData.duration_min * 60;
+          if (attemptData.started_at) {
+            const elapsed = Math.floor(
+              (Date.now() - new Date(attemptData.started_at).getTime()) / 1000,
+            );
+            setTimeLeft(Math.max(0, totalSec - elapsed));
+          } else {
+            setTimeLeft(totalSec);
+          }
         }}
         onExit={handleExit}
       />
     );
   }
+
+  if (!currentQuestion) return null;
+
+  const sortedOptions = [...currentQuestion.options].sort(
+    (a, b) => a.order - b.order,
+  );
 
   return (
     <div className="min-h-screen bg-neutral-50 flex flex-col">
@@ -375,7 +534,7 @@ export default function StartExamPage() {
               </button>
               <div>
                 <h1 className="font-semibold text-neutral-800">
-                  {examInfo.title}
+                  {attemptData.title}
                 </h1>
                 <p className="text-sm text-neutral-500">
                   Câu {currentIndex + 1}/{totalQuestions}
@@ -421,16 +580,67 @@ export default function StartExamPage() {
 
       {/* Main Content */}
       <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-8">
+        {/* Group Header (if this is a grouped question) */}
+        {currentQuestion.group && currentQuestion.isFirstInGroup && (
+          <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden mb-4">
+            <div className="px-6 py-4 bg-blue-50 border-b border-blue-100">
+              <h3 className="font-semibold text-blue-800">
+                {currentQuestion.group.title}
+              </h3>
+            </div>
+            {currentQuestion.group.text && (
+              <div className="px-6 py-4">
+                <p className="text-neutral-700 leading-relaxed whitespace-pre-line">
+                  {currentQuestion.group.text}
+                </p>
+              </div>
+            )}
+            {currentQuestion.group.audio_url && (
+              <div className="px-6 pb-4">
+                <div className="flex items-center gap-2 text-sm text-neutral-500 mb-2">
+                  <Volume2 className="w-4 h-4" />
+                  <span>Nghe audio</span>
+                </div>
+                <audio
+                  controls
+                  className="w-full"
+                  src={currentQuestion.group.audio_url}
+                />
+              </div>
+            )}
+            {currentQuestion.group.image_url && (
+              <div className="px-6 pb-4">
+                <img
+                  src={currentQuestion.group.image_url}
+                  alt="Group image"
+                  className="max-w-full rounded-lg border border-neutral-200"
+                />
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
           {/* Question Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100">
             <div className="flex items-center gap-3">
               <span className="flex items-center justify-center w-10 h-10 bg-blue-100 text-blue-600 font-bold rounded-xl">
-                {currentIndex + 1}
+                {currentQuestion.orderLabel}
               </span>
               <div>
                 <p className="text-sm text-neutral-500">Câu hỏi</p>
-                <p className="text-xs text-neutral-400">Chọn một đáp án đúng</p>
+                <p className="text-xs text-neutral-400">
+                  {currentQuestion.type === "single_choice"
+                    ? "Chọn một đáp án đúng"
+                    : currentQuestion.type === "multiple_choice"
+                      ? "Chọn nhiều đáp án đúng"
+                      : "Chọn đáp án"}
+                  {currentQuestion.score > 0 && (
+                    <span className="ml-2 text-blue-500">
+                      ({currentQuestion.score} điểm)
+                    </span>
+                  )}
+                </p>
               </div>
             </div>
             <button
@@ -455,19 +665,42 @@ export default function StartExamPage() {
 
           {/* Question Content */}
           <div className="p-6">
+            {/* Question Audio */}
+            {currentQuestion.audio_url && (
+              <div className="mb-4">
+                <audio
+                  controls
+                  className="w-full"
+                  src={currentQuestion.audio_url}
+                />
+              </div>
+            )}
+
+            {/* Question Image */}
+            {currentQuestion.image_url && (
+              <div className="mb-4">
+                <img
+                  src={currentQuestion.image_url}
+                  alt="Question image"
+                  className="max-w-full rounded-lg border border-neutral-200"
+                />
+              </div>
+            )}
+
             <h2 className="text-lg font-medium text-neutral-800 leading-relaxed mb-6">
-              {currentQuestion.question}
+              {currentQuestion.stem}
             </h2>
 
             {/* Options */}
             <div className="space-y-3">
-              {currentQuestion.options.map((option) => {
-                const isSelected = answers[currentQuestion.id] === option.key;
+              {sortedOptions.map((option, idx) => {
+                const isSelected = answers[currentQuestion.id] === option.id;
+                const label = OPTION_LABELS[idx] ?? `${idx + 1}`;
 
                 return (
                   <button
-                    key={option.key}
-                    onClick={() => handleSelectAnswer(option.key)}
+                    key={option.id}
+                    onClick={() => handleSelectAnswer(option.id)}
                     className={`
                       w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all
                       ${
@@ -487,12 +720,12 @@ export default function StartExamPage() {
                         }
                       `}
                     >
-                      {option.key}
+                      {label}
                     </span>
                     <span
                       className={`flex-1 ${isSelected ? "text-blue-700 font-medium" : "text-neutral-700"}`}
                     >
-                      {option.text}
+                      {option.content}
                     </span>
                     {isSelected && (
                       <CheckCircle2 className="w-5 h-5 text-blue-500 shrink-0" />
@@ -572,7 +805,7 @@ export default function StartExamPage() {
                       }
                     `}
                   >
-                    {index + 1}
+                    {q.orderLabel}
                     {(status === "flagged" ||
                       status === "flagged-answered") && (
                       <span className="absolute -top-1 -right-1 w-3 h-3 bg-amber-400 rounded-full" />
@@ -647,30 +880,29 @@ export default function StartExamPage() {
 
       {/* Exit Confirm Modal */}
       {showExitModal && (
-        <Modal onClose={() => setShowExitModal(false)}>
+        <Modal onClose={handleReEnterFullscreen}>
           <div className="text-center">
             <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="w-8 h-8 text-rose-600" />
             </div>
             <h3 className="text-xl font-semibold text-neutral-800 mb-2">
-              Thoát bài thi?
+              Bạn đã thoát chế độ toàn màn hình
             </h3>
             <p className="text-neutral-500 mb-6">
-              Tiến độ làm bài sẽ không được lưu lại. Bạn có chắc chắn muốn
-              thoát?
+              Bạn muốn tiếp tục làm bài hay nộp bài ngay?
             </p>
             <div className="flex items-center gap-3">
               <button
-                onClick={() => setShowExitModal(false)}
+                onClick={handleReEnterFullscreen}
                 className="flex-1 py-3 px-4 text-neutral-600 bg-neutral-100 hover:bg-neutral-200 font-medium rounded-xl transition-colors"
               >
                 Tiếp tục làm
               </button>
               <button
-                onClick={handleExit}
-                className="flex-1 py-3 px-4 text-white bg-rose-500 hover:bg-rose-600 font-medium rounded-xl transition-colors"
+                onClick={handleSubmit}
+                className="flex-1 py-3 px-4 text-white bg-blue-500 hover:bg-blue-600 font-medium rounded-xl transition-colors"
               >
-                Thoát
+                Nộp bài
               </button>
             </div>
           </div>
@@ -680,7 +912,7 @@ export default function StartExamPage() {
   );
 }
 
-// Modal Component
+// ─── Modal Component ───
 function Modal({
   children,
   onClose,
@@ -703,23 +935,31 @@ function Modal({
   );
 }
 
-// Result Screen Component
+// ─── Result Screen Component ───
 function ResultScreen({
-  results,
+  submitResult,
   questions,
   answers,
   examTitle,
+  slug,
+  attemptId,
   onRetry,
   onExit,
 }: {
-  results: { correct: number; score: number; isPassed: boolean };
-  questions: Question[];
-  answers: Record<string, Answer | null>;
+  submitResult: ExamSubmitResult;
+  questions: FlatQuestion[];
+  answers: Record<string, string | null>;
   examTitle: string;
+  slug: string;
+  attemptId: string;
   onRetry: () => void;
   onExit: () => void;
 }) {
-  const [showAnswers, setShowAnswers] = useState(false);
+  const router = useRouter();
+  const isPassed =
+    submitResult.max_score > 0
+      ? (submitResult.score / submitResult.max_score) * 100 >= 70
+      : false;
 
   return (
     <div className="min-h-screen bg-neutral-50 py-12 px-4">
@@ -729,27 +969,23 @@ function ResultScreen({
           {/* Header */}
           <div
             className={`p-8 text-center ${
-              results.isPassed
+              isPassed
                 ? "bg-gradient-to-br from-emerald-500 to-emerald-600"
                 : "bg-gradient-to-br from-rose-500 to-rose-600"
             }`}
           >
-            <div
-              className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 ${
-                results.isPassed ? "bg-white/20" : "bg-white/20"
-              }`}
-            >
-              {results.isPassed ? (
+            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 bg-white/20">
+              {isPassed ? (
                 <Trophy className="w-10 h-10 text-white" />
               ) : (
                 <Target className="w-10 h-10 text-white" />
               )}
             </div>
             <h2 className="text-2xl font-bold text-white mb-2">
-              {results.isPassed ? "Chúc mừng! 🎉" : "Cố gắng lên! 💪"}
+              {isPassed ? "Chúc mừng! 🎉" : "Cố gắng lên! 💪"}
             </h2>
             <p className="text-white/80">
-              {results.isPassed
+              {isPassed
                 ? "Bạn đã hoàn thành xuất sắc bài thi"
                 : "Bạn cần ôn tập thêm để đạt điểm đậu"}
             </p>
@@ -759,9 +995,11 @@ function ResultScreen({
           <div className="p-8">
             <div className="text-center mb-8">
               <p className="text-6xl font-bold text-neutral-800 mb-2">
-                {results.score}
+                {submitResult.score}
               </p>
-              <p className="text-neutral-500">điểm / 100</p>
+              <p className="text-neutral-500">
+                điểm / {submitResult.max_score}
+              </p>
             </div>
 
             {/* Stats */}
@@ -769,21 +1007,21 @@ function ResultScreen({
               <div className="text-center p-4 bg-emerald-50 rounded-xl">
                 <CheckCircle2 className="w-6 h-6 text-emerald-500 mx-auto mb-2" />
                 <p className="text-2xl font-bold text-emerald-600">
-                  {results.correct}
+                  {submitResult.correct_count}
                 </p>
                 <p className="text-sm text-emerald-600">Đúng</p>
               </div>
               <div className="text-center p-4 bg-rose-50 rounded-xl">
                 <X className="w-6 h-6 text-rose-500 mx-auto mb-2" />
                 <p className="text-2xl font-bold text-rose-600">
-                  {questions.length - results.correct}
+                  {submitResult.total_questions - submitResult.correct_count}
                 </p>
                 <p className="text-sm text-rose-600">Sai</p>
               </div>
               <div className="text-center p-4 bg-blue-50 rounded-xl">
                 <Zap className="w-6 h-6 text-blue-500 mx-auto mb-2" />
                 <p className="text-2xl font-bold text-blue-600">
-                  {questions.length}
+                  {submitResult.total_questions}
                 </p>
                 <p className="text-sm text-blue-600">Tổng câu</p>
               </div>
@@ -809,84 +1047,16 @@ function ResultScreen({
           </div>
         </div>
 
-        {/* Show/Hide Answers Toggle */}
+        {/* View Detailed Answers */}
         <button
-          onClick={() => setShowAnswers(!showAnswers)}
+          onClick={() =>
+            router.push(`/exam/${slug}/result?attempt_id=${attemptId}`)
+          }
           className="w-full flex items-center justify-center gap-2 py-3 px-4 text-blue-600 bg-blue-50 hover:bg-blue-100 font-medium rounded-xl transition-colors mb-4"
         >
           <BookOpen className="w-5 h-5" />
-          {showAnswers ? "Ẩn đáp án" : "Xem đáp án chi tiết"}
+          Xem đáp án chi tiết
         </button>
-
-        {/* Answers Review */}
-        {showAnswers && (
-          <div className="space-y-4">
-            {questions.map((q, index) => {
-              const userAnswer = answers[q.id];
-              const isCorrect = userAnswer === q.correctAnswer;
-
-              return (
-                <div
-                  key={q.id}
-                  className={`bg-white rounded-xl border-2 p-4 ${
-                    isCorrect ? "border-emerald-200" : "border-rose-200"
-                  }`}
-                >
-                  <div className="flex items-start gap-3 mb-3">
-                    <span
-                      className={`flex items-center justify-center w-8 h-8 rounded-lg font-semibold text-sm shrink-0 ${
-                        isCorrect
-                          ? "bg-emerald-100 text-emerald-600"
-                          : "bg-rose-100 text-rose-600"
-                      }`}
-                    >
-                      {index + 1}
-                    </span>
-                    <p className="font-medium text-neutral-800">{q.question}</p>
-                  </div>
-
-                  <div className="pl-11 space-y-2">
-                    {q.options.map((opt) => {
-                      const isUserAnswer = userAnswer === opt.key;
-                      const isCorrectAnswer = q.correctAnswer === opt.key;
-
-                      return (
-                        <div
-                          key={opt.key}
-                          className={`flex items-center gap-2 p-2 rounded-lg text-sm ${
-                            isCorrectAnswer
-                              ? "bg-emerald-50 text-emerald-700"
-                              : isUserAnswer && !isCorrect
-                                ? "bg-rose-50 text-rose-700 line-through"
-                                : "text-neutral-600"
-                          }`}
-                        >
-                          <span className="font-medium">{opt.key}.</span>
-                          <span>{opt.text}</span>
-                          {isCorrectAnswer && (
-                            <CheckCircle2 className="w-4 h-4 text-emerald-500 ml-auto" />
-                          )}
-                          {isUserAnswer && !isCorrect && (
-                            <X className="w-4 h-4 text-rose-500 ml-auto" />
-                          )}
-                        </div>
-                      );
-                    })}
-
-                    {q.explanation && (
-                      <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-                        <p className="text-sm text-blue-700">
-                          <span className="font-semibold">Giải thích:</span>{" "}
-                          {q.explanation}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
       </div>
     </div>
   );

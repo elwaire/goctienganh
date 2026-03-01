@@ -13,6 +13,7 @@ type FormInputProps = InputHTMLAttributes<HTMLInputElement> & {
   rightIcon?: React.ReactNode;
   clearable?: boolean;
   showCount?: boolean;
+  rounded?: boolean;
 };
 
 const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
@@ -35,6 +36,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
       showCount = false,
       autoFocus = false,
       className = "",
+      rounded = false,
       ...rest
     },
     ref,
@@ -73,7 +75,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
         <div
           className={`
             relative flex items-center
-            bg-white border rounded-lg 
+            bg-white border 
             transition-all duration-200
             ${disabled ? "bg-neutral-50 cursor-not-allowed" : ""}
             ${
@@ -83,6 +85,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
                   ? "border-rose-300"
                   : "border-neutral-200 hover:border-neutral-300"
             }
+            ${rounded ? "rounded-full" : "rounded-lg"}
           `}
         >
           {/* Left Icon */}
@@ -167,7 +170,9 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
           {showCount && maxLength && (
             <span
               className={`text-xs ${
-                inputValue.length >= maxLength ? "text-rose-500" : "text-neutral-400"
+                inputValue.length >= maxLength
+                  ? "text-rose-500"
+                  : "text-neutral-400"
               }`}
             >
               {inputValue.length}/{maxLength}
