@@ -3,7 +3,7 @@ import { Plus } from "lucide-react";
 
 type EmptyStateProps = {
   onClick?: () => void;
-  icon: React.ReactNode;
+  image: string;
   title: string;
   description: string;
   buttonText?: string;
@@ -11,16 +11,14 @@ type EmptyStateProps = {
 
 export default function EmptyState({
   onClick,
-  icon,
+  image,
   title,
   description,
   buttonText,
 }: EmptyStateProps) {
   return (
-    <div className="text-center py-16">
-      <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-        {icon}
-      </div>
+    <div className="text-center py-16 flex flex-col items-center ">
+      <img src={image} alt="" className="w-32" />
       <h3 className="text-xl font-semibold text-neutral-800 mb-2">{title}</h3>
       <p className="text-neutral-500 mb-6">{description}</p>
 

@@ -1,4 +1,4 @@
-import { Difficulty } from "@/types";
+import { DifficultyDetailExam } from "@/types";
 
 export const colorMap: Record<
   string,
@@ -55,7 +55,7 @@ export const colorMap: Record<
 };
 
 export const difficultyConfig: Record<
-  Difficulty,
+  DifficultyDetailExam,
   { label: string; class: string }
 > = {
   easy: { label: "Dễ", class: "text-emerald-600 bg-emerald-50" },

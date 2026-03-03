@@ -292,7 +292,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard
@@ -324,7 +323,6 @@ export default function DashboardPage() {
           color="amber"
         />
       </div>
-
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - 2/3 */}

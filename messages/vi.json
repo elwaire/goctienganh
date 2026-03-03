@@ -92,5 +92,30 @@
         "back": "Quay lại danh sách"
       }
     }
+  },
+  "exam": {
+    "card": {
+      "level": {
+        "easy": "Dễ",
+        "medium": "Trung bình",
+        "hard": "Khó"
+      },
+      "questions": "Câu hỏi",
+      "questionsUnit": "câu",
+      "duration": "Thời gian",
+      "durationUnit": "phút"
+    },
+    "page": {
+      "title": "Luyện thi",
+      "description": "Kiểm tra và nâng cao kiến thức của bạn",
+      "searchPlaceholder": "Tìm kiếm bài thi...",
+      "totalCount": "bộ đề",
+      "loading": "Đang tải bộ đề...",
+      "error": "Không thể tải danh sách bộ đề. Vui lòng thử lại.",
+      "emptyTitle": "Không tìm thấy bài thi",
+      "emptyDescription": "Không tìm thấy bài thi. Vui lòng thử lại sau",
+      "previous": "Trước",
+      "next": "Sau"
+    }
   }
 }

@@ -89,7 +89,9 @@ export default function ExamDetailPage() {
     leaderboardList.find((e: LeaderboardEntry) => e.rank === 2),
     leaderboardList.find((e: LeaderboardEntry) => e.rank === 3),
   ];
-  const restOfLeaderboard = leaderboardList.filter((e: LeaderboardEntry) => e.rank > 3);
+  const restOfLeaderboard = leaderboardList.filter(
+    (e: LeaderboardEntry) => e.rank > 3,
+  );
 
   // Mutation to start exam attempt
   const startAttemptMutation = useMutation({
@@ -240,42 +242,54 @@ export default function ExamDetailPage() {
                     <p className="text-lg font-bold text-neutral-800 leading-tight">
                       {examData.duration_min} phút
                     </p>
-                    <p className="text-[10px] uppercase tracking-wider font-semibold text-neutral-400 mt-0.5">Thời gian</p>
+                    <p className="text-[10px] uppercase tracking-wider font-semibold text-neutral-400 mt-0.5">
+                      Thời gian
+                    </p>
                   </div>
                   <div className="text-center p-3 bg-white rounded-xl border border-neutral-100/50">
                     <FileText className="w-5 h-5 text-indigo-500 mx-auto mb-1" />
                     <p className="text-lg font-bold text-neutral-800 leading-tight">
                       {examData.question_count}
                     </p>
-                    <p className="text-[10px] uppercase tracking-wider font-semibold text-neutral-400 mt-0.5">Câu hỏi</p>
+                    <p className="text-[10px] uppercase tracking-wider font-semibold text-neutral-400 mt-0.5">
+                      Câu hỏi
+                    </p>
                   </div>
                   <div className="text-center p-3 bg-white rounded-xl border border-neutral-100/50">
                     <Target className="w-5 h-5 text-rose-500 mx-auto mb-1" />
                     <p className="text-lg font-bold text-neutral-800 leading-tight">
                       {examData.total_score}đ
                     </p>
-                    <p className="text-[10px] uppercase tracking-wider font-semibold text-neutral-400 mt-0.5">Tổng điểm</p>
+                    <p className="text-[10px] uppercase tracking-wider font-semibold text-neutral-400 mt-0.5">
+                      Tổng điểm
+                    </p>
                   </div>
                   <div className="text-center p-3 bg-white rounded-xl border border-neutral-100/50">
                     <Users className="w-5 h-5 text-emerald-500 mx-auto mb-1" />
                     <p className="text-lg font-bold text-neutral-800 leading-tight">
                       {examData.participant_count ?? 0}
                     </p>
-                    <p className="text-[10px] uppercase tracking-wider font-semibold text-neutral-400 mt-0.5">Người tham gia</p>
+                    <p className="text-[10px] uppercase tracking-wider font-semibold text-neutral-400 mt-0.5">
+                      Người tham gia
+                    </p>
                   </div>
                   <div className="text-center p-3 bg-white rounded-xl border border-neutral-100/50">
                     <RotateCcw className="w-5 h-5 text-amber-500 mx-auto mb-1" />
                     <p className="text-lg font-bold text-neutral-800 leading-tight">
                       {examData.attempt_count ?? 0}
                     </p>
-                    <p className="text-[10px] uppercase tracking-wider font-semibold text-neutral-400 mt-0.5">Lượt làm bài</p>
+                    <p className="text-[10px] uppercase tracking-wider font-semibold text-neutral-400 mt-0.5">
+                      Lượt làm bài
+                    </p>
                   </div>
                   <div className="text-center p-3 bg-white rounded-xl border border-neutral-100/50">
                     <Layers className="w-5 h-5 text-purple-500 mx-auto mb-1" />
                     <p className="text-lg font-bold text-neutral-800 leading-tight">
                       {examData.categories?.length ?? 0}
                     </p>
-                    <p className="text-[10px] uppercase tracking-wider font-semibold text-neutral-400 mt-0.5">Danh mục</p>
+                    <p className="text-[10px] uppercase tracking-wider font-semibold text-neutral-400 mt-0.5">
+                      Danh mục
+                    </p>
                   </div>
                 </div>
 
@@ -635,7 +649,9 @@ export default function ExamDetailPage() {
           {isLeaderboardLoading ? (
             <div className="flex flex-col items-center justify-center py-12 gap-3">
               <Loader2 className="w-6 h-6 text-primary-500 animate-spin" />
-              <p className="text-sm text-neutral-400">Đang tải bảng xếp hạng...</p>
+              <p className="text-sm text-neutral-400">
+                Đang tải bảng xếp hạng...
+              </p>
             </div>
           ) : leaderboardList.length > 0 ? (
             <div className="bg-white rounded-xl border border-neutral-100 overflow-hidden">
@@ -647,7 +663,11 @@ export default function ExamDetailPage() {
                     <div className="text-center">
                       <div className="w-16 h-16 bg-neutral-200 rounded-full flex items-center justify-center mx-auto mb-2 text-lg font-bold text-neutral-600 overflow-hidden ring-2 ring-white shadow-md">
                         {top3[1].avatar ? (
-                          <img src={top3[1].avatar} alt={top3[1].fullname} className="w-full h-full object-cover" />
+                          <img
+                            src={top3[1].avatar}
+                            alt={top3[1].fullname}
+                            className="w-full h-full object-cover"
+                          />
                         ) : (
                           top3[1].fullname.charAt(0)
                         )}
@@ -669,7 +689,11 @@ export default function ExamDetailPage() {
                     <div className="text-center -mt-4">
                       <div className="w-20 h-20 bg-linear-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-2 text-xl font-bold text-white ring-4 ring-amber-200 overflow-hidden shadow-lg">
                         {top3[0].avatar ? (
-                          <img src={top3[0].avatar} alt={top3[0].fullname} className="w-full h-full object-cover" />
+                          <img
+                            src={top3[0].avatar}
+                            alt={top3[0].fullname}
+                            className="w-full h-full object-cover"
+                          />
                         ) : (
                           top3[0].fullname.charAt(0)
                         )}
@@ -691,7 +715,11 @@ export default function ExamDetailPage() {
                     <div className="text-center">
                       <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-2 text-lg font-bold text-amber-700 overflow-hidden ring-2 ring-white shadow-md">
                         {top3[2].avatar ? (
-                          <img src={top3[2].avatar} alt={top3[2].fullname} className="w-full h-full object-cover" />
+                          <img
+                            src={top3[2].avatar}
+                            alt={top3[2].fullname}
+                            className="w-full h-full object-cover"
+                          />
                         ) : (
                           top3[2].fullname.charAt(0)
                         )}
@@ -722,7 +750,11 @@ export default function ExamDetailPage() {
                     </span>
                     <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold bg-neutral-200 text-neutral-600 overflow-hidden ring-1 ring-neutral-100">
                       {entry.avatar ? (
-                        <img src={entry.avatar} alt={entry.fullname} className="w-full h-full object-cover" />
+                        <img
+                          src={entry.avatar}
+                          alt={entry.fullname}
+                          className="w-full h-full object-cover"
+                        />
                       ) : (
                         entry.fullname.charAt(0)
                       )}
@@ -732,7 +764,10 @@ export default function ExamDetailPage() {
                         {entry.fullname}
                       </p>
                       <p className="text-xs text-neutral-400">
-                        {new Date(entry.completed_at).toLocaleDateString("vi-VN")} • {entry.attempt_count} lần làm
+                        {new Date(entry.completed_at).toLocaleDateString(
+                          "vi-VN",
+                        )}{" "}
+                        • {entry.attempt_count} lần làm
                       </p>
                     </div>
                     <p className="text-lg font-bold text-neutral-800">
@@ -743,31 +778,38 @@ export default function ExamDetailPage() {
               </div>
 
               {/* Current user entry if not in list */}
-              {userEntry && !leaderboardList.some((e: LeaderboardEntry) => e.user_id === userEntry.user_id) && (
-                <div className="bg-blue-50 border-t border-blue-100 p-4 flex items-center gap-4">
-                  <span className="w-8 text-center font-bold text-blue-600">
-                    #{userEntry.rank}
-                  </span>
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold bg-blue-500 text-white overflow-hidden ring-1 ring-blue-400 shadow-sm">
-                    {userEntry.avatar ? (
-                      <img src={userEntry.avatar} alt={userEntry.fullname} className="w-full h-full object-cover" />
-                    ) : (
-                      userEntry.fullname.charAt(0)
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-bold text-blue-700">
-                      {userEntry.fullname} (Bạn)
+              {userEntry &&
+                !leaderboardList.some(
+                  (e: LeaderboardEntry) => e.user_id === userEntry.user_id,
+                ) && (
+                  <div className="bg-blue-50 border-t border-blue-100 p-4 flex items-center gap-4">
+                    <span className="w-8 text-center font-bold text-blue-600">
+                      #{userEntry.rank}
+                    </span>
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold bg-blue-500 text-white overflow-hidden ring-1 ring-blue-400 shadow-sm">
+                      {userEntry.avatar ? (
+                        <img
+                          src={userEntry.avatar}
+                          alt={userEntry.fullname}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        userEntry.fullname.charAt(0)
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-blue-700">
+                        {userEntry.fullname} (Bạn)
+                      </p>
+                      <p className="text-xs text-blue-500">
+                        Kết quả tốt nhất • {userEntry.attempt_count} lần làm
+                      </p>
+                    </div>
+                    <p className="text-lg font-bold text-blue-700">
+                      {userEntry.best_score}/{userEntry.max_score}
                     </p>
-                    <p className="text-xs text-blue-500">
-                      Kết quả tốt nhất • {userEntry.attempt_count} lần làm
-                    </p>
                   </div>
-                  <p className="text-lg font-bold text-blue-700">
-                    {userEntry.best_score}/{userEntry.max_score}
-                  </p>
-                </div>
-              )}
+                )}
             </div>
           ) : (
             <div className="text-center py-12 bg-white rounded-xl border border-neutral-100">

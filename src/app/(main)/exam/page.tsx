@@ -2,19 +2,21 @@
 
 "use client";
 
-import { ExamCard, StatsCard } from "@/components/pages/exam";
-import { EmptyState, Error, FormInput, Loading } from "@/components/ui";
 import { examsApi } from "@/api/examsApi";
+import { ExamCard } from "@/components/pages/exam";
+import { EmptyState, Error, FormInput, Loading } from "@/components/ui";
 import { queryKeys } from "@/lib/queryKeys";
 import { useQuery } from "@tanstack/react-query";
 import Cookies from "js-cookie";
-import { Loader2, Search, AlertCircle, BookOpen } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Search } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useEffect, useState } from "react";
 
 const LIMIT = 12;
 const SEARCH_DEBOUNCE_MS = 400;
 
 export default function ExamPage() {
+  const t = useTranslations("exam.page");
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -59,43 +61,38 @@ export default function ExamPage() {
     <div className="min-h-screen pb-12">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-neutral-800 mb-2">Luyện thi</h1>
-        <p className="text-neutral-500">
-          Kiểm tra và nâng cao kiến thức của bạn
-        </p>
+        <h1 className="text-2xl font-bold text-neutral-800 mb-2">
+          {t("title")}
+        </h1>
+        <p className="text-neutral-500">{t("description")}</p>
       </div>
 
       {/* Stats Cards */}
-      <StatsCard />
+      {/* <StatsCard /> */}
 
       {/* Search */}
-      <div className="flex flex-col lg:flex-row items-center gap-4 mb-6">
-        <div className="relative flex-1 max-w-md">
-          <FormInput
-            type="text"
-            placeholder="Tìm kiếm bài thi..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            leftIcon={<Search className="w-5 h-5 text-neutral-400" />}
-            rounded
-          />
-        </div>
-
+      <div className="flex flex-col items-start gap-2 mb-6">
+        <FormInput
+          type="text"
+          placeholder={t("searchPlaceholder")}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          leftIcon={<Search className="w-5 h-5 text-neutral-400 " />}
+          className="w-full max-w-lg"
+        />
         {/* Total count */}
         {!isLoading && !isError && (
           <div className="flex  items-center text-sm text-neutral-500">
-            {total} bộ đề
+            {total} {t("totalCount")}
           </div>
         )}
       </div>
 
       {/* Loading */}
-      {isLoading && <Loading message="Đang tải bộ đề..." />}
+      {isLoading && <Loading message={t("loading")} />}
 
       {/* Error */}
-      {isError && (
-        <Error message="Không thể tải danh sách bộ đề. Vui lòng thử lại." />
-      )}
+      {isError && <Error message={t("error")} />}
 
       {/* Exam Grid */}
       {!isLoading && !isError && examSets.length > 0 && (
@@ -109,21 +106,9 @@ export default function ExamPage() {
       {/* Empty */}
       {!isLoading && !isError && examSets.length === 0 && (
         <EmptyState
-          title={searchQuery ? "Không tìm thấy bài thi" : "Chưa có bộ đề nào"}
-          description={
-            searchQuery
-              ? "Thử tìm kiếm với từ khóa khác"
-              : "Hiện chưa có bộ đề nào cho môn học này"
-          }
-          buttonText={searchQuery ? "Xóa tìm kiếm" : undefined}
-          onClick={searchQuery ? () => setSearchQuery("") : undefined}
-          icon={
-            searchQuery ? (
-              <Search className="w-4 h-4" />
-            ) : (
-              <BookOpen className="w-4 h-4" />
-            )
-          }
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
+          image="https://www.thiings.co/_next/image?url=https%3A%2F%2Flftz25oez4aqbxpq.public.blob.vercel-storage.com%2Fimage-eP5KQCJDDuVeP72aHPCoeYD7Z9qWzZ.png&w=1000&q=75"
         />
       )}
 
@@ -135,7 +120,7 @@ export default function ExamPage() {
             disabled={page === 1}
             className="px-4 py-2 text-sm font-medium rounded-xl border border-neutral-200 hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
-            Trước
+            {t("previous")}
           </button>
 
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
@@ -157,7 +142,7 @@ export default function ExamPage() {
             disabled={page === totalPages}
             className="px-4 py-2 text-sm font-medium rounded-xl border border-neutral-200 hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
-            Sau
+            {t("next")}
           </button>
         </div>
       )}

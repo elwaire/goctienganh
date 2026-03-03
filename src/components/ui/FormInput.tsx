@@ -85,7 +85,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
                   ? "border-rose-300"
                   : "border-neutral-200 hover:border-neutral-300"
             }
-            ${rounded ? "rounded-full" : "rounded-lg"}
+            ${rounded ? "rounded-full" : "rounded-xl"}
           `}
         >
           {/* Left Icon */}

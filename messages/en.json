@@ -92,5 +92,30 @@
         "back": "Back to List"
       }
     }
+  },
+  "exam": {
+    "card": {
+      "level": {
+        "easy": "Easy",
+        "medium": "Medium",
+        "hard": "Hard"
+      },
+      "questions": "Questions",
+      "questionsUnit": "questions",
+      "duration": "Duration",
+      "durationUnit": "min"
+    },
+    "page": {
+      "title": "Practice Exams",
+      "description": "Test and improve your knowledge",
+      "searchPlaceholder": "Search exams...",
+      "totalCount": "exam sets",
+      "loading": "Loading exam sets...",
+      "error": "Unable to load exam list. Please try again.",
+      "emptyTitle": "No exams found",
+      "emptyDescription": "No exams found. Please try again later",
+      "previous": "Previous",
+      "next": "Next"
+    }
   }
 }
