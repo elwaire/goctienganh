@@ -62,3 +62,4 @@ export const difficultyConfig: Record<
   medium: { label: "Trung bình", class: "text-amber-600 bg-amber-50" },
   hard: { label: "Khó", class: "text-rose-600 bg-rose-50" },
 };
+
