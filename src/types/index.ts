@@ -4,3 +4,4 @@ export * from "./navigation";
 export * from "./exam";
 export * from "./examDetail";
 export * from "./subject";
+export * from "./flashcard";

@@ -1,94 +1,26 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
   RotateCcw,
   ChevronLeft,
   ChevronRight,
   Volume2,
-  ThumbsUp,
-  ThumbsDown,
   Trophy,
   Shuffle,
-  BookOpen,
   Target,
-  Zap,
-  BarChart2,
-  X,
+  CheckCircle2,
+  XCircle,
+  BookOpen,
 } from "lucide-react";
-
-// ─── Types & Data ─────────────────────────────────────────────────────────────
-
-type Card = {
-  id: string;
-  term: string;
-  phonetic: string;
-  definition: string;
-  example: string;
-};
-type CardStatus = "unseen" | "known" | "unknown";
-
-const DECK: Card[] = [
-  {
-    id: "1",
-    term: "Serendipity",
-    phonetic: "/ˌserənˈdɪpɪti/",
-    definition:
-      "Sự tình cờ may mắn, khám phá ra điều tốt đẹp một cách bất ngờ.",
-    example: "It was pure serendipity that we met at the conference.",
-  },
-  {
-    id: "2",
-    term: "Ephemeral",
-    phonetic: "/ɪˈfemərəl/",
-    definition: "Tồn tại trong thời gian rất ngắn; mau qua, thoáng qua.",
-    example: "The ephemeral beauty of cherry blossoms makes them precious.",
-  },
-  {
-    id: "3",
-    term: "Ubiquitous",
-    phonetic: "/juːˈbɪkwɪtəs/",
-    definition: "Hiện diện, xuất hiện hoặc tìm thấy ở khắp mọi nơi.",
-    example: "Smartphones have become ubiquitous in modern life.",
-  },
-  {
-    id: "4",
-    term: "Resilience",
-    phonetic: "/rɪˈzɪliəns/",
-    definition: "Khả năng phục hồi nhanh chóng sau khó khăn; tính kiên cường.",
-    example: "Her resilience helped her overcome many obstacles.",
-  },
-  {
-    id: "5",
-    term: "Ambiguous",
-    phonetic: "/æmˈbɪɡjuəs/",
-    definition: "Có thể hiểu theo nhiều cách; không rõ ràng, mơ hồ.",
-    example: "The instructions were ambiguous and caused confusion.",
-  },
-  {
-    id: "6",
-    term: "Eloquent",
-    phonetic: "/ˈeləkwənt/",
-    definition: "Diễn đạt trôi chảy, hùng hồn và thuyết phục.",
-    example: "She gave an eloquent speech at the graduation ceremony.",
-  },
-  {
-    id: "7",
-    term: "Pragmatic",
-    phonetic: "/præɡˈmætɪk/",
-    definition: "Thực tế, thực dụng; đặt ra kết quả thực tế lên hàng đầu.",
-    example: "We need a pragmatic approach to solve this problem.",
-  },
-  {
-    id: "8",
-    term: "Meticulous",
-    phonetic: "/məˈtɪkjʊləs/",
-    definition: "Rất cẩn thận và chú ý đến từng chi tiết nhỏ.",
-    example:
-      "She was meticulous in her research and double-checked every fact.",
-  },
-];
+import { flashcardApi } from "@/lib/flashcard-api";
+import type {
+  FlashcardCard,
+  StudySession,
+  CompleteStudySessionResponse,
+} from "@/types/flashcard";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -96,59 +28,232 @@ function shuffle<T>(arr: T[]): T[] {
   return [...arr].sort(() => Math.random() - 0.5);
 }
 
-// ─── Result Screen ────────────────────────────────────────────────────────────
+// ─── Confidence config ────────────────────────────────────────────────────────
+
+const CONFIDENCE_BUTTONS = [
+  {
+    level: 1 as const,
+    label: "Lại",
+    meaning: "Không nhớ gì",
+    reviewAfter: "10 phút",
+    is_correct: false,
+    btnClass: "border-red-200 bg-red-50 text-red-500 hover:bg-red-100 hover:border-red-300 active:scale-95",
+    dotClass: "bg-red-400",
+    badgeClass: "bg-red-100 text-red-500",
+  },
+  {
+    level: 2 as const,
+    label: "Khó",
+    meaning: "Nhớ nhưng lâu",
+    reviewAfter: "1 ngày",
+    is_correct: false,
+    btnClass: "border-orange-200 bg-orange-50 text-orange-500 hover:bg-orange-100 hover:border-orange-300 active:scale-95",
+    dotClass: "bg-orange-400",
+    badgeClass: "bg-orange-100 text-orange-500",
+  },
+  {
+    level: 3 as const,
+    label: "Được",
+    meaning: "Còn ngập ngừng",
+    reviewAfter: "3 ngày",
+    is_correct: true,
+    btnClass: "border-sky-200 bg-sky-50 text-sky-600 hover:bg-sky-100 hover:border-sky-300 active:scale-95",
+    dotClass: "bg-sky-400",
+    badgeClass: "bg-sky-100 text-sky-600",
+  },
+  {
+    level: 4 as const,
+    label: "Dễ",
+    meaning: "Nhớ khá tốt",
+    reviewAfter: "7 ngày",
+    is_correct: true,
+    btnClass: "border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:border-emerald-300 active:scale-95",
+    dotClass: "bg-emerald-400",
+    badgeClass: "bg-emerald-100 text-emerald-600",
+  },
+] as const;
+
+type ConfidenceLevel = 1 | 2 | 3 | 4;
+
+// ─── Card front ────────────────────────────────────────────────────────────────
+
+function CardFront({
+  card,
+  targetLang,
+  isSpeaking,
+  onSpeak,
+}: {
+  card: FlashcardCard;
+  targetLang: string;
+  isSpeaking: boolean;
+  onSpeak: (text: string) => void;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-4 text-center w-full">
+      <span className="text-[10px] font-bold tracking-widest uppercase text-primary-400 bg-primary-50 px-3 py-1 rounded-full">
+        Thuật ngữ
+      </span>
+
+      <h2 className="text-4xl font-black text-neutral-900 tracking-tight leading-tight">
+        {card.term}
+      </h2>
+
+      {["ja", "zh"].includes(targetLang) && card.reading && (
+        <p className="text-lg text-gray-500 font-medium">{card.reading}</p>
+      )}
+      {targetLang === "ko" && card.reading && (
+        <p className="text-base text-gray-500">{card.reading}</p>
+      )}
+      {["en", "fr"].includes(targetLang) && card.phonetic && (
+        <p className="text-base text-gray-400 italic font-mono">{card.phonetic}</p>
+      )}
+
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          if (card.audio_url) {
+            new Audio(card.audio_url).play().catch(() => onSpeak(card.term));
+          } else {
+            onSpeak(card.term);
+          }
+        }}
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all duration-200 ${
+          isSpeaking
+            ? "bg-primary-500 border-primary-500 text-white"
+            : "bg-primary-50 border-primary-200 text-primary-500 hover:bg-primary-500 hover:border-primary-500 hover:text-white"
+        }`}
+      >
+        <Volume2 size={12} className={isSpeaking ? "animate-pulse" : ""} />
+        {isSpeaking ? "Đang phát..." : "Nghe"}
+      </button>
+
+      <p className="text-xs text-neutral-300 mt-2">Nhấn để lật</p>
+    </div>
+  );
+}
+
+// ─── Card back ─────────────────────────────────────────────────────────────────
+
+function CardBack({
+  card,
+  targetLang,
+}: {
+  card: FlashcardCard;
+  targetLang: string;
+}) {
+  const extra = card.extra as Record<string, unknown> | undefined;
+
+  return (
+    <div className="flex flex-col items-start gap-4 w-full h-full justify-center">
+      <span className="text-[10px] font-bold tracking-widest uppercase text-primary-200 bg-primary-600 px-3 py-1 rounded-full">
+        Định nghĩa
+      </span>
+
+      <p className="text-xl font-bold text-white leading-snug">{card.definition}</p>
+
+      {card.example_sentence && (
+        <div className="border-l-4 border-primary-300 pl-4">
+          <p className="text-sm text-primary-100 italic leading-relaxed">
+            {card.example_sentence}
+          </p>
+          {card.example_translation && (
+            <p className="text-xs text-primary-200 mt-1">{card.example_translation}</p>
+          )}
+        </div>
+      )}
+
+      {targetLang === "ja" && extra && (
+        <div className="flex flex-wrap gap-2 text-xs">
+          {!!extra.jlpt_level && (
+            <span className="px-2 py-0.5 rounded-md bg-primary-600 text-primary-100 font-bold">
+              JLPT {String(extra.jlpt_level)}
+            </span>
+          )}
+          {!!extra.stroke_count && (
+            <span className="px-2 py-0.5 rounded-md bg-primary-600 text-primary-200">
+              {String(extra.stroke_count)} nét
+            </span>
+          )}
+          {!!extra.onyomi && (
+            <span className="px-2 py-0.5 rounded-md bg-primary-600 text-primary-200">
+              On: {String(extra.onyomi)}
+            </span>
+          )}
+          {!!extra.kunyomi && (
+            <span className="px-2 py-0.5 rounded-md bg-primary-600 text-primary-200">
+              Kun: {String(extra.kunyomi)}
+            </span>
+          )}
+        </div>
+      )}
+
+      {targetLang === "zh" && extra && (
+        <div className="flex flex-wrap gap-2 text-xs">
+          {!!extra.traditional && (
+            <span className="px-2 py-0.5 rounded-md bg-primary-600 text-primary-200">
+              Phồn thể: {String(extra.traditional)}
+            </span>
+          )}
+          {!!extra.hsk_level && (
+            <span className="px-2 py-0.5 rounded-md bg-primary-600 text-primary-100 font-bold">
+              {String(extra.hsk_level)}
+            </span>
+          )}
+        </div>
+      )}
+
+      {card.image_url && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={card.image_url}
+          alt={card.term}
+          className="rounded-xl max-h-28 object-cover"
+        />
+      )}
+    </div>
+  );
+}
+
+// ─── Result screen ─────────────────────────────────────────────────────────────
 
 function ResultScreen({
-  total,
-  known,
+  result,
+  cardRatings,
+  hardCardCount,
   onRestart,
-  onReview,
+  onReviewHard,
 }: {
-  total: number;
-  known: number;
+  result: CompleteStudySessionResponse;
+  cardRatings: Record<string, ConfidenceLevel>;
+  hardCardCount: number;
   onRestart: () => void;
-  onReview: () => void;
+  onReviewHard: () => void;
 }) {
-  const pct = Math.round((known / total) * 100);
+  const pct = Math.round(result.accuracy * 100);
   const grade =
     pct >= 80 ? "Xuất sắc! 🎉" : pct >= 60 ? "Khá tốt! 💪" : "Cần ôn thêm 📚";
 
+  const countByLevel = { 1: 0, 2: 0, 3: 0, 4: 0 } as Record<ConfidenceLevel, number>;
+  Object.values(cardRatings).forEach((lvl) => { countByLevel[lvl]++; });
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-[#fefcff] px-6 gap-8">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-background-main px-6">
       <div className="w-full max-w-md flex flex-col items-center gap-6">
-        {/* Trophy */}
         <div className="w-20 h-20 rounded-3xl bg-primary-50 border border-primary-100 flex items-center justify-center">
           <Trophy size={36} className="text-primary-500" />
         </div>
 
         <div className="text-center">
-          <h2 className="text-2xl font-extrabold text-neutral-900">
-            Hoàn thành!
-          </h2>
+          <h2 className="text-2xl font-extrabold text-neutral-900">Hoàn thành!</h2>
           <p className="text-neutral-500 mt-1 text-sm">{grade}</p>
         </div>
 
         {/* Score ring */}
         <div className="relative flex items-center justify-center w-36 h-36">
-          <svg
-            className="absolute inset-0 w-full h-full -rotate-90"
-            viewBox="0 0 100 100"
-          >
+          <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="42" fill="none" stroke="#eef2ff" strokeWidth="8" />
             <circle
-              cx="50"
-              cy="50"
-              r="42"
-              fill="none"
-              stroke="#eef2ff"
-              strokeWidth="8"
-            />
-            <circle
-              cx="50"
-              cy="50"
-              r="42"
-              fill="none"
-              stroke="#2855f7"
-              strokeWidth="8"
+              cx="50" cy="50" r="42" fill="none" stroke="#2855f7" strokeWidth="8"
               strokeLinecap="round"
               strokeDasharray={`${2 * Math.PI * 42}`}
               strokeDashoffset={`${2 * Math.PI * 42 * (1 - pct / 100)}`}
@@ -161,32 +266,14 @@ function ResultScreen({
           </div>
         </div>
 
-        {/* Stats */}
+        {/* Quick stats */}
         <div className="w-full grid grid-cols-3 gap-3">
           {[
-            {
-              icon: <Target size={15} />,
-              label: "Tổng thẻ",
-              value: total,
-              color: "text-neutral-700",
-            },
-            {
-              icon: <ThumbsUp size={15} />,
-              label: "Đã thuộc",
-              value: known,
-              color: "text-emerald-600",
-            },
-            {
-              icon: <ThumbsDown size={15} />,
-              label: "Cần ôn",
-              value: total - known,
-              color: "text-red-500",
-            },
+            { icon: <Target size={15} />, label: "Tổng thẻ", value: result.total_cards, color: "text-neutral-700" },
+            { icon: <CheckCircle2 size={15} />, label: "Đúng", value: result.correct_count, color: "text-emerald-600" },
+            { icon: <XCircle size={15} />, label: "Cần ôn", value: result.total_cards - result.correct_count, color: "text-red-500" },
           ].map((s) => (
-            <div
-              key={s.label}
-              className="bg-white rounded-2xl border border-neutral-100 py-3 flex flex-col items-center gap-1"
-            >
+            <div key={s.label} className="bg-white rounded-2xl border border-neutral-100 py-3 flex flex-col items-center gap-1">
               <span className={s.color}>{s.icon}</span>
               <p className={`text-xl font-black ${s.color}`}>{s.value}</p>
               <p className="text-[11px] text-neutral-400">{s.label}</p>
@@ -194,21 +281,54 @@ function ResultScreen({
           ))}
         </div>
 
+        {/* Rating breakdown */}
+        {Object.keys(cardRatings).length > 0 && (
+          <div className="w-full bg-white rounded-2xl border border-neutral-100 p-4 flex flex-col gap-2.5">
+            <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
+              Chi tiết đánh giá
+            </p>
+            {([4, 3, 2, 1] as ConfidenceLevel[]).map((lvl) => {
+              const btn = CONFIDENCE_BUTTONS.find((b) => b.level === lvl)!;
+              const count = countByLevel[lvl];
+              const barPct = result.total_cards > 0 ? (count / result.total_cards) * 100 : 0;
+              return (
+                <div key={lvl} className="flex items-center gap-3">
+                  <span className={`text-[11px] font-bold w-12 text-center px-2 py-0.5 rounded-md ${btn.badgeClass}`}>
+                    {btn.label}
+                  </span>
+                  <div className="flex-1 h-2 rounded-full bg-neutral-100 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-700 ${btn.dotClass}`}
+                      style={{ width: `${barPct}%` }}
+                    />
+                  </div>
+                  <span className="text-xs font-bold text-neutral-500 w-5 text-right">{count}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         {/* Actions */}
         <div className="w-full flex flex-col gap-2.5">
-          {total - known > 0 && (
+          {hardCardCount > 0 && (
             <button
-              onClick={onReview}
+              onClick={onReviewHard}
               className="w-full py-3.5 rounded-2xl bg-primary-500 text-white text-sm font-bold hover:bg-primary-600 transition-colors flex items-center justify-center gap-2"
             >
-              <RotateCcw size={15} />
-              Ôn lại {total - known} thẻ chưa thuộc
+              <BookOpen size={15} />
+              Ôn lại {hardCardCount} thẻ Lại &amp; Khó
             </button>
           )}
           <button
             onClick={onRestart}
-            className="w-full py-3 rounded-2xl border border-neutral-200 text-neutral-600 text-sm font-semibold hover:bg-neutral-50 transition-colors"
+            className={`w-full py-3 rounded-2xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${
+              hardCardCount > 0
+                ? "border border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+                : "bg-primary-500 text-white hover:bg-primary-600"
+            }`}
           >
+            <RotateCcw size={14} />
             Học lại từ đầu
           </button>
         </div>
@@ -217,49 +337,95 @@ function ResultScreen({
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// ─── Loading ───────────────────────────────────────────────────────────────────
 
-export default function FlashcardsStartPage() {
-  const [deck, setDeck] = useState<Card[]>(DECK);
+function LoadingScreen({ message }: { message?: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+      <div className="w-10 h-10 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+      {message && <p className="text-sm text-neutral-400">{message}</p>}
+    </div>
+  );
+}
+
+// ─── Study session ─────────────────────────────────────────────────────────────
+
+function StudySession() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const deckId = searchParams.get("deckId");
+
+  const [session, setSession] = useState<StudySession | null>(null);
+  const [deck, setDeck] = useState<{ title: string; target_language: string } | null>(null);
+  const [cards, setCards] = useState<FlashcardCard[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
-  const [statuses, setStatuses] = useState<Record<string, CardStatus>>({});
-  const [isFinished, setIsFinished] = useState(false);
-  const [isShuffled, setIsShuffled] = useState(false);
   const [exitDir, setExitDir] = useState<"left" | "right" | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isShuffled, setIsShuffled] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [result, setResult] = useState<CompleteStudySessionResponse | null>(null);
+  const [completing, setCompleting] = useState(false);
+  const [cardRatings, setCardRatings] = useState<Record<string, ConfidenceLevel>>({});
 
-  const speak = useCallback((text: string) => {
-    if (!("speechSynthesis" in window)) return;
-    window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = "en-US";
-    utter.rate = 0.85;
-    utter.pitch = 1;
-    // Prefer a natural-sounding voice
-    const voices = window.speechSynthesis.getVoices();
-    const preferred = voices.find((v) =>
-      ["Samantha", "Google US English", "Alex", "Karen"].includes(v.name),
-    );
-    if (preferred) utter.voice = preferred;
-    utter.onstart = () => setIsSpeaking(true);
-    utter.onend = () => setIsSpeaking(false);
-    utter.onerror = () => setIsSpeaking(false);
-    window.speechSynthesis.speak(utter);
-  }, []);
+  const cardStartTimeRef = useRef<number>(Date.now());
+  const originalCardsRef = useRef<FlashcardCard[]>([]);
 
-  const card = deck[index];
-  const total = deck.length;
-  const knownIds = Object.entries(statuses)
-    .filter(([, v]) => v === "known")
-    .map(([k]) => k);
-  const unknownIds = Object.entries(statuses)
-    .filter(([, v]) => v === "unknown")
-    .map(([k]) => k);
-  const seenCount = Object.keys(statuses).length;
+  // ── Speak ────────────────────────────────────────────────────────────────────
+  const speak = useCallback(
+    (text: string) => {
+      if (!("speechSynthesis" in window)) return;
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = deck?.target_language === "ja" ? "ja-JP" : "en-US";
+      utter.rate = 0.85;
+      const voices = window.speechSynthesis.getVoices();
+      const preferred = voices.find((v) =>
+        ["Samantha", "Google US English", "Alex"].includes(v.name),
+      );
+      if (preferred) utter.voice = preferred;
+      utter.onstart = () => setIsSpeaking(true);
+      utter.onend = () => setIsSpeaking(false);
+      utter.onerror = () => setIsSpeaking(false);
+      window.speechSynthesis.speak(utter);
+    },
+    [deck?.target_language],
+  );
 
-  // Navigate with animation
+  // ── Start session ─────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!deckId) {
+      setError("Không tìm thấy bộ thẻ.");
+      setLoading(false);
+      return;
+    }
+    const start = async () => {
+      try {
+        const [deckRes, sessionRes] = await Promise.all([
+          flashcardApi.getDeck(deckId),
+          flashcardApi.startSession(deckId, "flashcard"),
+        ]);
+        const deckData = deckRes.data.data;
+        const sessionData = sessionRes.data.data;
+        setDeck({ title: deckData.title, target_language: deckData.target_language });
+        setSession(sessionData);
+        const sessionCards = sessionData.cards ?? deckData.cards ?? [];
+        originalCardsRef.current = sessionCards;
+        setCards([...sessionCards]);
+        cardStartTimeRef.current = Date.now();
+      } catch {
+        setError("Không thể bắt đầu phiên học. Vui lòng thử lại.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    start();
+  }, [deckId]);
+
+  // ── Navigate ──────────────────────────────────────────────────────────────────
   const goTo = useCallback(
     (dir: "left" | "right", nextIdx: number) => {
       if (isAnimating) return;
@@ -270,97 +436,168 @@ export default function FlashcardsStartPage() {
         setFlipped(false);
         setExitDir(null);
         setIsAnimating(false);
-      }, 260);
+        cardStartTimeRef.current = Date.now();
+      }, 220);
     },
     [isAnimating],
   );
 
-  const prev = () => {
+  const prev = useCallback(() => {
     if (index > 0) goTo("right", index - 1);
-  };
-  const next = () => {
-    if (index < total - 1) goTo("left", index + 1);
-    else setIsFinished(true);
-  };
+  }, [index, goTo]);
 
-  const markCard = (status: "known" | "unknown") => {
-    setStatuses((prev) => ({ ...prev, [card.id]: status }));
-    if (index < total - 1)
-      goTo(status === "known" ? "left" : "left", index + 1);
-    else setIsFinished(true);
-  };
+  // ── Rate card ─────────────────────────────────────────────────────────────────
+  const rateCard = useCallback(
+    async (confidenceLevel: ConfidenceLevel, isCorrect: boolean) => {
+      if (!session || !deckId || isAnimating) return;
 
-  // Keyboard
+      const card = cards[index];
+      const timeSpentMs = Date.now() - cardStartTimeRef.current;
+
+      // Update dot color immediately
+      setCardRatings((prev) => ({ ...prev, [card.id]: confidenceLevel }));
+
+      // Fire-and-forget API call
+      flashcardApi
+        .recordCard(deckId, session.id, {
+          card_id: card.id,
+          is_correct: isCorrect,
+          confidence_level: confidenceLevel,
+          time_spent_ms: timeSpentMs,
+        })
+        .catch(() => {});
+
+      if (index < cards.length - 1) {
+        goTo("left", index + 1);
+      } else {
+        setCompleting(true);
+        try {
+          const res = await flashcardApi.completeSession(deckId, session.id);
+          setResult(res.data.data);
+        } catch {
+          const finalRatings = { ...cardRatings, [card.id]: confidenceLevel };
+          const correctCount = Object.values(finalRatings).filter((l) => l >= 3).length;
+          setResult({
+            session_id: session.id,
+            deck_id: deckId,
+            mode: "flashcard",
+            total_cards: cards.length,
+            correct_count: correctCount,
+            accuracy: correctCount / cards.length,
+            status: "completed",
+            started_at: session.started_at,
+          });
+        } finally {
+          setCompleting(false);
+        }
+      }
+    },
+    [session, deckId, index, cards, isAnimating, goTo, cardRatings],
+  );
+
+  // ── Keyboard ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (e.key === " " || e.key === "Enter") {
         e.preventDefault();
-        setFlipped((f) => !f);
+        if (!isAnimating) setFlipped((f) => !f);
       }
-      if (e.key === "ArrowRight") next();
+      if (e.key === "ArrowRight" && !flipped && index < cards.length - 1)
+        goTo("left", index + 1);
       if (e.key === "ArrowLeft") prev();
-      if (e.key === "1") markCard("known");
-      if (e.key === "2") markCard("unknown");
-      if (e.key === "p" || e.key === "P") speak(deck[index].term);
+      if (flipped) {
+        if (e.key === "1") rateCard(1, false);
+        if (e.key === "2") rateCard(2, false);
+        if (e.key === "3") rateCard(3, true);
+        if (e.key === "4") rateCard(4, true);
+      }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [index, flipped, isAnimating]);
+  }, [index, flipped, isAnimating, cards.length, goTo, prev, rateCard]);
 
+  // ── Controls ──────────────────────────────────────────────────────────────────
   const handleShuffle = () => {
-    setDeck(shuffle(DECK));
-    setIndex(0);
-    setFlipped(false);
-    setStatuses({});
-    setIsFinished(false);
-    setIsShuffled(true);
+    setCards(shuffle([...originalCardsRef.current]));
+    setIndex(0); setFlipped(false); setIsShuffled(true);
+    setCardRatings({}); cardStartTimeRef.current = Date.now();
   };
 
   const handleRestart = () => {
-    setDeck(DECK);
-    setIndex(0);
-    setFlipped(false);
-    setStatuses({});
-    setIsFinished(false);
-    setIsShuffled(false);
+    setCards([...originalCardsRef.current]);
+    setIndex(0); setFlipped(false); setIsShuffled(false);
+    setResult(null); setCardRatings({}); cardStartTimeRef.current = Date.now();
   };
 
-  const handleReviewUnknown = () => {
-    const unknownCards = DECK.filter((c) => statuses[c.id] === "unknown");
-    setDeck(unknownCards);
-    setIndex(0);
-    setFlipped(false);
-    setStatuses({});
-    setIsFinished(false);
+  const handleReviewHard = () => {
+    const hardIds = Object.entries(cardRatings)
+      .filter(([, lvl]) => lvl <= 2).map(([id]) => id);
+    const hardCards = originalCardsRef.current.filter((c) => hardIds.includes(c.id));
+    if (!hardCards.length) return;
+    setCards(hardCards); setIndex(0); setFlipped(false);
+    setResult(null); setCardRatings({}); cardStartTimeRef.current = Date.now();
   };
 
-  if (isFinished) {
+  const hardCardCount = Object.values(cardRatings).filter((l) => l <= 2).length;
+
+  // ── Render guards ─────────────────────────────────────────────────────────────
+  if (loading) return <LoadingScreen message="Đang bắt đầu phiên học..." />;
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4 px-6 text-center">
+        <p className="text-sm text-neutral-500">{error}</p>
+        <button onClick={() => router.push("/flashcards")} className="text-sm text-primary-500 font-semibold underline">
+          Quay lại danh sách
+        </button>
+      </div>
+    );
+  }
+  if (completing) return <LoadingScreen message="Đang hoàn thành..." />;
+  if (result) {
     return (
       <ResultScreen
-        total={total}
-        known={knownIds.length}
+        result={result}
+        cardRatings={cardRatings}
+        hardCardCount={hardCardCount}
         onRestart={handleRestart}
-        onReview={handleReviewUnknown}
+        onReviewHard={handleReviewHard}
       />
     );
   }
+  if (cards.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4 px-6 text-center">
+        <p className="text-sm text-neutral-500">Bộ thẻ chưa có thẻ nào.</p>
+        <button onClick={() => router.push("/flashcards")} className="text-sm text-primary-500 font-semibold underline">
+          Quay lại
+        </button>
+      </div>
+    );
+  }
+
+  const card = cards[index];
+  const total = cards.length;
+  const ratedCount = Object.keys(cardRatings).length;
 
   return (
-    <div className="min-h-screen bg-[#fefcff] flex flex-col">
+    <div className="min-h-screen bg-background-main flex flex-col">
       {/* ── Header ── */}
-      <header className="px-6 py-4 flex items-center justify-between max-w-2xl mx-auto w-full">
-        <button className="flex items-center gap-2 text-sm text-neutral-400 hover:text-neutral-700 transition-colors group">
-          <ArrowLeft
-            size={16}
-            className="group-hover:-translate-x-0.5 transition-transform"
-          />
-          <span className="hidden sm:block">IELTS Academic Word List</span>
+      <header className="px-6 py-4 flex items-center justify-between max-w-2xl mx-auto w-full shrink-0">
+        <button
+          onClick={() => router.push("/flashcards")}
+          className="flex items-center gap-2 text-sm text-neutral-400 hover:text-neutral-700 transition-colors group"
+        >
+          <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
+          <span className="hidden sm:block truncate max-w-[180px] font-medium">
+            {deck?.title ?? "Flashcards"}
+          </span>
         </button>
 
         <div className="flex items-center gap-2">
           <button
             onClick={handleShuffle}
-            className={`p-2 rounded-xl border transition-all text-sm ${
+            className={`p-2 rounded-xl border transition-all ${
               isShuffled
                 ? "border-primary-200 bg-primary-50 text-primary-500"
                 : "border-neutral-200 text-neutral-400 hover:border-neutral-300 hover:text-neutral-600"
@@ -380,35 +617,33 @@ export default function FlashcardsStartPage() {
       </header>
 
       {/* ── Main ── */}
-      <main className="flex-1 flex flex-col items-center justify-center px-6 pb-10 max-w-2xl mx-auto w-full gap-8">
-        {/* Progress */}
-        <div className="w-full flex flex-col gap-2">
-          {/* Dot indicators */}
+      <main className="flex-1 flex flex-col items-center px-6 pb-8 max-w-2xl mx-auto w-full">
+
+        {/* ── Progress ── */}
+        <div className="w-full flex flex-col gap-2 mb-6 shrink-0">
+          {/* Dot row */}
           <div className="flex items-center justify-center gap-1 flex-wrap">
-            {deck.map((c, i) => {
-              const status = statuses[c.id];
+            {cards.map((c, i) => {
+              const rating = cardRatings[c.id];
+              const btn = rating ? CONFIDENCE_BUTTONS.find((b) => b.level === rating) : null;
               return (
                 <button
                   key={c.id}
-                  onClick={() => {
-                    setIndex(i);
-                    setFlipped(false);
-                  }}
+                  onClick={() => { setIndex(i); setFlipped(false); cardStartTimeRef.current = Date.now(); }}
+                  title={c.term}
                   className={`rounded-full transition-all duration-300 ${
                     i === index
                       ? "w-5 h-2 bg-primary-500"
-                      : status === "known"
-                        ? "w-2 h-2 bg-emerald-400"
-                        : status === "unknown"
-                          ? "w-2 h-2 bg-red-400"
-                          : "w-2 h-2 bg-neutral-200 hover:bg-neutral-300"
+                      : btn
+                        ? `w-2 h-2 ${btn.dotClass}`
+                        : "w-2 h-2 bg-neutral-200 hover:bg-neutral-300"
                   }`}
                 />
               );
             })}
           </div>
 
-          {/* Bar */}
+          {/* Bar + counter */}
           <div className="flex items-center gap-3">
             <div className="flex-1 h-1 rounded-full bg-neutral-100 overflow-hidden">
               <div
@@ -416,181 +651,139 @@ export default function FlashcardsStartPage() {
                 style={{ width: `${((index + 1) / total) * 100}%` }}
               />
             </div>
-            <span className="text-xs font-semibold text-neutral-400 tabular-nums w-14 text-right">
+            <span className="text-xs font-semibold text-neutral-400 tabular-nums shrink-0">
               {index + 1} / {total}
             </span>
           </div>
 
-          {/* Known/unknown counts */}
-          {seenCount > 0 && (
-            <div className="flex justify-center gap-4 text-xs">
-              <span className="flex items-center gap-1 text-emerald-600 font-semibold">
-                <ThumbsUp size={11} /> {knownIds.length} thuộc
-              </span>
-              <span className="flex items-center gap-1 text-red-500 font-semibold">
-                <ThumbsDown size={11} /> {unknownIds.length} chưa thuộc
-              </span>
-            </div>
-          )}
+          {/* Live rating mini-badges */}
+          <div
+            className={`flex justify-center gap-2 transition-all duration-300 ${
+              ratedCount > 0 ? "opacity-100" : "opacity-0 pointer-events-none"
+            }`}
+          >
+            {([4, 3, 2, 1] as ConfidenceLevel[]).map((lvl) => {
+              const btn = CONFIDENCE_BUTTONS.find((b) => b.level === lvl)!;
+              const count = Object.values(cardRatings).filter((l) => l === lvl).length;
+              if (count === 0) return null;
+              return (
+                <span
+                  key={lvl}
+                  className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${btn.badgeClass}`}
+                >
+                  {btn.label} {count}
+                </span>
+              );
+            })}
+          </div>
         </div>
 
-        {/* ── Flashcard ── */}
-        <div className="w-full" style={{ perspective: "1200px" }}>
+        {/* ── Card (fixed height) ── */}
+        <div className="w-full shrink-0 mb-6" style={{ perspective: "1400px" }}>
           <div
             onClick={() => !isAnimating && setFlipped((f) => !f)}
             style={{
-              height: "340px",
+              height: "300px",
               transformStyle: "preserve-3d",
-              transform: `${exitDir === "left" ? "translateX(-40px)" : exitDir === "right" ? "translateX(40px)" : "translateX(0)"} ${flipped ? "rotateY(180deg)" : "rotateY(0deg)"}`,
+              transform: `${
+                exitDir === "left" ? "translateX(-48px)" : exitDir === "right" ? "translateX(48px)" : "translateX(0)"
+              } ${flipped ? "rotateY(180deg)" : "rotateY(0deg)"}`,
               opacity: exitDir ? 0 : 1,
               transition: exitDir
-                ? "opacity 0.25s ease, transform 0.25s ease"
-                : "transform 0.45s cubic-bezier(0.4, 0, 0.2, 1)",
+                ? "opacity 0.2s ease, transform 0.2s ease"
+                : "transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
             }}
             className="relative cursor-pointer select-none"
           >
             {/* Front */}
             <div
-              className="absolute inset-0 rounded-3xl bg-white border border-neutral-200 shadow-lg shadow-neutral-100 flex flex-col items-center justify-center p-10 gap-4"
+              className="absolute inset-0 rounded-3xl bg-white border border-neutral-200 shadow-lg flex flex-col items-center justify-center p-8"
               style={{ backfaceVisibility: "hidden" }}
             >
-              <span className="text-[10px] font-bold tracking-widest uppercase text-primary-400 bg-primary-50 px-3 py-1 rounded-full">
-                Thuật ngữ
-              </span>
-              <h2 className="text-4xl font-black text-neutral-900 text-center tracking-tight">
-                {card.term}
-              </h2>
-
-              {/* Phonetic + Speak button */}
-              <div className="flex items-center gap-2">
-                {card.phonetic && (
-                  <span className="text-sm font-mono text-primary-400">
-                    {card.phonetic}
-                  </span>
-                )}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    speak(card.term);
-                  }}
-                  title="Phát âm (P)"
-                  className={`group/speak flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all duration-200 text-xs font-semibold
-                    ${
-                      isSpeaking
-                        ? "bg-primary-500 border-primary-500 text-white shadow-sm shadow-primary-200"
-                        : "bg-primary-50 border-primary-200 text-primary-500 hover:bg-primary-500 hover:border-primary-500 hover:text-white hover:shadow-sm hover:shadow-primary-200"
-                    }`}
-                >
-                  <Volume2
-                    size={13}
-                    className={
-                      isSpeaking
-                        ? "animate-pulse"
-                        : "group-hover/speak:scale-110 transition-transform"
-                    }
-                  />
-                  <span>{isSpeaking ? "Đang phát..." : "Nghe"}</span>
-                  {!isSpeaking && (
-                    <kbd className="ml-0.5 px-1 py-0.5 rounded bg-primary-100 group-hover/speak:bg-primary-400 font-mono text-[9px] text-primary-400 group-hover/speak:text-white transition-colors">
-                      P
-                    </kbd>
-                  )}
-                </button>
-              </div>
-
-              <p className="text-xs text-neutral-300">Nhấn để lật</p>
+              <CardFront
+                card={card}
+                targetLang={deck?.target_language ?? "en"}
+                isSpeaking={isSpeaking}
+                onSpeak={speak}
+              />
             </div>
 
             {/* Back */}
             <div
-              className="absolute inset-0 rounded-3xl bg-primary-500 shadow-xl shadow-primary-200 flex flex-col items-start justify-center p-10 gap-5"
-              style={{
-                backfaceVisibility: "hidden",
-                transform: "rotateY(180deg)",
-              }}
+              className="absolute inset-0 rounded-3xl bg-primary-500 shadow-xl shadow-primary-200 flex flex-col justify-center p-8 overflow-y-auto"
+              style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
             >
-              <span className="text-[10px] font-bold tracking-widest uppercase text-primary-200 bg-primary-600 px-3 py-1 rounded-full">
-                Định nghĩa
-              </span>
-              <p className="text-xl font-bold text-white leading-snug">
-                {card.definition}
-              </p>
-              {card.example && (
-                <div className="border-l-2 border-primary-300 pl-4">
-                  <p className="text-sm text-primary-100 italic leading-relaxed">
-                    "{card.example}"
-                  </p>
-                </div>
-              )}
+              <CardBack card={card} targetLang={deck?.target_language ?? "en"} />
             </div>
           </div>
         </div>
 
-        {/* ── Actions ── */}
-        {flipped ? (
-          /* Rating buttons — only show when flipped */
-          <div className="w-full flex flex-col gap-3">
-            <p className="text-center text-xs text-neutral-400 font-medium">
-              Bạn nhớ từ này không?
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => markCard("unknown")}
-                className="flex-1 py-3.5 rounded-2xl border-2 border-red-200 bg-red-50 text-red-500 text-sm font-bold hover:bg-red-100 hover:border-red-300 transition-all flex items-center justify-center gap-2 group"
-              >
-                <ThumbsDown
-                  size={15}
-                  className="group-hover:scale-110 transition-transform"
-                />
-                Chưa thuộc
-              </button>
-              <button
-                onClick={() => markCard("known")}
-                className="flex-1 py-3.5 rounded-2xl border-2 border-emerald-200 bg-emerald-50 text-emerald-600 text-sm font-bold hover:bg-emerald-100 hover:border-emerald-300 transition-all flex items-center justify-center gap-2 group"
-              >
-                <ThumbsUp
-                  size={15}
-                  className="group-hover:scale-110 transition-transform"
-                />
-                Đã thuộc
-              </button>
-            </div>
-          </div>
-        ) : (
-          /* Navigation */
-          <div className="flex items-center gap-4 w-full">
+        {/* ── Action zone (FIXED height — no layout shift) ── */}
+        <div className="w-full relative shrink-0" style={{ height: "120px" }}>
+
+          {/* State A: Navigation (shown when NOT flipped) */}
+          <div
+            className={`absolute inset-0 flex items-center gap-3 transition-all duration-200 ${
+              flipped ? "opacity-0 pointer-events-none scale-95" : "opacity-100 scale-100"
+            }`}
+          >
             <button
               onClick={prev}
               disabled={index === 0}
-              className="p-3 rounded-2xl border border-neutral-200 text-neutral-400 hover:text-neutral-700 hover:border-neutral-300 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              className="p-3 rounded-2xl border border-neutral-200 text-neutral-400 hover:text-neutral-700 hover:border-neutral-300 disabled:opacity-25 disabled:cursor-not-allowed transition-all shrink-0"
             >
               <ChevronLeft size={18} />
             </button>
 
             <button
               onClick={() => setFlipped(true)}
-              className="flex-1 py-3.5 rounded-2xl bg-primary-500 text-white text-sm font-bold hover:bg-primary-600 transition-colors shadow-sm shadow-primary-100 flex items-center justify-center gap-2"
+              className="flex-1 h-full rounded-2xl bg-primary-500 text-white text-sm font-bold hover:bg-primary-600 active:scale-[0.98] transition-all shadow-sm shadow-primary-200"
             >
-              <Zap size={15} />
               Lật thẻ
             </button>
 
             <button
-              onClick={next}
-              className="p-3 rounded-2xl border border-neutral-200 text-neutral-400 hover:text-neutral-700 hover:border-neutral-300 transition-all"
+              onClick={() => index < total - 1 && goTo("left", index + 1)}
+              disabled={index === total - 1}
+              className="p-3 rounded-2xl border border-neutral-200 text-neutral-400 hover:text-neutral-700 hover:border-neutral-300 disabled:opacity-25 disabled:cursor-not-allowed transition-all shrink-0"
             >
               <ChevronRight size={18} />
             </button>
           </div>
-        )}
 
-        {/* Keyboard hint */}
-        <div className="flex items-center gap-4 text-[11px] text-neutral-300">
+          {/* State B: Confidence rating (shown when flipped) */}
+          <div
+            className={`absolute inset-0 flex flex-col justify-between transition-all duration-200 ${
+              flipped ? "opacity-100 pointer-events-auto scale-100" : "opacity-0 pointer-events-none scale-95"
+            }`}
+          >
+            <p className="text-center text-[11px] text-neutral-400 font-medium">
+              Bạn nhớ từ này ở mức nào?
+            </p>
+
+            <div className="grid grid-cols-4 gap-2 flex-1 mt-2">
+              {CONFIDENCE_BUTTONS.map((btn) => (
+                <button
+                  key={btn.level}
+                  onClick={() => rateCard(btn.level, btn.is_correct)}
+                  className={`flex flex-col items-center justify-center gap-0.5 rounded-2xl border-2 transition-all ${btn.btnClass}`}
+                >
+                  <span className="text-sm font-bold leading-none">{btn.label}</span>
+                  <span className="text-[9px] text-neutral-400 leading-none mt-1">
+                    ↻ {btn.reviewAfter}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Keyboard hints ── */}
+        <div className="flex items-center gap-4 mt-5 text-[11px] text-neutral-300 shrink-0">
           {[
             { key: "Space", label: "Lật" },
             { key: "← →", label: "Chuyển" },
-            { key: "1 / 2", label: "Thuộc / Chưa" },
-            { key: "P", label: "Phát âm" },
+            { key: "1–4", label: "Đánh giá" },
           ].map(({ key, label }) => (
             <span key={key} className="flex items-center gap-1">
               <kbd className="px-1.5 py-0.5 rounded bg-neutral-100 font-mono text-[10px] text-neutral-400">
@@ -602,5 +795,15 @@ export default function FlashcardsStartPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
+export default function FlashcardsStartPage() {
+  return (
+    <Suspense fallback={<LoadingScreen message="Đang tải..." />}>
+      <StudySession />
+    </Suspense>
   );
 }
