@@ -34,8 +34,12 @@ import {
 import { DifficultyDetailExam } from "@/types";
 import { colorMapExamDetail } from "@/constants";
 import { difficultyConfig } from "@/constants";
+import { useTranslations } from "next-intl";
+import { ButtonPrimary } from "@/components/ui";
 
 export default function ExamDetailPage() {
+  const t = useTranslations("exam.page");
+  const td = useTranslations("exam.detail");
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -107,7 +111,7 @@ export default function ExamDetailPage() {
       );
     },
     onError: () => {
-      alert("Không thể bắt đầu bài thi. Vui lòng thử lại.");
+      alert(td("startError"));
     },
   });
 
@@ -126,7 +130,7 @@ export default function ExamDetailPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-3">
         <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
-        <p className="text-sm text-neutral-400">Đang tải bộ đề...</p>
+        <p className="text-sm text-neutral-400">{td("loadingExam")}</p>
       </div>
     );
   }
@@ -136,14 +140,12 @@ export default function ExamDetailPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <AlertCircle className="w-10 h-10 text-rose-400" />
-        <p className="text-sm text-neutral-500">
-          Không thể tải thông tin bộ đề. Vui lòng thử lại.
-        </p>
+        <p className="text-sm text-neutral-500">{td("errorLoading")}</p>
         <button
           onClick={handleBack}
           className="text-sm text-primary-500 hover:underline"
         >
-          Quay lại danh sách
+          {td("backToList")}
         </button>
       </div>
     );
@@ -169,39 +171,36 @@ export default function ExamDetailPage() {
         className="flex items-center gap-2 text-neutral-500 hover:text-neutral-800 mb-6 transition-colors"
       >
         <ArrowLeft className="w-5 h-5" />
-        <span className="font-medium">Quay lại</span>
+        <span className="font-medium">{t("back")}</span>
       </button>
 
       {/* Header */}
       <div className="bg-white rounded-2xl border border-neutral-200 overflow-hidden mb-6">
-        {/* Gradient Bar */}
-        <div className={`h-2 bg-linear-to-r ${colors.gradient}`} />
-
         <div className="p-6">
           <div className="flex flex-col lg:flex-row lg:items-start gap-6">
             {/* Left: Info */}
             <div className="flex-1">
               <div className="flex items-start gap-4 mb-4">
                 <div
-                  className={`w-16 h-16 ${colors.bgLight} rounded-2xl flex items-center justify-center shrink-0`}
+                  className={`w-14 h-14 ${colors.bgLight} rounded-xl flex items-center justify-center shrink-0`}
                 >
-                  <BookOpen className={`w-8 h-8 ${colors.text}`} />
+                  <BookOpen className={`w-6 h-6 ${colors.text}`} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-2">
                     {examData.is_public && (
-                      <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-lg">
+                      <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-md">
                         <Sparkles className="w-3 h-3" />
-                        Public
+                        {t("public")}
                       </span>
                     )}
                     <span
-                      className={`text-xs font-medium px-2.5 py-1 rounded-lg ${difficulty.class}`}
+                      className={`text-xs font-medium px-2.5 py-1 rounded-md ${difficulty.class}`}
                     >
                       {difficulty.label}
                     </span>
                     {examData.subject && (
-                      <span className="text-xs font-medium text-neutral-500 bg-neutral-100 px-2.5 py-1 rounded-lg">
+                      <span className="text-xs font-medium text-neutral-500 bg-neutral-100 px-2.5 py-1 rounded-md">
                         {examData.subject.name}
                       </span>
                     )}
@@ -214,36 +213,35 @@ export default function ExamDetailPage() {
                       {examData.description}
                     </p>
                   )}
+                  {/* Tags */}
+                  {examData.tags && examData.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      {examData.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="text-xs font-medium text-neutral-600 bg-neutral-100 px-3 py-1.5 rounded-full"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
-
-              {/* Tags */}
-              {examData.tags && examData.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-4">
-                  {examData.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="text-xs font-medium text-neutral-600 bg-neutral-100 px-3 py-1.5 rounded-full"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              )}
             </div>
 
             {/* Right: Action Card */}
             <div className="lg:w-80 shrink-0">
-              <div className="bg-neutral-50 rounded-2xl p-5">
+              <div className="bg-neutral-50 rounded-xl p-5">
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 gap-3 mb-5">
                   <div className="text-center p-3 bg-white rounded-xl border border-neutral-100/50">
                     <Clock className="w-5 h-5 text-blue-500 mx-auto mb-1" />
                     <p className="text-lg font-bold text-neutral-800 leading-tight">
-                      {examData.duration_min} phút
+                      {examData.duration_min} {t("minus")}
                     </p>
                     <p className="text-[10px] uppercase tracking-wider font-semibold text-neutral-400 mt-0.5">
-                      Thời gian
+                      {t("duration")}
                     </p>
                   </div>
                   <div className="text-center p-3 bg-white rounded-xl border border-neutral-100/50">
@@ -252,16 +250,17 @@ export default function ExamDetailPage() {
                       {examData.question_count}
                     </p>
                     <p className="text-[10px] uppercase tracking-wider font-semibold text-neutral-400 mt-0.5">
-                      Câu hỏi
+                      {t("questions")}
                     </p>
                   </div>
                   <div className="text-center p-3 bg-white rounded-xl border border-neutral-100/50">
                     <Target className="w-5 h-5 text-rose-500 mx-auto mb-1" />
                     <p className="text-lg font-bold text-neutral-800 leading-tight">
-                      {examData.total_score}đ
+                      {examData.total_score}
+                      {td("points")}
                     </p>
                     <p className="text-[10px] uppercase tracking-wider font-semibold text-neutral-400 mt-0.5">
-                      Tổng điểm
+                      {td("totalScore")}
                     </p>
                   </div>
                   <div className="text-center p-3 bg-white rounded-xl border border-neutral-100/50">
@@ -270,7 +269,7 @@ export default function ExamDetailPage() {
                       {examData.participant_count ?? 0}
                     </p>
                     <p className="text-[10px] uppercase tracking-wider font-semibold text-neutral-400 mt-0.5">
-                      Người tham gia
+                      {td("participants")}
                     </p>
                   </div>
                   <div className="text-center p-3 bg-white rounded-xl border border-neutral-100/50">
@@ -279,7 +278,7 @@ export default function ExamDetailPage() {
                       {examData.attempt_count ?? 0}
                     </p>
                     <p className="text-[10px] uppercase tracking-wider font-semibold text-neutral-400 mt-0.5">
-                      Lượt làm bài
+                      {td("attempts")}
                     </p>
                   </div>
                   <div className="text-center p-3 bg-white rounded-xl border border-neutral-100/50">
@@ -288,7 +287,7 @@ export default function ExamDetailPage() {
                       {examData.categories?.length ?? 0}
                     </p>
                     <p className="text-[10px] uppercase tracking-wider font-semibold text-neutral-400 mt-0.5">
-                      Danh mục
+                      {td("categories")}
                     </p>
                   </div>
                 </div>
@@ -305,7 +304,7 @@ export default function ExamDetailPage() {
                     </div>
                     <div>
                       <p className="text-sm text-neutral-500">
-                        Điểm cao nhất của bạn
+                        {td("bestScore")}
                       </p>
                       <p className={`text-2xl font-bold ${colors.text}`}>
                         {bestScore}
@@ -315,16 +314,10 @@ export default function ExamDetailPage() {
                 )}
 
                 {/* Start Button */}
-                <button
+                <ButtonPrimary
                   onClick={handleStartExam}
                   disabled={startAttemptMutation.isPending}
-                  className={`
-                    w-full flex items-center justify-center gap-2 py-4 px-6
-                    text-base font-semibold text-white rounded-xl
-                    bg-linear-to-r ${colors.gradient}
-                    hover:opacity-90 transition-opacity shadow-lg
-                    disabled:opacity-70 disabled:cursor-not-allowed
-                  `}
+                  className="w-full"
                 >
                   {startAttemptMutation.isPending ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -332,15 +325,15 @@ export default function ExamDetailPage() {
                     <Play className="w-5 h-5" />
                   )}
                   {startAttemptMutation.isPending
-                    ? "Đang bắt đầu..."
+                    ? td("starting")
                     : attemptList.length > 0
-                      ? "Làm lại bài thi"
-                      : "Bắt đầu làm bài"}
-                </button>
+                      ? td("retakeExam")
+                      : td("startExam")}
+                </ButtonPrimary>
 
                 {attemptList.length > 0 && (
                   <p className="text-xs text-neutral-400 text-center mt-3">
-                    Bạn đã làm bài này {attemptList.length} lần
+                    {td("attemptCount", { count: attemptList.length })}
                   </p>
                 )}
               </div>
@@ -355,20 +348,20 @@ export default function ExamDetailPage() {
           active={activeTab === "overview"}
           onClick={() => handleTabChange("overview")}
           icon={<BookOpen className="w-4 h-4" />}
-          label="Tổng quan"
+          label={td("tabOverview")}
         />
         <TabButton
           active={activeTab === "history"}
           onClick={() => handleTabChange("history")}
           icon={<RotateCcw className="w-4 h-4" />}
-          label="Lịch sử"
+          label={td("tabHistory")}
           count={attemptList.length > 0 ? attemptList.length : undefined}
         />
         <TabButton
           active={activeTab === "leaderboard"}
           onClick={() => handleTabChange("leaderboard")}
           icon={<Trophy className="w-4 h-4" />}
-          label="Bảng xếp hạng"
+          label={td("tabLeaderboard")}
         />
       </div>
 
@@ -378,7 +371,7 @@ export default function ExamDetailPage() {
           {/* Sections (Categories from API) */}
           <div className="lg:col-span-2">
             <h2 className="text-lg font-semibold text-neutral-800 mb-4">
-              Nội dung bài thi
+              {td("examContent")}
             </h2>
             <div className="space-y-3">
               {examData.categories && examData.categories.length > 0 ? (
@@ -407,7 +400,7 @@ export default function ExamDetailPage() {
                       </div>
                       <div className="text-right shrink-0">
                         <p className="text-sm font-medium text-neutral-800">
-                          {category.question_count} câu
+                          {category.question_count} {td("questionsUnit")}
                         </p>
                       </div>
                     </div>
@@ -415,7 +408,7 @@ export default function ExamDetailPage() {
                 )
               ) : (
                 <div className="text-center py-8 text-neutral-400 text-sm">
-                  Chưa có phân loại nào cho bộ đề này
+                  {td("noCategories")}
                 </div>
               )}
             </div>
@@ -427,31 +420,39 @@ export default function ExamDetailPage() {
             <div className="bg-white rounded-xl border border-neutral-100 p-4">
               <h3 className="font-semibold text-neutral-800 mb-3 flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-neutral-400" />
-                Thống kê chung
+                {td("generalStats")}
               </h3>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-neutral-500">Số câu hỏi</span>
+                  <span className="text-sm text-neutral-500">
+                    {td("questionCount")}
+                  </span>
                   <span className="text-sm font-semibold text-neutral-800">
                     {examData.question_count}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-neutral-500">Tổng điểm</span>
+                  <span className="text-sm text-neutral-500">
+                    {td("totalScoreLabel")}
+                  </span>
                   <span className="text-sm font-semibold text-neutral-800">
                     {examData.total_score}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-neutral-500">Thời gian</span>
+                  <span className="text-sm text-neutral-500">
+                    {td("durationLabel")}
+                  </span>
                   <span className="text-sm font-semibold text-neutral-800">
-                    {examData.duration_min} phút
+                    {td("durationValue", { value: examData.duration_min })}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-neutral-500">Tự phân điểm</span>
+                  <span className="text-sm text-neutral-500">
+                    {td("autoScore")}
+                  </span>
                   <span className="text-sm font-semibold text-emerald-600">
-                    {examData.auto_distribute_score ? "Có" : "Không"}
+                    {examData.auto_distribute_score ? td("yes") : td("no")}
                   </span>
                 </div>
               </div>
@@ -461,20 +462,20 @@ export default function ExamDetailPage() {
             <div className="bg-amber-50 rounded-xl p-4">
               <h3 className="font-semibold text-amber-800 mb-3 flex items-center gap-2">
                 <Zap className="w-4 h-4" />
-                Mẹo làm bài
+                {td("tips")}
               </h3>
               <ul className="space-y-2 text-sm text-amber-700">
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
-                  <span>Đọc kỹ câu hỏi trước khi chọn đáp án</span>
+                  <span>{td("tip1")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
-                  <span>Phân bổ thời gian hợp lý cho từng phần</span>
+                  <span>{td("tip2")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
-                  <span>Đánh dấu câu khó để quay lại sau</span>
+                  <span>{td("tip3")}</span>
                 </li>
               </ul>
             </div>
@@ -483,20 +484,22 @@ export default function ExamDetailPage() {
             <div className="bg-neutral-50 rounded-xl p-4">
               <h3 className="font-semibold text-neutral-800 mb-3 flex items-center gap-2">
                 <Info className="w-4 h-4 text-neutral-400" />
-                Thông tin
+                {td("info")}
               </h3>
               <div className="space-y-2 text-sm text-neutral-600">
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-neutral-400" />
                   <span>
-                    Cập nhật:{" "}
+                    {td("updatedAt")}{" "}
                     {new Date(examData.updated_at).toLocaleDateString("vi-VN")}
                   </span>
                 </div>
                 {examData.topic && (
                   <div className="flex items-center gap-2">
                     <BookOpen className="w-4 h-4 text-neutral-400" />
-                    <span>Chủ đề: {examData.topic.name}</span>
+                    <span>
+                      {td("topic")} {examData.topic.name}
+                    </span>
                   </div>
                 )}
               </div>
@@ -508,12 +511,12 @@ export default function ExamDetailPage() {
       {activeTab === "history" && (
         <div>
           <h2 className="text-lg font-semibold text-neutral-800 mb-4">
-            Lịch sử làm bài
+            {td("historyTitle")}
           </h2>
           {isHistoryLoading ? (
             <div className="flex flex-col items-center justify-center py-12 gap-3">
               <Loader2 className="w-6 h-6 text-primary-500 animate-spin" />
-              <p className="text-sm text-neutral-400">Đang tải lịch sử...</p>
+              <p className="text-sm text-neutral-400">{td("loadingHistory")}</p>
             </div>
           ) : attemptList.length > 0 ? (
             <div className="space-y-3">
@@ -530,7 +533,7 @@ export default function ExamDetailPage() {
                       hour: "2-digit",
                       minute: "2-digit",
                     })
-                  : "Chưa hoàn thành";
+                  : td("notCompleted");
 
                 // Calculate duration
                 let durationText = "—";
@@ -573,16 +576,18 @@ export default function ExamDetailPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-medium text-neutral-800">
-                          Lần {attemptList.length - index}
+                          {td("attemptNumber", {
+                            number: attemptList.length - index,
+                          })}
                         </span>
                         {index === 0 && (
                           <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
-                            Gần nhất
+                            {td("latest")}
                           </span>
                         )}
                         {attempt.score === bestScore && (
                           <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
-                            Điểm cao nhất
+                            {td("highestScore")}
                           </span>
                         )}
                       </div>
@@ -594,19 +599,19 @@ export default function ExamDetailPage() {
                     {/* Stats */}
                     <div className="flex items-center gap-6 text-sm">
                       <div className="text-center">
-                        <p className="text-neutral-400">Đúng</p>
+                        <p className="text-neutral-400">{td("correct")}</p>
                         <p className="font-semibold text-neutral-800">
                           {attempt.correct_count}/{attempt.total_questions}
                         </p>
                       </div>
                       <div className="text-center">
-                        <p className="text-neutral-400">Thời gian</p>
+                        <p className="text-neutral-400">{td("time")}</p>
                         <p className="font-semibold text-neutral-800">
                           {durationText}
                         </p>
                       </div>
                       <div className="text-center">
-                        <p className="text-neutral-400">Điểm</p>
+                        <p className="text-neutral-400">{td("score")}</p>
                         <p
                           className={`text-2xl font-bold ${
                             isPassed ? "text-emerald-600" : "text-rose-600"
@@ -631,11 +636,9 @@ export default function ExamDetailPage() {
                 <RotateCcw className="w-8 h-8 text-neutral-400" />
               </div>
               <h3 className="text-lg font-semibold text-neutral-800 mb-2">
-                Chưa có lịch sử
+                {td("noHistory")}
               </h3>
-              <p className="text-neutral-500">
-                Bạn chưa làm bài thi này lần nào
-              </p>
+              <p className="text-neutral-500">{td("noHistoryDesc")}</p>
             </div>
           )}
         </div>
@@ -644,13 +647,13 @@ export default function ExamDetailPage() {
       {activeTab === "leaderboard" && (
         <div>
           <h2 className="text-lg font-semibold text-neutral-800 mb-4">
-            Bảng xếp hạng
+            {td("leaderboardTitle")}
           </h2>
           {isLeaderboardLoading ? (
             <div className="flex flex-col items-center justify-center py-12 gap-3">
               <Loader2 className="w-6 h-6 text-primary-500 animate-spin" />
               <p className="text-sm text-neutral-400">
-                Đang tải bảng xếp hạng...
+                {td("loadingLeaderboard")}
               </p>
             </div>
           ) : leaderboardList.length > 0 ? (
@@ -767,7 +770,7 @@ export default function ExamDetailPage() {
                         {new Date(entry.completed_at).toLocaleDateString(
                           "vi-VN",
                         )}{" "}
-                        • {entry.attempt_count} lần làm
+                        • {td("attemptsCount", { count: entry.attempt_count })}
                       </p>
                     </div>
                     <p className="text-lg font-bold text-neutral-800">
@@ -799,10 +802,13 @@ export default function ExamDetailPage() {
                     </div>
                     <div className="flex-1">
                       <p className="font-bold text-blue-700">
-                        {userEntry.fullname} (Bạn)
+                        {userEntry.fullname} ({td("you")})
                       </p>
                       <p className="text-xs text-blue-500">
-                        Kết quả tốt nhất • {userEntry.attempt_count} lần làm
+                        {td("bestResult")} •{" "}
+                        {td("attemptsCount", {
+                          count: userEntry.attempt_count,
+                        })}
                       </p>
                     </div>
                     <p className="text-lg font-bold text-blue-700">
@@ -817,11 +823,9 @@ export default function ExamDetailPage() {
                 <Trophy className="w-8 h-8 text-neutral-400" />
               </div>
               <h3 className="text-lg font-semibold text-neutral-800 mb-2">
-                Chưa có xếp hạng
+                {td("noLeaderboard")}
               </h3>
-              <p className="text-neutral-500">
-                Hãy là người đầu tiên chinh服 bài thi này!
-              </p>
+              <p className="text-neutral-500">{td("noLeaderboardDesc")}</p>
             </div>
           )}
         </div>

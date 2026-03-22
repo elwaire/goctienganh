@@ -11,6 +11,7 @@ import {
   Settings,
 } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { LanguageSwitcher } from "@/components/common/LanguageSwitcher";
@@ -28,6 +29,7 @@ function getInitials(name: string): string {
 
 export default function Header() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const router = useRouter();
   const user = useSelector((state: RootState) => state.auth.user);
 
   const displayName = user?.fullname || user?.username || "Learner";
@@ -66,10 +68,10 @@ export default function Header() {
 
       {/* Right - Actions & Profile */}
       <div className="flex items-center gap-2">
-        {/* Streak/XP Badge */}
+        {/* Streak */}
         <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-600 rounded-full">
-          <Sparkles className="w-4 h-4" />
-          <span className="text-sm font-medium">128 XP</span>
+          🔥
+          <span className="text-sm font-medium">12</span>
         </div>
         <LanguageSwitcher />
 
@@ -131,6 +133,10 @@ export default function Header() {
                   <DropdownItem
                     icon={<User className="w-4 h-4" />}
                     label="My Profile"
+                    onClick={() => {
+                      setIsProfileOpen(false);
+                      router.push("/profile");
+                    }}
                   />
                   <DropdownItem
                     icon={<Award className="w-4 h-4" />}

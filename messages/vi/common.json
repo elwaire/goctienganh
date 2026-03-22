@@ -1,0 +1,12 @@
+{
+  "common": {
+    "back": "Quay lại",
+    "sidebar": {
+      "sectionTitle": "Học Tập",
+      "dashboard": "Tổng quan",
+      "vocabularySet": "Bộ từ vựng",
+      "practice": "Luyện tập",
+      "exam": "Bài thi"
+    }
+  }
+}

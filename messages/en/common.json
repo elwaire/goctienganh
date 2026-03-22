@@ -1,0 +1,12 @@
+{
+  "common": {
+    "back": "Back",
+    "sidebar": {
+      "sectionTitle": "Learning",
+      "dashboard": "Dashboard",
+      "vocabularySet": "Vocabulary Set",
+      "practice": "Practice",
+      "exam": "Exam"
+    }
+  }
+}

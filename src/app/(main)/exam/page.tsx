@@ -67,9 +67,6 @@ export default function ExamPage() {
         <p className="text-neutral-500">{t("description")}</p>
       </div>
 
-      {/* Stats Cards */}
-      {/* <StatsCard /> */}
-
       {/* Search */}
       <div className="flex flex-col items-start gap-2 mb-6">
         <FormInput
