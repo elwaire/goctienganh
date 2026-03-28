@@ -1,10 +1,10 @@
 // constants/navigation.ts
 
-import { BookOpen, Home, Notebook } from "lucide-react";
+import { Book, BookOpen, Home, Notebook, Trophy } from "lucide-react";
 
 export const SECTIONS_SIDEBAR = [
-  { nameKey: "dashboard", icon: Home, href: "/dashboard" },
-  { nameKey: "vocabularySet", icon: Home, href: "/vocabulary-set" },
+  { nameKey: "dashboard", icon: Home, href: "/" },
+  { nameKey: "vocabularySet", icon: Book, href: "/vocabulary-set" },
   {
     nameKey: "practice",
     icon: BookOpen,

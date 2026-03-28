@@ -15,6 +15,7 @@ import {
   Star,
   Bell,
   X,
+  Info,
 } from "lucide-react";
 
 export default function ProfilePage() {
@@ -22,7 +23,6 @@ export default function ProfilePage() {
     "info" | "security" | "progress" | "goals"
   >("info");
   const [selectedAvatar, setSelectedAvatar] = useState(0);
-  const [showAllBadges, setShowAllBadges] = useState(false);
 
   const [form, setForm] = useState({
     fullname: "Võ Ngọc Min",
@@ -46,7 +46,6 @@ export default function ProfilePage() {
     "https://api.dicebear.com/7.x/avataaars/svg?seed=5",
   ];
 
-  // Mock learning data
   const stats = {
     wordsLearned: 1245,
     streak: 15,
@@ -57,123 +56,20 @@ export default function ProfilePage() {
     accuracy: 87,
   };
 
-  // Earned badges (hiển thị ở profile)
-  const earnedBadges = [
-    {
-      id: 1,
-      name: "100 Days Streak",
-      icon: "🔥",
-      description: "Học liên tục 100 ngày",
-      earned: true,
-    },
-    {
-      id: 2,
-      name: "Word Master",
-      icon: "📚",
-      description: "Học được 1000+ từ vựng",
-      earned: true,
-    },
-    {
-      id: 3,
-      name: "Perfect Week",
-      icon: "⭐",
-      description: "Hoàn thành mục tiêu 7 ngày liên tục",
-      earned: true,
-    },
+  const badges = [
+    { id: 1, name: "100 Days Streak", icon: "🔥", earned: true },
+    { id: 2, name: "Word Master", icon: "📚", earned: true },
+    { id: 3, name: "Perfect Week", icon: "⭐", earned: true },
+    { id: 4, name: "Early Bird", icon: "🌅", earned: false },
+    { id: 5, name: "Night Owl", icon: "🦉", earned: false },
   ];
 
-  // All badges (hiển thị trong modal)
-  const allBadges = [
-    {
-      id: 1,
-      name: "100 Days Streak",
-      icon: "🔥",
-      description: "Học liên tục 100 ngày",
-      earned: true,
-    },
-    {
-      id: 2,
-      name: "Word Master",
-      icon: "📚",
-      description: "Học được 1000+ từ vựng",
-      earned: true,
-    },
-    {
-      id: 3,
-      name: "Perfect Week",
-      icon: "⭐",
-      description: "Hoàn thành mục tiêu 7 ngày liên tục",
-      earned: true,
-    },
-    {
-      id: 4,
-      name: "Early Bird",
-      icon: "🌅",
-      description: "Học trước 6h sáng 10 lần",
-      earned: false,
-    },
-    {
-      id: 5,
-      name: "Night Owl",
-      icon: "🦉",
-      description: "Học sau 10h đêm 10 lần",
-      earned: false,
-    },
-    {
-      id: 6,
-      name: "Speed Learner",
-      icon: "⚡",
-      description: "Hoàn thành 50 từ trong 1 ngày",
-      earned: false,
-    },
-    {
-      id: 7,
-      name: "Grammar Guru",
-      icon: "📝",
-      description: "Đạt 100% bài kiểm tra ngữ pháp",
-      earned: false,
-    },
-    {
-      id: 8,
-      name: "Listening Pro",
-      icon: "🎧",
-      description: "Hoàn thành 100 bài nghe",
-      earned: false,
-    },
-    {
-      id: 9,
-      name: "Speaking Star",
-      icon: "🗣️",
-      description: "Luyện nói 50 giờ",
-      earned: false,
-    },
-    {
-      id: 10,
-      name: "Reading Champion",
-      icon: "📖",
-      description: "Đọc 1000+ câu",
-      earned: false,
-    },
-    {
-      id: 11,
-      name: "Social Butterfly",
-      icon: "👥",
-      description: "Kết bạn với 20 người học",
-      earned: false,
-    },
-    {
-      id: 12,
-      name: "Helper",
-      icon: "🤝",
-      description: "Giúp đỡ 10 người học khác",
-      earned: false,
-    },
-  ];
+  const earnedBadges = badges.filter((b) => b.earned);
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-5xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl border border-gray-200">
           {/* Tabs */}
           <div className="flex border-b border-gray-200 overflow-x-auto">
             <TabButton
@@ -210,43 +106,43 @@ export default function ProfilePage() {
           </div>
 
           {/* Content */}
-          <div className="p-8">
+          <div className="p-6">
             {/* TAB 1: THÔNG TIN CÁ NHÂN */}
             {activeTab === "info" && (
-              <div className="space-y-8">
+              <div className="space-y-6">
                 <div className="flex items-center justify-center">
-                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-full text-sm font-medium">
-                    <div className="w-2 h-2 bg-green-500 rounded-full" />
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-sm font-medium border border-green-200">
+                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
                     Tài khoản học viên
                   </div>
                 </div>
 
                 <div className="flex flex-col items-center">
                   <div className="relative mb-4">
-                    <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100 border-4 border-white shadow-lg">
+                    <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200">
                       <img
                         src={presetAvatars[selectedAvatar]}
                         alt="Avatar"
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <button className="absolute bottom-0 right-0 w-10 h-10 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center shadow-lg transition-colors">
-                      <Camera className="w-5 h-5 text-white" />
+                    <button className="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center border-2 border-white transition-colors">
+                      <Camera className="w-4 h-4 text-white" />
                     </button>
                   </div>
 
-                  <p className="text-sm text-gray-600 mb-3">
+                  <p className="text-xs text-gray-600 mb-3">
                     Chọn avatar có sẵn
                   </p>
-                  <div className="flex gap-3">
+                  <div className="flex gap-2">
                     {presetAvatars.map((avatar, index) => (
                       <button
                         key={index}
                         onClick={() => setSelectedAvatar(index)}
-                        className={`relative w-14 h-14 rounded-full overflow-hidden transition-all ${
+                        className={`relative w-12 h-12 rounded-full overflow-hidden transition-all border-2 ${
                           selectedAvatar === index
-                            ? "ring-2 ring-blue-600 ring-offset-2"
-                            : "ring-1 ring-gray-200"
+                            ? "border-blue-600"
+                            : "border-gray-200 hover:border-gray-300"
                         }`}
                       >
                         <img
@@ -256,8 +152,8 @@ export default function ProfilePage() {
                         />
                         {selectedAvatar === index && (
                           <div className="absolute inset-0 bg-blue-600/20 flex items-center justify-center">
-                            <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
-                              <Check className="w-4 h-4 text-white" />
+                            <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
+                              <Check className="w-3 h-3 text-white" />
                             </div>
                           </div>
                         )}
@@ -266,7 +162,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                <div className="space-y-5">
+                <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Họ và tên
@@ -277,7 +173,7 @@ export default function ProfilePage() {
                       onChange={(e) =>
                         setForm({ ...form, fullname: e.target.value })
                       }
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                     />
                   </div>
 
@@ -291,11 +187,11 @@ export default function ProfilePage() {
                       onChange={(e) =>
                         setForm({ ...form, email: e.target.value })
                       }
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Số điện thoại
@@ -306,7 +202,7 @@ export default function ProfilePage() {
                         onChange={(e) =>
                           setForm({ ...form, phone: e.target.value })
                         }
-                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                       />
                     </div>
 
@@ -320,13 +216,13 @@ export default function ProfilePage() {
                         onChange={(e) =>
                           setForm({ ...form, dob: e.target.value })
                         }
-                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                       />
                     </div>
                   </div>
                 </div>
 
-                <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 rounded-xl transition-all shadow-lg">
+                <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-colors">
                   Lưu thay đổi
                 </button>
               </div>
@@ -335,48 +231,48 @@ export default function ProfilePage() {
             {/* TAB 2: TIẾN ĐỘ HỌC TẬP */}
             {activeTab === "progress" && (
               <div className="space-y-6">
-                <h3 className="text-2xl font-bold text-gray-900">
+                <h3 className="text-xl font-bold text-gray-900">
                   Tiến độ học tập của bạn
                 </h3>
 
                 {/* Stats Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <StatCard
-                    icon={<Book className="w-6 h-6 text-blue-600" />}
+                    icon={<Book className="w-5 h-5 text-blue-600" />}
                     label="Từ đã học"
                     value={stats.wordsLearned.toLocaleString()}
                   />
                   <StatCard
-                    icon={<Flame className="w-6 h-6 text-orange-500" />}
+                    icon={<Flame className="w-5 h-5 text-orange-500" />}
                     label="Chuỗi ngày"
                     value={`${stats.streak} ngày`}
                     highlight
                   />
                   <StatCard
-                    icon={<Clock className="w-6 h-6 text-green-600" />}
+                    icon={<Clock className="w-5 h-5 text-green-600" />}
                     label="Tuần này"
                     value={stats.studyTimeWeek}
                   />
                   <StatCard
-                    icon={<Star className="w-6 h-6 text-yellow-500" />}
+                    icon={<Star className="w-5 h-5 text-yellow-500" />}
                     label="Độ chính xác"
                     value={`${stats.accuracy}%`}
                   />
                 </div>
 
                 {/* Level Progress */}
-                <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-6">
+                <div className="bg-blue-50 rounded-2xl p-5 border border-blue-100">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h4 className="font-semibold text-gray-900">
+                      <h4 className="font-semibold text-gray-900 text-sm">
                         Cấp độ hiện tại
                       </h4>
-                      <p className="text-2xl font-bold text-blue-600 mt-1">
+                      <p className="text-xl font-bold text-blue-600 mt-1">
                         {stats.level}
                       </p>
                     </div>
-                    <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
-                      <Award className="w-8 h-8 text-white" />
+                    <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
+                      <Award className="w-6 h-6 text-white" />
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -386,9 +282,9 @@ export default function ProfilePage() {
                         {stats.lessonsCompleted}/{stats.totalLessons}
                       </span>
                     </div>
-                    <div className="w-full h-3 bg-white rounded-full overflow-hidden">
+                    <div className="w-full h-2 bg-white rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"
+                        className="h-full bg-blue-600 rounded-full"
                         style={{
                           width: `${(stats.lessonsCompleted / stats.totalLessons) * 100}%`,
                         }}
@@ -397,29 +293,26 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                {/* Badges - Earned */}
+                {/* Badges */}
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <h4 className="font-semibold text-gray-900">
                       Huy hiệu đã đạt được
                     </h4>
-                    <button
-                      onClick={() => setShowAllBadges(true)}
-                      className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
-                    >
+                    <button className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
                       Xem tất cả
                       <span className="text-xs bg-blue-100 px-2 py-0.5 rounded-full">
-                        {allBadges.length}
+                        {badges.length}
                       </span>
                     </button>
                   </div>
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-3 gap-3">
                     {earnedBadges.map((badge) => (
                       <div
                         key={badge.id}
                         className="text-center p-4 rounded-xl border-2 border-yellow-300 bg-yellow-50"
                       >
-                        <div className="text-4xl mb-2">{badge.icon}</div>
+                        <div className="text-3xl mb-2">{badge.icon}</div>
                         <p className="text-xs font-medium text-gray-700">
                           {badge.name}
                         </p>
@@ -437,15 +330,15 @@ export default function ProfilePage() {
             {/* TAB 3: MỤC TIÊU & CÀI ĐẶT */}
             {activeTab === "goals" && (
               <div className="space-y-6">
-                <h3 className="text-2xl font-bold text-gray-900">
+                <h3 className="text-xl font-bold text-gray-900">
                   Mục tiêu học tập
                 </h3>
 
                 {/* Daily Goals */}
-                <div className="bg-blue-50 rounded-2xl p-6">
+                <div className="bg-blue-50 rounded-2xl p-5 border border-blue-100">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                      <Target className="w-6 h-6 text-white" />
+                    <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+                      <Target className="w-5 h-5 text-white" />
                     </div>
                     <h4 className="font-semibold text-gray-900">
                       Mục tiêu hàng ngày
@@ -509,7 +402,7 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Notifications */}
-                <div className="border border-gray-200 rounded-2xl p-6">
+                <div className="border border-gray-200 rounded-2xl p-5">
                   <h4 className="font-semibold text-gray-900 mb-4">
                     Nhắc nhở học tập
                   </h4>
@@ -518,10 +411,10 @@ export default function ProfilePage() {
                     <div className="flex items-center gap-3">
                       <Bell className="w-5 h-5 text-gray-600" />
                       <div>
-                        <p className="font-medium text-gray-900">
+                        <p className="font-medium text-gray-900 text-sm">
                           Bật thông báo
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-xs text-gray-500">
                           Nhận nhắc nhở học tập hàng ngày
                         </p>
                       </div>
@@ -533,13 +426,13 @@ export default function ProfilePage() {
                           notifications: !goals.notifications,
                         })
                       }
-                      className={`relative w-14 h-7 rounded-full transition-colors ${
+                      className={`relative w-12 h-6 rounded-full transition-colors ${
                         goals.notifications ? "bg-blue-600" : "bg-gray-300"
                       }`}
                     >
                       <div
-                        className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform ${
-                          goals.notifications ? "translate-x-7" : ""
+                        className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                          goals.notifications ? "translate-x-6" : ""
                         }`}
                       />
                     </button>
@@ -556,13 +449,13 @@ export default function ProfilePage() {
                         onChange={(e) =>
                           setGoals({ ...goals, reminderTime: e.target.value })
                         }
-                        className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                       />
                     </div>
                   )}
                 </div>
 
-                <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 rounded-xl transition-all shadow-lg">
+                <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-colors">
                   Lưu cài đặt
                 </button>
               </div>
@@ -583,7 +476,7 @@ export default function ProfilePage() {
                     <input
                       type="password"
                       placeholder="Nhập mật khẩu hiện tại"
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                     />
                   </div>
 
@@ -594,7 +487,7 @@ export default function ProfilePage() {
                     <input
                       type="password"
                       placeholder="Nhập mật khẩu mới"
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                     />
                   </div>
 
@@ -605,11 +498,11 @@ export default function ProfilePage() {
                     <input
                       type="password"
                       placeholder="Nhập lại mật khẩu mới"
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                     />
                   </div>
 
-                  <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 rounded-xl transition-all shadow-lg">
+                  <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-colors">
                     Đổi mật khẩu
                   </button>
                 </div>
@@ -618,76 +511,6 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
-
-      {/* Modal - All Badges */}
-      {showAllBadges && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
-          onClick={() => setShowAllBadges(false)}
-        >
-          <div
-            className="bg-white rounded-2xl max-w-3xl w-full max-h-[80vh] overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <div>
-                <h3 className="text-xl font-bold text-gray-900">
-                  Tất cả huy hiệu
-                </h3>
-                <p className="text-sm text-gray-500 mt-1">
-                  Đã đạt được {allBadges.filter((b) => b.earned).length}/
-                  {allBadges.length} huy hiệu
-                </p>
-              </div>
-              <button
-                onClick={() => setShowAllBadges(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-
-            {/* Modal Content */}
-            <div className="p-6 overflow-y-auto max-h-[calc(80vh-80px)]">
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {allBadges.map((badge) => (
-                  <div
-                    key={badge.id}
-                    className={`text-center p-4 rounded-xl border-2 transition-all ${
-                      badge.earned
-                        ? "border-yellow-300 bg-yellow-50"
-                        : "border-gray-200 bg-gray-50 opacity-60"
-                    }`}
-                  >
-                    <div
-                      className={`text-4xl mb-2 ${!badge.earned && "grayscale"}`}
-                    >
-                      {badge.icon}
-                    </div>
-                    <p className="text-sm font-medium text-gray-900 mb-1">
-                      {badge.name}
-                    </p>
-                    <p className="text-xs text-gray-600 mb-2">
-                      {badge.description}
-                    </p>
-                    {badge.earned ? (
-                      <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full text-xs">
-                        <Award className="w-3 h-3" />
-                        Đã đạt
-                      </div>
-                    ) : (
-                      <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-200 text-gray-600 rounded-full text-xs">
-                        🔒 Chưa mở
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -697,7 +520,7 @@ function TabButton({ active, onClick, icon, children }: any) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center justify-center gap-2 px-6 py-4 font-medium text-sm transition-colors relative whitespace-nowrap ${
+      className={`flex items-center justify-center gap-2 px-5 py-3 font-medium text-sm transition-colors relative whitespace-nowrap ${
         active ? "text-blue-600" : "text-gray-500 hover:text-gray-700"
       }`}
     >
@@ -713,10 +536,10 @@ function TabButton({ active, onClick, icon, children }: any) {
 function StatCard({ icon, label, value, highlight }: any) {
   return (
     <div
-      className={`p-4 rounded-xl ${highlight ? "bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200" : "bg-gray-50"}`}
+      className={`p-4 rounded-xl border ${highlight ? "bg-orange-50 border-orange-200" : "bg-gray-50 border-gray-200"}`}
     >
       <div className="flex items-center gap-2 mb-2">{icon}</div>
-      <div className="text-2xl font-bold text-gray-900">{value}</div>
+      <div className="text-xl font-bold text-gray-900">{value}</div>
       <div className="text-xs text-gray-600 mt-1">{label}</div>
     </div>
   );

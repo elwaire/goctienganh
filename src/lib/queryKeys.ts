@@ -20,4 +20,17 @@ export const queryKeys = {
       ["attempts", "byExamCode", examCode] as const,
     result: (attemptId: string) => ["attempts", "result", attemptId] as const,
   },
+  flashcardDecks: {
+    all: ["flashcard-decks"] as const,
+    list: (params?: Record<string, unknown>) =>
+      ["flashcard-decks", "list", params] as const,
+    detail: (deckId: string) =>
+      ["flashcard-decks", "detail", deckId] as const,
+    cards: (deckId: string, params?: Record<string, unknown>) =>
+      ["flashcard-decks", deckId, "cards", params] as const,
+    studyStats: (deckId: string) =>
+      ["flashcard-decks", deckId, "study-stats"] as const,
+    studyHistory: (deckId: string, params?: Record<string, unknown>) =>
+      ["flashcard-decks", deckId, "study-history", params] as const,
+  },
 };
