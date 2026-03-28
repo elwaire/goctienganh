@@ -1,9 +1,9 @@
 import { BookOpen, Keyboard, Play, Loader2 } from "lucide-react";
-import type { DeckResponse } from "@/types/flashcard";
+import type { VocabularySetWithWords } from "@/types/vocabulary";
 import { INTRO_SHORTCUTS } from "../_constants";
 
 interface IntroScreenProps {
-  deck: DeckResponse;
+  deck: VocabularySetWithWords;
   cardCount: number;
   isStarting: boolean;
   onStart: () => void;

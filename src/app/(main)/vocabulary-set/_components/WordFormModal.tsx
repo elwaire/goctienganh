@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { X } from "lucide-react";
-import type { CardResponse, CreateCardRequest } from "@/types/flashcard";
+import type { VocabularyWord, CreateVocabularyWordRequest } from "@/types/vocabulary";
 import { WORD_TYPES, EMPTY_WORD_FORM } from "../_constants";
 
 interface WordFormModalProps {
   isOpen: boolean;
-  editingCard: CardResponse | null;
+  editingCard: VocabularyWord | null;
   onClose: () => void;
-  onSave: (data: CreateCardRequest) => void;
+  onSave: (data: CreateVocabularyWordRequest) => void;
 }
 
 export function WordFormModal({

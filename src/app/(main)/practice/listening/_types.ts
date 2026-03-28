@@ -1,4 +1,4 @@
-import type { CardResponse } from "@/types/flashcard";
+import type { VocabularyWord } from "@/types/vocabulary";
 
 export type GameState = "intro" | "playing" | "results";
 
@@ -10,7 +10,7 @@ export type ListeningQuestionType =
 export interface ListeningQuestion {
   id: string;
   type: ListeningQuestionType;
-  card: CardResponse;
+  card: VocabularyWord;
   prompt: string;
   audioText: string;
   audioLang: "en" | "vi";
@@ -40,7 +40,7 @@ const QUESTION_TYPES: ListeningQuestionType[] = [
 
 /** Generate listening questions from cards (random question type per card) */
 export function generateListeningQuestions(
-  cards: CardResponse[],
+  cards: VocabularyWord[],
 ): ListeningQuestion[] {
   return cards.map((card) => {
     const type =

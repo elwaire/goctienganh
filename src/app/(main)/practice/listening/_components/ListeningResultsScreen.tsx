@@ -1,4 +1,4 @@
-import { Check, XCircle, Clock, RotateCcw, Home, Loader2 } from "lucide-react";
+import { Check, XCircle, Clock, RotateCcw, Home } from "lucide-react";
 import type { ListeningResult } from "../_types";
 
 interface ListeningResultsScreenProps {
@@ -7,7 +7,6 @@ interface ListeningResultsScreenProps {
   totalCount: number;
   elapsedTime: string;
   results: ListeningResult[];
-  isRestarting: boolean;
   onRestart: () => void;
   onExit: () => void;
 }
@@ -18,7 +17,6 @@ export function ListeningResultsScreen({
   totalCount,
   elapsedTime,
   results,
-  isRestarting,
   onRestart,
   onExit,
 }: ListeningResultsScreenProps) {
@@ -110,14 +108,9 @@ export function ListeningResultsScreen({
           <div className="flex gap-3">
             <button
               onClick={onRestart}
-              disabled={isRestarting}
               className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
             >
-              {isRestarting ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <RotateCcw className="w-5 h-5" />
-              )}
+              <RotateCcw className="w-5 h-5" />
               Học lại
             </button>
             <button

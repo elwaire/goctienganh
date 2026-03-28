@@ -1,23 +1,46 @@
+import { useState, useRef, useEffect } from "react";
 import {
   ArrowLeft,
   BookOpen,
   TrendingUp,
   Award,
   Clock,
-  Play,
   MoreVertical,
+  Globe,
+  Lock,
+  Edit,
+  Trash2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import type { DeckWithCardsResponse, DeckStudyStatsResponse } from "@/types/flashcard";
+import type {
+  VocabularySetWithWords,
+} from "@/types/vocabulary";
+
 
 interface DeckHeaderProps {
-  deck: DeckWithCardsResponse;
-  stats?: DeckStudyStatsResponse;
-  onStartGame: () => void;
+  deck: VocabularySetWithWords;
+  stats?: any; // Temporarily any until we have stats in new API
+  onEditDeck?: () => void;
+  onDeleteDeck?: () => void;
 }
 
-export function DeckHeader({ deck, stats, onStartGame }: DeckHeaderProps) {
+export function DeckHeader({ deck, stats, onEditDeck, onDeleteDeck }: DeckHeaderProps) {
   const router = useRouter();
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const progress = stats ? Math.round(stats.progress * 100) : 0;
+  const accuracy = stats ? Math.round(stats.accuracy * 100) : 0;
 
   return (
     <div className="mb-6">
@@ -29,75 +52,114 @@ export function DeckHeader({ deck, stats, onStartGame }: DeckHeaderProps) {
         <span className="font-medium">Quay lại</span>
       </button>
 
-      <div className="bg-white rounded-2xl border border-gray-200 p-5">
-        <div className="flex items-start justify-between">
+      <div className="bg-white rounded-2xl border border-gray-200 p-6">
+        {/* Title & Meta */}
+        <div className="flex items-start justify-between mb-5">
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              {deck.title}
-            </h1>
-            {deck.description && (
-              <p className="text-gray-600 text-sm mb-4">{deck.description}</p>
-            )}
-
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <QuickStat
-                icon={<BookOpen className="w-4 h-4 text-blue-600" />}
-                value={`${deck.cards.length}`}
-                label="Từ vựng"
-              />
-              <QuickStat
-                icon={<TrendingUp className="w-4 h-4 text-green-600" />}
-                value={`${stats ? Math.round(stats.progress * 100) : 0}%`}
-                label="Hoàn thành"
-              />
-              <QuickStat
-                icon={<Award className="w-4 h-4 text-yellow-600" />}
-                value={`${stats ? Math.round(stats.accuracy * 100) : 0}%`}
-                label="Chính xác"
-              />
-              <QuickStat
-                icon={<Clock className="w-4 h-4 text-purple-600" />}
-                value={`${stats?.total_sessions ?? 0}`}
-                label="Lần học"
-              />
+            <div className="flex items-center gap-2 mb-2">
+              <h1 className="text-2xl font-bold text-gray-900">{deck.title}</h1>
+              {deck.is_public ? (
+                <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-md">
+                  <Globe className="w-3 h-3" />
+                  Công khai
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-md">
+                  <Lock className="w-3 h-3" />
+                  Riêng tư
+                </span>
+              )}
             </div>
+            {deck.description && (
+              <p className="text-gray-600 text-sm">{deck.description}</p>
+            )}
           </div>
 
           {/* Actions */}
           <div className="flex items-center gap-2 ml-4">
-            <button
-              onClick={onStartGame}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors text-sm"
-            >
-              <Play className="w-4 h-4" />
-              Học ngay
-            </button>
-            <button className="p-2 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">
-              <MoreVertical className="w-4 h-4 text-gray-700" />
-            </button>
+            {deck.is_owner && (
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setShowDropdown(!showDropdown)}
+                  className={`h-[44px] w-[44px] rounded-full justify-center items-center flex transition-colors ${
+                    showDropdown ? "bg-gray-200" : "bg-gray-100 hover:bg-gray-200"
+                  }`}
+                >
+                  <MoreVertical className="w-4 h-4 text-gray-700" />
+                </button>
+                
+                {showDropdown && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-20 py-1">
+                    <button
+                      onClick={() => {
+                        setShowDropdown(false);
+                        onEditDeck?.();
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors cursor-pointer"
+                    >
+                      <Edit className="w-4 h-4" />
+                      Sửa bộ từ
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowDropdown(false);
+                        onDeleteDeck?.();
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Xóa bộ từ
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
+          <StatCard
+            icon={<BookOpen className="w-5 h-5 text-blue-600" />}
+            value={deck.words.length}
+            label="Từ vựng"
+            bgColor="bg-blue-50"
+            borderColor="border-blue-200"
+          />
+          <StatCard
+            icon={<Clock className="w-5 h-5 text-purple-600" />}
+            value={new Date(deck.created_at).toLocaleDateString("vi-VN")}
+            label="Ngày tạo"
+            bgColor="bg-purple-50"
+            borderColor="border-purple-200"
+          />
         </div>
       </div>
     </div>
   );
 }
 
-function QuickStat({
+function StatCard({
   icon,
   value,
   label,
+  bgColor,
+  borderColor,
 }: {
   icon: React.ReactNode;
-  value: string;
+  value: string | number;
   label: string;
+  bgColor: string;
+  borderColor: string;
 }) {
   return (
-    <div className="flex items-center gap-2">
-      {icon}
-      <div>
-        <p className="text-lg font-bold text-gray-900">{value}</p>
-        <p className="text-xs text-gray-600">{label}</p>
+    <div className={`${bgColor} border ${borderColor} rounded-xl p-4`}>
+      <div className="flex items-center gap-3">
+        <div className="flex-shrink-0">{icon}</div>
+        <div className="min-w-0">
+          <p className="text-xl font-bold text-gray-900 truncate">{value}</p>
+          <p className="text-xs text-gray-600 truncate">{label}</p>
+        </div>
       </div>
     </div>
   );

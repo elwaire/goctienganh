@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, AlertCircle, ArrowLeft } from "lucide-react";
-import { flashcardApi } from "@/api/flashcardApi";
+import { vocabularyApi } from "@/api/vocabularyApi";
 import { queryKeys } from "@/lib/queryKeys";
 import { toFlashcardWord } from "./_types";
 import { useFlashcardGame, useKeyboardShortcuts, useSpeech } from "./_hooks";
@@ -20,15 +20,15 @@ export default function FlashcardPage() {
     isLoading,
     isError,
   } = useQuery({
-    queryKey: queryKeys.flashcardDecks.detail(deckId),
-    queryFn: () => flashcardApi.getDeck(deckId),
+    queryKey: ["vocabularySets", "detail", deckId],
+    queryFn: () => vocabularyApi.getSet(deckId),
     enabled: !!deckId,
   });
 
   // Convert API cards → view-model
   const words = useMemo(
-    () => (deckData?.cards ?? []).map(toFlashcardWord),
-    [deckData?.cards],
+    () => (deckData?.words ?? []).map(toFlashcardWord),
+    [deckData?.words],
   );
 
   // ─── Hooks ───
@@ -103,7 +103,7 @@ export default function FlashcardPage() {
       <IntroScreen
         deck={deckData}
         cardCount={words.length}
-        isStarting={game.isSubmitting}
+        isStarting={false}
         onStart={game.handleStart}
       />
     );
@@ -117,8 +117,6 @@ export default function FlashcardPage() {
         totalCount={words.length}
         elapsedTime={game.getElapsedTime()}
         results={game.results}
-        completionData={game.completionData}
-        isRestarting={game.isSubmitting}
         onRestart={game.handleRestart}
         onExit={game.handleExit}
       />

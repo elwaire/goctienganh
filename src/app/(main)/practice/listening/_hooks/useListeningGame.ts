@@ -1,6 +1,5 @@
 import { useState, useCallback, useRef } from "react";
-import type { CardResponse } from "@/types/flashcard";
-import { flashcardApi } from "@/api/flashcardApi";
+import type { VocabularyWord } from "@/types/vocabulary";
 import type {
   ListeningQuestion,
   ListeningResult,
@@ -10,7 +9,7 @@ import { generateListeningQuestions, normalizeAnswer } from "../_types";
 
 interface UseListeningGameOptions {
   deckId: string;
-  cards: CardResponse[];
+  cards: VocabularyWord[];
 }
 
 export function useListeningGame({ deckId, cards }: UseListeningGameOptions) {
@@ -21,8 +20,6 @@ export function useListeningGame({ deckId, cards }: UseListeningGameOptions) {
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [results, setResults] = useState<ListeningResult[]>([]);
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasPlayed, setHasPlayed] = useState(false);
 
@@ -64,26 +61,14 @@ export function useListeningGame({ deckId, cards }: UseListeningGameOptions) {
   }, [currentQuestion, playAudio]);
 
   // ─── Start ───
-  const handleStart = useCallback(async () => {
+  const handleStart = useCallback(() => {
     const generated = generateListeningQuestions(cards);
     setQuestions(generated);
-
-    try {
-      setIsSubmitting(true);
-      const session = await flashcardApi.startStudySession(deckId, {
-        mode: "listening",
-      });
-      setSessionId(session.id);
-    } catch (err) {
-      console.error("Failed to start session:", err);
-    } finally {
-      setIsSubmitting(false);
-    }
 
     sessionStartRef.current = Date.now();
     questionStartRef.current = Date.now();
     setGameState("playing");
-  }, [cards, deckId]);
+  }, [cards]);
 
   // ─── Check answer ───
   const checkAnswer = useCallback(() => {
@@ -106,18 +91,7 @@ export function useListeningGame({ deckId, cards }: UseListeningGameOptions) {
       timeSpentMs,
     };
     setResults((prev) => [...prev, result]);
-
-    // Record to API (fire-and-forget)
-    if (sessionId) {
-      flashcardApi
-        .recordStudy(deckId, sessionId, {
-          card_id: currentQuestion.card.id,
-          is_correct: isAnswerCorrect,
-          time_spent_ms: timeSpentMs,
-        })
-        .catch((err) => console.error("Failed to record:", err));
-    }
-  }, [userAnswer, currentQuestion, sessionId, deckId]);
+  }, [userAnswer, currentQuestion]);
 
   // ─── Next / Complete ───
   const handleNext = useCallback(() => {
@@ -130,14 +104,9 @@ export function useListeningGame({ deckId, cards }: UseListeningGameOptions) {
       questionStartRef.current = Date.now();
       setTimeout(() => inputRef.current?.focus(), 100);
     } else {
-      if (sessionId) {
-        flashcardApi
-          .completeStudySession(deckId, sessionId)
-          .catch((err) => console.error("Failed to complete:", err));
-      }
       setGameState("results");
     }
-  }, [currentIndex, questions.length, sessionId, deckId]);
+  }, [currentIndex, questions.length]);
 
   const handleSubmit = useCallback(
     (e?: React.FormEvent) => {
@@ -149,7 +118,7 @@ export function useListeningGame({ deckId, cards }: UseListeningGameOptions) {
   );
 
   // ─── Restart ───
-  const handleRestart = useCallback(async () => {
+  const handleRestart = useCallback(() => {
     const generated = generateListeningQuestions(cards);
     setQuestions(generated);
     setCurrentIndex(0);
@@ -159,22 +128,10 @@ export function useListeningGame({ deckId, cards }: UseListeningGameOptions) {
     setResults([]);
     setHasPlayed(false);
 
-    try {
-      setIsSubmitting(true);
-      const session = await flashcardApi.startStudySession(deckId, {
-        mode: "listening",
-      });
-      setSessionId(session.id);
-    } catch (err) {
-      console.error("Failed to start session:", err);
-    } finally {
-      setIsSubmitting(false);
-    }
-
     sessionStartRef.current = Date.now();
     questionStartRef.current = Date.now();
     setGameState("playing");
-  }, [cards, deckId]);
+  }, [cards]);
 
   const handleExit = useCallback(() => {
     if (typeof window !== "undefined") window.history.back();
@@ -199,7 +156,6 @@ export function useListeningGame({ deckId, cards }: UseListeningGameOptions) {
     progress,
     correctCount,
     wrongCount,
-    isSubmitting,
     isPlaying,
     hasPlayed,
     inputRef,

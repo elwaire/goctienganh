@@ -5,19 +5,20 @@ import { useParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Loader2, AlertCircle, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { flashcardApi } from "@/api/flashcardApi";
+import { vocabularyApi } from "@/api/vocabularyApi";
 import { queryKeys } from "@/lib/queryKeys";
-import type { CardResponse, CreateCardRequest } from "@/types/flashcard";
+import type { VocabularyWord, CreateVocabularyWordRequest, CreateVocabularySetRequest } from "@/types/vocabulary";
 import {
   DeckHeader,
   WordCard,
   WordFormModal,
   WordListEmptyState,
-  GameModeModal,
   StudyHistoryPanel,
   StudyStatsPanel,
+  CreateDeckModal,
 } from "../_components";
 import { useSpeech } from "../_hooks";
+import { ButtonPrimary } from "@/components/ui";
 
 export default function VocabularySetDetailPage() {
   const router = useRouter();
@@ -27,8 +28,8 @@ export default function VocabularySetDetailPage() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [showWordModal, setShowWordModal] = useState(false);
-  const [showGameModal, setShowGameModal] = useState(false);
-  const [editingCard, setEditingCard] = useState<CardResponse | null>(null);
+  const [showEditDeckModal, setShowEditDeckModal] = useState(false);
+  const [editingCard, setEditingCard] = useState<VocabularyWord | null>(null);
 
   const { speak } = useSpeech();
 
@@ -38,28 +39,19 @@ export default function VocabularySetDetailPage() {
     isLoading,
     isError,
   } = useQuery({
-    queryKey: queryKeys.flashcardDecks.detail(deckId),
-    queryFn: () => flashcardApi.getDeck(deckId),
+    queryKey: ["vocabularySets", "detail", deckId],
+    queryFn: () => vocabularyApi.getSet(deckId),
     enabled: !!deckId,
   });
 
-  // ─── Fetch study stats ───
-  const { data: studyStats } = useQuery({
-    queryKey: queryKeys.flashcardDecks.studyStats(deckId),
-    queryFn: () => flashcardApi.getStudyStats(deckId),
-    enabled: !!deckId,
-  });
-
-  // ─── Fetch study history ───
-  const { data: historyData } = useQuery({
-    queryKey: queryKeys.flashcardDecks.studyHistory(deckId),
-    queryFn: () => flashcardApi.getStudyHistory(deckId),
-    enabled: !!deckId,
-  });
+  // Study stats and history are currently not supported in new API.
+  // We keep them as null for now or hide if they are missing.
+  const studyStats: any = null;
+  const historyData: any = null;
 
   // ─── Filtered cards ───
   const filteredCards = useMemo(() => {
-    const cards = deckData?.cards ?? [];
+    const cards = deckData?.words ?? [];
     if (!searchQuery) return cards;
     const q = searchQuery.toLowerCase();
     return cards.filter(
@@ -67,15 +59,15 @@ export default function VocabularySetDetailPage() {
         c.term.toLowerCase().includes(q) ||
         c.definition.toLowerCase().includes(q),
     );
-  }, [deckData?.cards, searchQuery]);
+  }, [deckData?.words, searchQuery]);
 
   // ─── Mutations ───
   const createCardMutation = useMutation({
-    mutationFn: (data: CreateCardRequest) =>
-      flashcardApi.createCard(deckId, data),
+    mutationFn: (data: CreateVocabularyWordRequest) =>
+      vocabularyApi.createWord(deckId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.flashcardDecks.detail(deckId),
+        queryKey: ["vocabularySets", "detail", deckId],
       });
       setShowWordModal(false);
     },
@@ -87,11 +79,11 @@ export default function VocabularySetDetailPage() {
       data,
     }: {
       cardId: string;
-      data: Partial<CreateCardRequest>;
-    }) => flashcardApi.updateCard(deckId, cardId, data),
+      data: Partial<CreateVocabularyWordRequest>;
+    }) => vocabularyApi.updateWord(deckId, cardId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.flashcardDecks.detail(deckId),
+        queryKey: ["vocabularySets", "detail", deckId],
       });
       setShowWordModal(false);
       setEditingCard(null);
@@ -99,11 +91,34 @@ export default function VocabularySetDetailPage() {
   });
 
   const deleteCardMutation = useMutation({
-    mutationFn: (cardId: string) => flashcardApi.deleteCard(deckId, cardId),
+    mutationFn: (cardId: string) => vocabularyApi.deleteWord(deckId, cardId),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.flashcardDecks.detail(deckId),
+        queryKey: ["vocabularySets", "detail", deckId],
       });
+    },
+  });
+
+  const updateDeckMutation = useMutation({
+    mutationFn: (data: CreateVocabularySetRequest) => vocabularyApi.updateSet(deckId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["vocabularySets", "detail", deckId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["vocabularySets"],
+      });
+      setShowEditDeckModal(false);
+    },
+  });
+
+  const deleteDeckMutation = useMutation({
+    mutationFn: () => vocabularyApi.deleteSet(deckId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["vocabularySets"],
+      });
+      router.push("/vocabulary-set");
     },
   });
 
@@ -113,12 +128,12 @@ export default function VocabularySetDetailPage() {
     setShowWordModal(true);
   };
 
-  const handleOpenEditModal = (card: CardResponse) => {
+  const handleOpenEditModal = (card: VocabularyWord) => {
     setEditingCard(card);
     setShowWordModal(true);
   };
 
-  const handleSaveWord = (data: CreateCardRequest) => {
+  const handleSaveWord = (data: CreateVocabularyWordRequest) => {
     if (editingCard) {
       updateCardMutation.mutate({ cardId: editingCard.id, data });
     } else {
@@ -129,6 +144,28 @@ export default function VocabularySetDetailPage() {
   const handleDeleteWord = (cardId: string) => {
     if (confirm("Bạn có chắc muốn xóa từ này?")) {
       deleteCardMutation.mutate(cardId);
+    }
+  };
+
+  const handleEditDeck = () => {
+    setShowEditDeckModal(true);
+  };
+
+  const handleSaveDeck = (data: {
+    title: string;
+    description: string;
+    is_public: boolean;
+  }) => {
+    updateDeckMutation.mutate(data);
+  };
+
+  const handleDeleteDeck = () => {
+    if (
+      confirm(
+        "Bạn có chắc chắn muốn xoá bộ từ này không? Hành động này không thể hoàn tác.",
+      )
+    ) {
+      deleteDeckMutation.mutate();
     }
   };
 
@@ -159,41 +196,41 @@ export default function VocabularySetDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen ">
       <div className="max-w-6xl mx-auto">
         {/* Deck Header */}
         <DeckHeader
           deck={deckData}
           stats={studyStats}
-          onStartGame={() => setShowGameModal(true)}
+          onEditDeck={handleEditDeck}
+          onDeleteDeck={handleDeleteDeck}
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left — Word List */}
           <div className="lg:col-span-2 space-y-6">
             {/* Toolbar */}
-            <div className="bg-white rounded-2xl border border-gray-200 p-4">
-              <div className="flex items-center gap-3">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Tìm từ vựng..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                  />
-                </div>
-                {deckData.is_owner && (
-                  <button
-                    onClick={handleOpenAddModal}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors text-sm whitespace-nowrap"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Thêm từ
-                  </button>
-                )}
+            <div className="flex items-center gap-3">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Tìm từ vựng..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 h-[44px] bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                />
               </div>
+              {deckData.is_owner && (
+                <ButtonPrimary
+                  onClick={handleOpenAddModal}
+                  variant="outline"
+                  rounded="md"
+                >
+                  <Plus className="w-4 h-4" />
+                  Thêm từ
+                </ButtonPrimary>
+              )}
             </div>
 
             {/* Words */}
@@ -220,20 +257,11 @@ export default function VocabularySetDetailPage() {
 
           {/* Right — Stats & History */}
           <div className="space-y-6">
-            <StudyHistoryPanel sessions={historyData?.sessions ?? []} />
-            <StudyStatsPanel stats={studyStats} />
+            {historyData && <StudyHistoryPanel sessions={historyData?.sessions ?? []} />}
+            {studyStats && <StudyStatsPanel stats={studyStats} />}
           </div>
         </div>
       </div>
-
-      {/* Game Mode Modal */}
-      <GameModeModal
-        isOpen={showGameModal}
-        deckId={deckId}
-        deckTitle={deckData.title}
-        cardCount={deckData.cards.length}
-        onClose={() => setShowGameModal(false)}
-      />
 
       {/* Word Add/Edit Modal */}
       {showWordModal && (
@@ -247,6 +275,23 @@ export default function VocabularySetDetailPage() {
           onSave={handleSaveWord}
         />
       )}
+
+      {/* Edit Deck Modal */}
+      <CreateDeckModal
+        isOpen={showEditDeckModal}
+        isCreating={updateDeckMutation.isPending}
+        editingDeck={
+          deckData
+            ? {
+                title: deckData.title,
+                description: deckData.description,
+                is_public: deckData.is_public,
+              }
+            : undefined
+        }
+        onClose={() => setShowEditDeckModal(false)}
+        onSave={handleSaveDeck}
+      />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import type { CardResponse } from "@/types/flashcard";
+import type { VocabularyWord } from "@/types/vocabulary";
 
 export interface CardResult {
   cardId: string;
@@ -15,7 +15,7 @@ export interface ShortcutConfig {
 }
 
 /**
- * Adapter: Maps CardResponse (API shape) to a simpler view-model
+ * Adapter: Maps VocabularyWord (API shape) to a simpler view-model
  * used by the Flashcard UI component.
  */
 export interface FlashcardWord {
@@ -28,8 +28,8 @@ export interface FlashcardWord {
   translation?: string;
 }
 
-/** Convert API CardResponse → FlashcardWord for rendering */
-export function toFlashcardWord(card: CardResponse): FlashcardWord {
+/** Convert API VocabularyWord → FlashcardWord for rendering */
+export function toFlashcardWord(card: VocabularyWord): FlashcardWord {
   return {
     id: card.id,
     word: card.term,

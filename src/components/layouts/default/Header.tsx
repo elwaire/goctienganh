@@ -1,15 +1,6 @@
 "use client";
 
-import {
-  Bell,
-  Search,
-  ChevronDown,
-  Sparkles,
-  LogOut,
-  User,
-  Award,
-  Settings,
-} from "lucide-react";
+import { Search, ChevronDown, LogOut, User } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
@@ -44,28 +35,7 @@ export default function Header() {
   };
 
   return (
-    <header className="p-3 bg-white rounded-2xl border border-slate-200  flex items-center justify-between sticky top-0 z-40">
-      {/* Center - Search Bar */}
-      <div className="flex-1 max-w-md  hidden md:block">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
-          <input
-            type="text"
-            placeholder="Search lessons, flashcards..."
-            className="
-              w-full pl-10 pr-4 py-2 
-              bg-neutral-50 border border-neutral-200 rounded-xl
-              text-sm text-neutral-700 placeholder:text-neutral-400
-              focus:outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100
-              transition-all
-            "
-          />
-          <kbd className="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-0.5 text-xs text-neutral-400 bg-white border border-neutral-200 rounded-md hidden lg:inline-block">
-            ⌘K
-          </kbd>
-        </div>
-      </div>
-
+    <header className="p-3 bg-white rounded-2xl border border-slate-200  flex items-center justify-end sticky top-0 z-40">
       {/* Right - Actions & Profile */}
       <div className="flex items-center gap-2">
         {/* Streak */}
@@ -74,12 +44,6 @@ export default function Header() {
           <span className="text-sm font-medium">12</span>
         </div>
         <LanguageSwitcher />
-
-        {/* Notifications */}
-        <button className="relative p-2.5 hover:bg-neutral-50 rounded-xl transition-colors">
-          <Bell className="w-5 h-5 text-neutral-600" />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full" />
-        </button>
 
         {/* Divider */}
         <div className="w-px h-8 bg-neutral-200 mx-2 hidden sm:block" />
@@ -137,14 +101,6 @@ export default function Header() {
                       setIsProfileOpen(false);
                       router.push("/profile");
                     }}
-                  />
-                  <DropdownItem
-                    icon={<Award className="w-4 h-4" />}
-                    label="Achievements"
-                  />
-                  <DropdownItem
-                    icon={<Settings className="w-4 h-4" />}
-                    label="Settings"
                   />
                 </div>
                 <div className="border-t border-neutral-100 pt-1">

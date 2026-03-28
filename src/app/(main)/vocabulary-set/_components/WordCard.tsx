@@ -1,10 +1,10 @@
 import { Volume2, Edit, Trash2, Check } from "lucide-react";
-import type { CardResponse } from "@/types/flashcard";
+import type { VocabularyWord } from "@/types/vocabulary";
 
 interface WordCardProps {
-  card: CardResponse;
+  card: VocabularyWord;
   isOwner: boolean;
-  onEdit: (card: CardResponse) => void;
+  onEdit: (card: VocabularyWord) => void;
   onDelete: (cardId: string) => void;
   onSpeak: (text: string) => void;
 }

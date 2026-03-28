@@ -1,6 +1,5 @@
-import { Check, XCircle, Clock, RotateCcw, Home, Loader2 } from "lucide-react";
+import { Check, XCircle, Clock, RotateCcw, Home } from "lucide-react";
 import type { CardResult } from "../_types";
-import type { CompleteStudySessionResponse } from "@/types/flashcard";
 
 interface ResultsScreenProps {
   masteredCount: number;
@@ -8,8 +7,6 @@ interface ResultsScreenProps {
   totalCount: number;
   elapsedTime: string;
   results: CardResult[];
-  completionData: CompleteStudySessionResponse | null;
-  isRestarting: boolean;
   onRestart: () => void;
   onExit: () => void;
 }
@@ -20,15 +17,11 @@ export function ResultsScreen({
   totalCount,
   elapsedTime,
   results,
-  completionData,
-  isRestarting,
   onRestart,
   onExit,
 }: ResultsScreenProps) {
-  // Use server accuracy if available, otherwise calculate locally
-  const accuracy = completionData
-    ? Math.round(completionData.accuracy * 100)
-    : Math.round((masteredCount / totalCount) * 100);
+  // calculate locally
+  const accuracy = Math.round((masteredCount / totalCount) * 100);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
@@ -47,13 +40,13 @@ export function ResultsScreen({
           <div className="grid grid-cols-2 gap-4 mb-8">
             <div className="bg-gray-50 rounded-xl p-4 text-center">
               <div className="text-3xl font-bold text-blue-600 mb-1">
-                {completionData?.correct_count ?? masteredCount}
+                {masteredCount}
               </div>
               <div className="text-sm text-gray-600">Đã thuộc</div>
             </div>
             <div className="bg-gray-50 rounded-xl p-4 text-center">
               <div className="text-3xl font-bold text-gray-900 mb-1">
-                {totalCount - (completionData?.correct_count ?? masteredCount)}
+                {difficultCount}
               </div>
               <div className="text-sm text-gray-600">Cần ôn</div>
             </div>
@@ -99,14 +92,9 @@ export function ResultsScreen({
           <div className="flex gap-3">
             <button
               onClick={onRestart}
-              disabled={isRestarting}
               className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
             >
-              {isRestarting ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <RotateCcw className="w-5 h-5" />
-              )}
+              <RotateCcw className="w-5 h-5" />
               Học lại
             </button>
             <button

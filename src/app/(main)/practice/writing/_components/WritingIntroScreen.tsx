@@ -1,7 +1,7 @@
 import { PenTool, Play, Check, Keyboard, Loader2 } from "lucide-react";
 import { FileText, Languages, Type } from "lucide-react";
 import type { WritingMode } from "@/types/flashcard";
-import type { DeckResponse } from "@/types/flashcard";
+import type { VocabularySetWithWords } from "@/types/vocabulary";
 import { WRITING_MODES } from "../_types";
 
 const MODE_ICONS: Record<WritingMode, React.ReactNode> = {
@@ -11,7 +11,7 @@ const MODE_ICONS: Record<WritingMode, React.ReactNode> = {
 };
 
 interface WritingIntroScreenProps {
-  deck: DeckResponse;
+  deck: VocabularySetWithWords;
   cardCount: number;
   selectedMode: WritingMode | null;
   isStarting: boolean;

@@ -1,7 +1,7 @@
-import { Check, XCircle, Clock, RotateCcw, Home, Loader2 } from "lucide-react";
+import { Check, XCircle, Clock, RotateCcw, Home } from "lucide-react";
 import type { WritingResult } from "../_types";
 import { WRITING_MODES } from "../_types";
-import type { WritingMode } from "@/types/flashcard";
+import type { WritingMode } from "@/types/vocabulary";
 
 interface WritingResultsScreenProps {
   mode: WritingMode | null;
@@ -10,7 +10,6 @@ interface WritingResultsScreenProps {
   totalCount: number;
   elapsedTime: string;
   results: WritingResult[];
-  isRestarting: boolean;
   onRestart: () => void;
   onExit: () => void;
 }
@@ -22,7 +21,6 @@ export function WritingResultsScreen({
   totalCount,
   elapsedTime,
   results,
-  isRestarting,
   onRestart,
   onExit,
 }: WritingResultsScreenProps) {
@@ -115,14 +113,9 @@ export function WritingResultsScreen({
           <div className="flex gap-3">
             <button
               onClick={onRestart}
-              disabled={isRestarting}
               className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
             >
-              {isRestarting ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <RotateCcw className="w-5 h-5" />
-              )}
+              <RotateCcw className="w-5 h-5" />
               Học lại
             </button>
             <button

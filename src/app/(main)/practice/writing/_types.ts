@@ -1,12 +1,12 @@
 import type { WritingMode } from "@/types/flashcard";
-import type { CardResponse } from "@/types/flashcard";
+import type { VocabularyWord } from "@/types/vocabulary";
 
 export type GameState = "intro" | "playing" | "results";
 
 export interface WritingQuestion {
   id: string;
   mode: WritingMode;
-  card: CardResponse;
+  card: VocabularyWord;
   prompt: string;
   correctAnswer: string;
   blankedWord?: string;
@@ -51,7 +51,7 @@ export const WRITING_MODES: WritingModeOption[] = [
 
 /** Generate questions from cards for the given writing mode */
 export function generateQuestions(
-  cards: CardResponse[],
+  cards: VocabularyWord[],
   mode: WritingMode,
 ): WritingQuestion[] {
   return cards.map((card) => {
@@ -69,9 +69,7 @@ export function generateQuestions(
         correctAnswer = card.term;
         break;
       case "fill_blank":
-        blankedWord =
-          card.masked_term ??
-          card.term
+        blankedWord = card.term
             .split("")
             .map((char, i) => {
               if (i > 0 && i < card.term.length - 1 && Math.random() < 0.4) {
