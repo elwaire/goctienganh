@@ -24,30 +24,30 @@ export function DeckCard({ deck, onEdit, onDelete }: DeckCardProps) {
   return (
     <div className="bg-white rounded-2xl border border-gray-200 hover:shadow-lg transition-all p-4 group">
       {/* Header */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex-1">
+      <div className="flex flex-col mb-4">
+        <div className="flex items-center justify-between mb-1">
           <h3 className="font-bold text-lg text-gray-900 mb-1 line-clamp-1 group-hover:text-blue-600 transition-colors uppercase">
             {deck.title}
           </h3>
-          {deck.description && (
-            <p className="text-sm text-gray-600 line-clamp-2">
-              {deck.description}
-            </p>
-          )}
+          <div className="ml-3">
+            {deck.is_public ? (
+              <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-medium">
+                <Globe className="w-3 h-3" />
+                Public
+              </div>
+            ) : (
+              <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium">
+                <Lock className="w-3 h-3" />
+                Private
+              </div>
+            )}
+          </div>
         </div>
-        <div className="ml-3">
-          {deck.is_public ? (
-            <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-medium">
-              <Globe className="w-3 h-3" />
-              Public
-            </div>
-          ) : (
-            <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium">
-              <Lock className="w-3 h-3" />
-              Private
-            </div>
-          )}
-        </div>
+        {deck.description && (
+          <p className="text-sm text-gray-500 line-clamp-2">
+            {deck.description}
+          </p>
+        )}
       </div>
 
       {/* Stats */}

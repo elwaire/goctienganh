@@ -22,7 +22,11 @@ export default function VocabularySetPage() {
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ["vocabularySets", "list", { search: debouncedSearch || undefined }],
+    queryKey: [
+      "vocabularySets",
+      "list",
+      { search: debouncedSearch || undefined },
+    ],
     queryFn: () =>
       vocabularyApi.getSets({ search: debouncedSearch || undefined }),
   });

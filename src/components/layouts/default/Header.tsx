@@ -22,7 +22,9 @@ function getInitials(name: string): string {
 export default function Header() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const router = useRouter();
-  const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { user, isAuthenticated } = useSelector(
+    (state: RootState) => state.auth,
+  );
   const { data: streak } = useStreak();
 
   const displayName = user?.fullname || user?.username || "Learner";
@@ -42,9 +44,9 @@ export default function Header() {
       <div className="flex items-center gap-2">
         {/* Streak */}
         {isAuthenticated && streak && (
-          <div 
+          <div
             title={`Kỷ lục: ${streak.longest_streak} ngày`}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-600 rounded-full border border-amber-100/50 shadow-sm animate-in fade-in slide-in-from-right-4 duration-500 cursor-help"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-600 rounded-full border border-amber-200  animate-in fade-in slide-in-from-right-4 duration-500 cursor-help"
           >
             <span className="animate-pulse">🔥</span>
             <span className="text-sm font-bold tracking-tight">

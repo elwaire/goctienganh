@@ -1,6 +1,9 @@
 import { useState, useRef } from "react";
 import { X, Copy, Check } from "lucide-react";
-import type { VocabularyWord, CreateVocabularyWordRequest } from "@/types/vocabulary";
+import type {
+  VocabularyWord,
+  CreateVocabularyWordRequest,
+} from "@/types/vocabulary";
 import { WORD_TYPES, EMPTY_WORD_FORM } from "../_constants";
 
 interface WordFormModalProps {
@@ -58,26 +61,32 @@ export function WordFormModal({
       if (!Array.isArray(parsed)) {
         throw new Error("Dữ liệu JSON phải là một mảng (Array).");
       }
-      
-      const validatedData: CreateVocabularyWordRequest[] = parsed.map((item, index) => {
-        if (!item.term || !item.definition) {
-            throw new Error(`Từ vựng ở vị trí thứ ${index + 1} ('${item.term || 'không tên'}') thiếu trường bắt buộc (term, definition).`);
-        }
-        return {
-          term: item.term,
-          phonetic: item.phonetic,
-          word_type: item.word_type,
-          definition: item.definition,
-          example_sentence: item.example_sentence,
-          example_translation: item.example_translation
-        };
-      });
+
+      const validatedData: CreateVocabularyWordRequest[] = parsed.map(
+        (item, index) => {
+          if (!item.term || !item.definition) {
+            throw new Error(
+              `Từ vựng ở vị trí thứ ${index + 1} ('${item.term || "không tên"}') thiếu trường bắt buộc (term, definition).`,
+            );
+          }
+          return {
+            term: item.term,
+            phonetic: item.phonetic,
+            word_type: item.word_type,
+            definition: item.definition,
+            example_sentence: item.example_sentence,
+            example_translation: item.example_translation,
+          };
+        },
+      );
 
       if (onSaveBulk) {
         onSaveBulk(validatedData);
       }
-    } catch(err: any) {
-        setJsonError(err.message || "JSON không hợp lệ. Vui lòng kiểm tra lại cú pháp.");
+    } catch (err: any) {
+      setJsonError(
+        err.message || "JSON không hợp lệ. Vui lòng kiểm tra lại cú pháp.",
+      );
     }
   };
 
@@ -117,18 +126,18 @@ Chỉ trả về định dạng JSON array chuẩn, không kèm theo bất kỳ 
               <X className="w-5 h-5 text-gray-500" />
             </button>
           </div>
-          
+
           {!editingCard && (
             <div className="flex gap-4 mt-2">
               <button
-                 className={`py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'manual' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-                 onClick={() => setActiveTab('manual')}
+                className={`py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === "manual" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+                onClick={() => setActiveTab("manual")}
               >
                 Thêm thủ công
               </button>
               <button
-                 className={`py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'json' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
-                 onClick={() => setActiveTab('json')}
+                className={`py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === "json" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+                onClick={() => setActiveTab("json")}
               >
                 Thêm hàng loạt (JSON)
               </button>
@@ -205,7 +214,9 @@ Chỉ trả về định dạng JSON array chuẩn, không kèm theo bất kỳ 
                   type="text"
                   placeholder="VD: She accomplished her goal"
                   value={form.example_sentence}
-                  onChange={(e) => updateField("example_sentence", e.target.value)}
+                  onChange={(e) =>
+                    updateField("example_sentence", e.target.value)
+                  }
                   className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 />
               </div>
@@ -247,18 +258,31 @@ Chỉ trả về định dạng JSON array chuẩn, không kèm theo bất kỳ 
             <div className="p-5 space-y-5">
               <div className="bg-blue-50/50 border border-blue-200 p-5 rounded-2xl text-sm text-blue-900">
                 <div className="flex justify-between items-start mb-2">
-                  <p className="font-bold text-base">Hướng dẫn tạo dữ liệu JSON:</p>
-                  <button 
+                  <p className="font-bold text-base">
+                    Hướng dẫn tạo dữ liệu JSON:
+                  </p>
+                  <button
                     onClick={copyPrompt}
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors text-blue-700 font-medium whitespace-nowrap"
                   >
-                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    {copied ? (
+                      <Check className="w-4 h-4" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
                     {copied ? "Đã chép" : "Copy Prompt"}
                   </button>
                 </div>
-                <p className="mb-3 text-blue-800">Bạn có thể copy đoạn yêu cầu (prompt) dưới đây và dán vào ChatGPT (hoặc Claude, Gemini) để trí tuệ nhân tạo sinh ra danh sách từ vựng theo đúng định dạng JSON chuẩn. Sau đó copy JSON sinh ra dán vào ô bên dưới:</p>
+                <p className="mb-3 text-blue-800">
+                  Bạn có thể copy đoạn yêu cầu (prompt) dưới đây và dán vào
+                  ChatGPT (hoặc Claude, Gemini) để trí tuệ nhân tạo sinh ra danh
+                  sách từ vựng theo đúng định dạng JSON chuẩn. Sau đó copy JSON
+                  sinh ra dán vào ô bên dưới:
+                </p>
                 <div className="relative group">
-                  <pre className="bg-white/70 p-4 rounded-xl text-[13px] font-mono overflow-x-auto border border-blue-100 whitespace-pre-wrap text-slate-700">{PROMPT_TEXT}</pre>
+                  <pre className="bg-white/70 p-4 rounded-xl text-[13px] font-mono overflow-x-auto border border-blue-100 whitespace-pre-wrap text-slate-700">
+                    {PROMPT_TEXT}
+                  </pre>
                 </div>
               </div>
 
@@ -266,14 +290,14 @@ Chỉ trả về định dạng JSON array chuẩn, không kèm theo bất kỳ 
                 <label className="block text-sm font-bold text-gray-900 mb-2">
                   Dán mã JSON vào đây:
                 </label>
-                <textarea 
+                <textarea
                   value={jsonInput}
                   onChange={(e) => {
-                      setJsonInput(e.target.value);
-                      if (jsonError) setJsonError("");
+                    setJsonInput(e.target.value);
+                    if (jsonError) setJsonError("");
                   }}
                   rows={8}
-                  className={`w-full px-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm leading-relaxed transition-colors ${jsonError ? 'border-red-300 ring-1 ring-red-100' : 'border-gray-200'}`}
+                  className={`w-full px-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm leading-relaxed transition-colors ${jsonError ? "border-red-300 ring-1 ring-red-100" : "border-gray-200"}`}
                   placeholder="[
   {
     &#34;term&#34;: &#34;Accomplish&#34;,
