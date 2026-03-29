@@ -171,21 +171,39 @@ Chỉ trả về định dạng JSON array chuẩn, không kèm theo bất kỳ 
             <div className="p-5 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Từ vựng <span className="text-red-500">*</span>
+                  {t("term")} <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  placeholder="VD: Accomplish"
-                  value={form.term}
-                  onChange={(e) => updateField("term", e.target.value)}
-                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="VD: Accomplish"
+                    value={form.term}
+                    onChange={(e) => updateField("term", e.target.value)}
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm italic"
+                  />
+                  {form.term.length > 0 && (
+                    <button
+                      onClick={handleTranslate}
+                      disabled={isTranslating}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors flex items-center gap-1.5"
+                    >
+                      {isTranslating ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Languages className="w-3.5 h-3.5" />
+                      )}
+                      <span className="text-[10px] font-bold uppercase tracking-wider">
+                        Auto VN→EN
+                      </span>
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Phiên âm
+                    {t("phonetic")}
                   </label>
                   <input
                     type="text"
@@ -198,7 +216,7 @@ Chỉ trả về định dạng JSON array chuẩn, không kèm theo bất kỳ 
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Loại từ
+                    {t("wordType")}
                   </label>
                   <select
                     value={form.word_type}
@@ -216,7 +234,7 @@ Chỉ trả về định dạng JSON array chuẩn, không kèm theo bất kỳ 
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nghĩa tiếng Việt <span className="text-red-500">*</span>
+                  {t("definition")} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -229,7 +247,7 @@ Chỉ trả về định dạng JSON array chuẩn, không kèm theo bất kỳ 
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Ví dụ
+                  {t("example")}
                 </label>
                 <input
                   type="text"
@@ -244,7 +262,7 @@ Chỉ trả về định dạng JSON array chuẩn, không kèm theo bất kỳ 
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Dịch ví dụ
+                  {t("exampleTranslation")}
                 </label>
                 <input
                   type="text"
@@ -263,17 +281,18 @@ Chỉ trả về định dạng JSON array chuẩn, không kèm theo bất kỳ 
                 onClick={onClose}
                 className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors"
               >
-                Hủy
+                {t("cancel")}
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={!form.term || !form.definition}
                 className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {editingCard ? "Lưu thay đổi" : "Thêm từ"}
+                {editingCard ? t("save") : t("add")}
               </button>
             </div>
           </>
+
         ) : (
           <>
             <div className="p-5 space-y-5">
