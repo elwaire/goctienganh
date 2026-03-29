@@ -32,6 +32,21 @@ export const QUESTION_TYPE_LABELS: Record<ListeningQuestionType, string> = {
   LISTEN_VN_WRITE_EN: "Nghe nghĩa viết từ",
 };
 
+export function listeningInputPlaceholder(
+  type: ListeningQuestionType,
+): string {
+  switch (type) {
+    case "LISTEN_EN_WRITE_EN":
+      return "Nhập từ tiếng Anh...";
+    case "LISTEN_EN_WRITE_VN":
+      return "Nhập nghĩa tiếng Việt...";
+    case "LISTEN_VN_WRITE_EN":
+      return "Nhập từ tiếng Anh...";
+    default:
+      return "Nhập câu trả lời...";
+  }
+}
+
 const QUESTION_TYPES: ListeningQuestionType[] = [
   "LISTEN_EN_WRITE_EN",
   "LISTEN_EN_WRITE_VN",

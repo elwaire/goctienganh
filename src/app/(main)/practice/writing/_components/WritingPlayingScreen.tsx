@@ -16,7 +16,7 @@ interface WritingPlayingScreenProps {
   inputRef: React.RefObject<HTMLInputElement | null>;
   onAnswerChange: (value: string) => void;
   onSubmit: (e?: React.FormEvent) => void;
-  onSpeak: (text: string) => void;
+  onSpeak: (text: string, lang?: "en" | "vi") => void;
   onExit: () => void;
 }
 
@@ -125,9 +125,10 @@ export function WritingPlayingScreen({
             </span>
             {question.mode === "vi_to_en" && (
               <button
-                onClick={() => onSpeak(question.correctAnswer)}
+                type="button"
+                onClick={() => onSpeak(question.card.definition, "vi")}
                 className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Nghe phát âm"
+                title="Nghe câu hỏi (tiếng Việt)"
               >
                 <Volume2 className="w-5 h-5 text-blue-600" />
               </button>

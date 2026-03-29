@@ -1,7 +1,10 @@
-import { X, Volume2, Check, XCircle } from "lucide-react";
+import { X, Volume2, Check, XCircle, ChevronRight } from "lucide-react";
 import React, { useEffect, useRef } from "react";
 import type { ListeningQuestion } from "../_types";
-import { QUESTION_TYPE_LABELS } from "../_types";
+import {
+  QUESTION_TYPE_LABELS,
+  listeningInputPlaceholder,
+} from "../_types";
 
 interface ListeningPlayingScreenProps {
   currentIndex: number;
@@ -19,6 +22,131 @@ interface ListeningPlayingScreenProps {
   onSubmit: (e?: React.FormEvent) => void;
   onPlayAudio: () => void;
   onExit: () => void;
+}
+
+function ListeningFlowVisual({
+  question,
+  isPlaying,
+  onPlayAudio,
+}: {
+  question: ListeningQuestion;
+  isPlaying: boolean;
+  onPlayAudio: () => void;
+}) {
+  const speakerBtn = (
+    <button
+      type="button"
+      onClick={onPlayAudio}
+      disabled={isPlaying}
+      className={`group relative flex items-center justify-center w-16 h-16 shrink-0 bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 rounded-full transition-all active:scale-95 ${
+        isPlaying ? "ring-4 ring-blue-500/20" : ""
+      }`}
+      aria-label="Phát âm thanh"
+    >
+      <Volume2
+        className={`w-8 h-8 text-blue-600 ${isPlaying ? "animate-pulse" : "group-hover:scale-110 transition-transform"}`}
+      />
+    </button>
+  );
+
+  if (question.type === "LISTEN_EN_WRITE_EN") {
+    return (
+      <div className="mb-6 space-y-4">
+        <div className="rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-50/90 to-blue-50/50 p-4 shadow-sm">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-3">
+            <div className="flex-1 min-w-0 rounded-xl bg-white border border-emerald-100 px-4 py-3 shadow-sm">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-bold tracking-wide">
+                  VI
+                </span>
+                <span className="text-[11px] font-medium text-emerald-700/80">
+                  Gợi ý nghĩa
+                </span>
+              </div>
+              <p className="text-base sm:text-lg font-semibold text-neutral-900 leading-snug break-words">
+                {question.card.definition}
+              </p>
+            </div>
+
+            <div className="flex items-center justify-center gap-2 lg:flex-col lg:py-1 shrink-0">
+              <ChevronRight className="hidden lg:block w-6 h-6 text-sky-300" />
+              {speakerBtn}
+              <ChevronRight className="hidden lg:block w-6 h-6 text-sky-300" />
+            </div>
+
+            <div className="flex-1 min-w-0 rounded-xl bg-white border border-indigo-100 px-4 py-3 shadow-sm flex flex-col justify-center">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="px-2 py-0.5 rounded-md bg-indigo-600 text-white text-[10px] font-bold tracking-wide">
+                  EN
+                </span>
+                <span className="text-[11px] font-medium text-indigo-700/80">
+                  Nghe và gõ từ
+                </span>
+              </div>
+              <p className="text-sm text-neutral-600 leading-relaxed">
+                Nhấn loa để nghe phát âm tiếng Anh, sau đó viết đúng chính tả ở
+                ô bên dưới.
+              </p>
+            </div>
+          </div>
+        </div>
+        <p className="text-center font-bold text-neutral-900">
+          {isPlaying ? "Đang phát..." : "Nhấn loa để nghe"}
+        </p>
+      </div>
+    );
+  }
+
+  if (question.type === "LISTEN_EN_WRITE_VN") {
+    return (
+      <div className="mb-6 space-y-4">
+        <div className="rounded-2xl border border-violet-100 bg-violet-50/40 p-5">
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+            <span className="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-bold tracking-wide">
+              EN
+            </span>
+            <ChevronRight className="w-5 h-5 text-violet-300 hidden sm:block" />
+            <div className="flex justify-center">{speakerBtn}</div>
+            <ChevronRight className="w-5 h-5 text-violet-300 hidden sm:block" />
+            <span className="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-bold tracking-wide">
+              VI
+            </span>
+          </div>
+          <p className="text-center text-sm font-medium text-neutral-700 mt-4">
+            Nghe từ tiếng Anh qua loa → viết nghĩa tiếng Việt ở ô dưới
+          </p>
+        </div>
+        <p className="text-center font-bold text-neutral-900">
+          {isPlaying ? "Đang phát..." : "Nhấn loa để nghe"}
+        </p>
+      </div>
+    );
+  }
+
+  /* LISTEN_VN_WRITE_EN */
+  return (
+    <div className="mb-6 space-y-4">
+      <div className="rounded-2xl border border-amber-100 bg-amber-50/40 p-5">
+        <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+          <span className="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-bold tracking-wide">
+            VI
+          </span>
+          <ChevronRight className="w-5 h-5 text-amber-300 hidden sm:block" />
+          <div className="flex justify-center">{speakerBtn}</div>
+          <ChevronRight className="w-5 h-5 text-amber-300 hidden sm:block" />
+          <span className="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-xs font-bold tracking-wide">
+            EN
+          </span>
+        </div>
+        <p className="text-center text-sm font-medium text-neutral-700 mt-4">
+          Nghe nghĩa tiếng Việt → viết từ tiếng Anh tương ứng
+        </p>
+      </div>
+      <p className="text-center font-bold text-neutral-900">
+        {isPlaying ? "Đang phát..." : "Nhấn loa để nghe"}
+      </p>
+    </div>
+  );
 }
 
 export function ListeningPlayingScreen({
@@ -124,24 +252,11 @@ export function ListeningPlayingScreen({
             </span>
           </div>
 
-          {/* Audio Player Button (Minimalized) */}
-          <div className="mb-6 flex flex-col items-center">
-            <button
-              onClick={onPlayAudio}
-              disabled={isPlaying}
-              className={`group relative flex items-center justify-center w-24 h-24 bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 rounded-full transition-all active:scale-95 ${
-                isPlaying ? "ring-4 ring-blue-500/20" : ""
-              }`}
-            >
-              <Volume2
-                className={`w-10 h-10 text-blue-600 ${isPlaying ? "animate-pulse" : "group-hover:scale-110 transition-transform"}`}
-              />
-            </button>
-            <p className="mt-4 font-bold text-gray-900 text-lg">
-              {isPlaying ? "Đang phát..." : "Nhấn để nghe"}
-            </p>
-            <p className="text-gray-500 text-sm mt-1">{question.prompt}</p>
-          </div>
+          <ListeningFlowVisual
+            question={question}
+            isPlaying={isPlaying}
+            onPlayAudio={onPlayAudio}
+          />
 
           {/* Input Form */}
           <form onSubmit={onSubmit} className="space-y-4">
@@ -152,7 +267,7 @@ export function ListeningPlayingScreen({
                 value={userAnswer}
                 onChange={(e) => onAnswerChange(e.target.value)}
                 disabled={showFeedback}
-                placeholder="Nhập những gì bạn nghe được..."
+                placeholder={listeningInputPlaceholder(question.type)}
                 className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 disabled:bg-gray-100 disabled:cursor-not-allowed font-medium text-gray-900 transition-all placeholder:text-gray-400"
                 autoComplete="off"
                 autoFocus

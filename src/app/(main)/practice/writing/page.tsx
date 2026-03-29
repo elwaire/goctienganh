@@ -4,17 +4,20 @@ import { vocabularyApi } from "@/api/vocabularyApi";
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, ArrowLeft, Loader2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useEffect } from "react";
 import {
   WritingIntroScreen,
   WritingPlayingScreen,
   WritingResultsScreen,
 } from "./_components";
 import { useWritingGame } from "./_hooks";
+import { parseWritingModeParam } from "./_types";
+import { useEffect, useRef } from "react";
 
 export default function WritingPage() {
   const searchParams = useSearchParams();
   const deckId = searchParams.get("deckId");
+  const urlMode = parseWritingModeParam(searchParams.get("mode"));
+  const urlStartRef = useRef(false);
 
   // ─── Fetch deck data ───
   const {
@@ -31,6 +34,12 @@ export default function WritingPage() {
     deckId: deckId ?? "",
     cards: deckData?.words ?? [],
   });
+
+  useEffect(() => {
+    if (!urlMode || !deckData?.words?.length || urlStartRef.current) return;
+    urlStartRef.current = true;
+    game.startWithMode(urlMode);
+  }, [urlMode, deckData?.words, game.startWithMode]);
 
   // Auto-focus input on game state changes
   useEffect(() => {
@@ -83,16 +92,28 @@ export default function WritingPage() {
     );
   }
 
-  // Speech helper
-  const handleSpeak = (text: string) => {
+  const handleSpeak = (text: string, lang: "en" | "vi" = "en") => {
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
       speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "en-US";
-      utterance.rate = 0.8;
+      utterance.lang = lang === "vi" ? "vi-VN" : "en-US";
+      utterance.rate = 0.85;
       speechSynthesis.speak(utterance);
     }
   };
+
+  if (
+    urlMode &&
+    deckData?.words?.length &&
+    game.gameState === "intro"
+  ) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3">
+        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+        <p className="text-sm text-neutral-400">Đang mở chế độ luyện tập...</p>
+      </div>
+    );
+  }
 
   // ─── Intro Screen ───
   if (game.gameState === "intro") {

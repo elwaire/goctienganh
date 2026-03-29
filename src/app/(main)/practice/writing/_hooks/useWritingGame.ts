@@ -44,6 +44,20 @@ export function useWritingGame({ deckId, cards }: UseWritingGameOptions) {
     setGameState("playing");
   }, [selectedMode, cards]);
 
+  /** Bắt đầu luôn với một mode (deep link từ trang học chủ động) */
+  const startWithMode = useCallback(
+    (mode: WritingMode) => {
+      if (cards.length === 0) return;
+      const generated = generateQuestions(cards, mode);
+      setQuestions(generated);
+      setSelectedMode(mode);
+      sessionStartRef.current = Date.now();
+      questionStartRef.current = Date.now();
+      setGameState("playing");
+    },
+    [cards],
+  );
+
   const checkAnswer = useCallback(() => {
     if (!userAnswer.trim() || !currentQuestion) return;
 
@@ -141,6 +155,7 @@ export function useWritingGame({ deckId, cards }: UseWritingGameOptions) {
     setSelectedMode,
     setUserAnswer,
     handleStart,
+    startWithMode,
     handleSubmit,
     handleRestart,
     handleExit,

@@ -8,6 +8,10 @@ import { Providers } from "@/components/common/Providers";
 export const metadata: Metadata = {
   title: "Goc Tieng Anh",
   description: "Nền tảng học tiếng Anh thông minh",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default async function RootLayout({

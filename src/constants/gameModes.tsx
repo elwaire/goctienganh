@@ -29,7 +29,8 @@ export const GAME_MODES: GameModeConfig[] = [
   {
     id: "writing",
     name: "Luyện viết từ",
-    description: "Nghe và viết lại từ vựng chính xác",
+    description:
+      "Viết nghĩa, viết từ Anh, điền chữ thiếu hoặc trộn lẫn các kiểu",
     icon: <PenTool className="w-6 h-6" />,
     color: "text-blue-600",
     bgColor: "bg-blue-50",
@@ -39,8 +40,8 @@ export const GAME_MODES: GameModeConfig[] = [
   },
   {
     id: "listening",
-    name: "Nghe từ",
-    description: "Nghe phát âm và viết lại từ vựng",
+    name: "Nghe và viết từ",
+    description: "Nghe âm thanh (EN/VI) và viết đáp án đúng",
     icon: <Headphones className="w-6 h-6" />,
     color: "text-blue-600",
     bgColor: "bg-blue-50",

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import type { VocabularyWord } from "@/types/vocabulary";
 import type {
   ListeningQuestion,
@@ -71,12 +71,11 @@ export function useListeningGame({ deckId, cards }: UseListeningGameOptions) {
     setGameState("playing");
   }, [cards]);
 
-  // Auto-start if cards are present and we're in intro
-  useState(() => {
-    if (gameState === "intro" && cards.length > 0) {
-      handleStart();
-    }
-  });
+  // Auto-start when deck words load (no intro screen in UI)
+  useEffect(() => {
+    if (gameState !== "intro" || cards.length === 0) return;
+    handleStart();
+  }, [gameState, cards, handleStart]);
 
   // ─── Check answer ───
   const checkAnswer = useCallback(() => {

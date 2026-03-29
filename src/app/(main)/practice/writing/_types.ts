@@ -28,6 +28,23 @@ export interface WritingModeOption {
   example: string;
 }
 
+const WRITING_MODE_IDS = [
+  "en_to_vi",
+  "vi_to_en",
+  "fill_blank",
+  "random",
+] as const satisfies readonly WritingMode[];
+
+/** Parse `mode` query param for `/practice/writing` deep links */
+export function parseWritingModeParam(
+  value: string | null,
+): WritingMode | null {
+  if (!value) return null;
+  return WRITING_MODE_IDS.includes(value as WritingMode)
+    ? (value as WritingMode)
+    : null;
+}
+
 export const WRITING_MODES: WritingModeOption[] = [
   {
     id: "en_to_vi",
@@ -101,8 +118,8 @@ export function generateQuestions(
     }
 
     return {
-      id: `${card.id}-${mode}`,
-      mode,
+      id: `${card.id}-${mode}-${actualMode}`,
+      mode: actualMode,
       card,
       prompt,
       correctAnswer,
