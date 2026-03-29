@@ -1,14 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { useSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { Loader2, AlertCircle, ArrowLeft } from "lucide-react";
 import { vocabularyApi } from "@/api/vocabularyApi";
-import { queryKeys } from "@/lib/queryKeys";
-import { toFlashcardWord } from "./_types";
+import { useQuery } from "@tanstack/react-query";
+import { AlertCircle, ArrowLeft, Loader2 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { useMemo, useState } from "react";
+import { PlayingScreen, ResultsScreen } from "./_components";
 import { useFlashcardGame, useKeyboardShortcuts, useSpeech } from "./_hooks";
-import { IntroScreen, ResultsScreen, PlayingScreen } from "./_components";
+import { toFlashcardWord } from "./_types";
 
 export default function FlashcardPage() {
   const searchParams = useSearchParams();
@@ -82,9 +81,7 @@ export default function FlashcardPage() {
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <AlertCircle className="w-10 h-10 text-rose-400" />
         <p className="text-sm text-neutral-500">
-          {!deckData
-            ? "Không tìm thấy bộ thẻ."
-            : "Bộ thẻ chưa có thẻ nào."}
+          {!deckData ? "Không tìm thấy bộ thẻ." : "Bộ thẻ chưa có thẻ nào."}
         </p>
         <button
           onClick={() => window.history.back()}
@@ -98,17 +95,6 @@ export default function FlashcardPage() {
   }
 
   // ─── Screens ───
-  if (game.gameState === "intro") {
-    return (
-      <IntroScreen
-        deck={deckData}
-        cardCount={words.length}
-        isStarting={false}
-        onStart={game.handleStart}
-      />
-    );
-  }
-
   if (game.gameState === "results") {
     return (
       <ResultsScreen

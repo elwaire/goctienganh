@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from "react";
-import type { WritingMode } from "@/types/flashcard";
+import type { WritingMode } from "@/types/vocabulary";
 import type { VocabularyWord } from "@/types/vocabulary";
 import type {
   WritingQuestion,

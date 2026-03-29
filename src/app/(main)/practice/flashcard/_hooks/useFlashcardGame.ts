@@ -33,7 +33,7 @@ export function useFlashcardGame({
   deckId,
   words,
 }: UseFlashcardGameOptions): UseFlashcardGameReturn {
-  const [gameState, setGameState] = useState<GameState>("intro");
+  const [gameState, setGameState] = useState<GameState>("playing");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [results, setResults] = useState<CardResult[]>([]);

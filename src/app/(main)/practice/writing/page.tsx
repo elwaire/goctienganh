@@ -1,17 +1,16 @@
 "use client";
 
-import { useEffect } from "react";
-import { useSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { Loader2, AlertCircle, ArrowLeft } from "lucide-react";
 import { vocabularyApi } from "@/api/vocabularyApi";
-import { queryKeys } from "@/lib/queryKeys";
-import { useWritingGame } from "./_hooks";
+import { useQuery } from "@tanstack/react-query";
+import { AlertCircle, ArrowLeft, Loader2 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 import {
   WritingIntroScreen,
   WritingPlayingScreen,
   WritingResultsScreen,
 } from "./_components";
+import { useWritingGame } from "./_hooks";
 
 export default function WritingPage() {
   const searchParams = useSearchParams();

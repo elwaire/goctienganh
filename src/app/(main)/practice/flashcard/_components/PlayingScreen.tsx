@@ -5,10 +5,12 @@ import {
   ChevronRight,
   ThumbsUp,
   ThumbsDown,
+  ArrowRightLeft,
+  Settings2,
 } from "lucide-react";
 import type { FlashcardWord } from "../_types";
 import { Flashcard } from "./Flashcard";
-import { ShortcutsModal } from "./ShortcutsModal";
+import { useState } from "react";
 
 interface PlayingScreenProps {
   words: FlashcardWord[];
@@ -47,15 +49,18 @@ export function PlayingScreen({
   onExit,
   onToggleShortcuts,
 }: PlayingScreenProps) {
+  const [direction, setDirection] = useState<"en-vi" | "vi-en">("en-vi");
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen py-6 px-4">
+      <div className="max-w-2xl mx-auto">
         {/* Header */}
         <Header
           currentIndex={currentIndex}
           totalCount={words.length}
+          direction={direction}
+          onToggleDirection={() => setDirection(d => d === "en-vi" ? "vi-en" : "en-vi")}
           onExit={onExit}
-          onShowShortcuts={() => onToggleShortcuts(true)}
         />
 
         {/* Progress Bar */}
@@ -73,6 +78,7 @@ export function PlayingScreen({
           word={currentWord}
           isFlipped={isFlipped}
           pressedKey={pressedKey}
+          direction={direction}
           onFlip={onFlip}
           onSpeak={onSpeak}
         />
@@ -88,22 +94,15 @@ export function PlayingScreen({
           onAnswer={onAnswer}
         />
 
-        {/* Keyboard hint */}
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-500">
-            Sử dụng phím tắt để học nhanh hơn • Nhấn{" "}
-            <kbd className="px-1.5 py-0.5 bg-white border border-gray-300 rounded text-xs font-mono">
-              ?
-            </kbd>{" "}
-            để xem hướng dẫn
-          </p>
+        {/* Keyboard hints visible immediately */}
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-xs text-gray-500 bg-white border border-gray-100 p-4 rounded-xl shadow-sm">
+          <div className="flex items-center gap-1.5"><kbd className="px-1.5 py-0.5 bg-gray-100 border border-gray-200 rounded font-mono font-medium">Space</kbd> <span>Lật thẻ</span></div>
+          <div className="flex items-center gap-1.5"><kbd className="px-1.5 py-0.5 bg-gray-100 border border-gray-200 rounded font-mono font-medium">←</kbd> <kbd className="px-1.5 py-0.5 bg-gray-100 border border-gray-200 rounded font-mono font-medium">→</kbd> <span>Chuyển thẻ</span></div>
+          <div className="flex items-center gap-1.5"><kbd className="px-1.5 py-0.5 bg-gray-100 border border-gray-200 rounded font-mono font-medium">1</kbd> <span>Cần ôn</span></div>
+          <div className="flex items-center gap-1.5"><kbd className="px-1.5 py-0.5 bg-gray-100 border border-gray-200 rounded font-mono font-medium">2</kbd> <span>Đã thuộc</span></div>
+          <div className="flex items-center gap-1.5"><kbd className="px-1.5 py-0.5 bg-gray-100 border border-gray-200 rounded font-mono font-medium">S</kbd> <span>Phát âm</span></div>
         </div>
       </div>
-
-      {/* Shortcuts Modal */}
-      {showShortcuts && (
-        <ShortcutsModal onClose={() => onToggleShortcuts(false)} />
-      )}
     </div>
   );
 }
@@ -113,37 +112,40 @@ export function PlayingScreen({
 function Header({
   currentIndex,
   totalCount,
+  direction,
+  onToggleDirection,
   onExit,
-  onShowShortcuts,
 }: {
   currentIndex: number;
   totalCount: number;
+  direction: "en-vi" | "vi-en";
+  onToggleDirection: () => void;
   onExit: () => void;
-  onShowShortcuts: () => void;
 }) {
   return (
     <div className="flex items-center justify-between mb-6">
       <button
         onClick={onExit}
-        className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+        className="flex items-center justify-center w-10 h-10 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:text-red-500 transition-colors"
+        title="Thoát"
       >
-        <X className="w-5 h-5 text-gray-600" />
-        <span className="font-medium text-gray-700">Thoát</span>
+        <X className="w-5 h-5 text-gray-600 hover:text-red-500" />
       </button>
 
-      <div className="text-center">
-        <p className="text-sm text-gray-600">
-          {currentIndex + 1} / {totalCount}
+      <div className="text-center flex-1">
+        <p className="text-sm font-semibold text-gray-600 bg-white border border-gray-100 rounded-full px-4 py-1.5 inline-block shadow-sm">
+          {currentIndex + 1} <span className="text-gray-400 mx-1">/</span> {totalCount}
         </p>
       </div>
 
       <button
-        onClick={onShowShortcuts}
-        className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+        onClick={onToggleDirection}
+        className="flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 rounded-xl hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-colors shadow-sm"
+        title="Đổi chiều học"
       >
-        <Keyboard className="w-5 h-5 text-gray-600" />
-        <span className="font-medium text-gray-700 hidden sm:inline">
-          Phím tắt
+        <ArrowRightLeft className="w-4 h-4 text-gray-600 group-hover:text-blue-600" />
+        <span className="font-medium text-xs sm:text-sm text-gray-700 hidden sm:inline">
+          {direction === "en-vi" ? "EN → VN" : "VN → EN"}
         </span>
       </button>
     </div>
@@ -173,10 +175,10 @@ function StatsRow({
   difficultCount: number;
 }) {
   return (
-    <div className="grid grid-cols-3 gap-4 mb-8">
+    <div className="grid grid-cols-3 gap-3 mb-6">
       <StatCard label="Tổng" value={totalCount} color="text-gray-900" />
       <StatCard label="Đã thuộc" value={masteredCount} color="text-blue-600" />
-      <StatCard label="Cần ôn" value={difficultCount} color="text-gray-900" />
+      <StatCard label="Cần ôn" value={difficultCount} color="text-orange-600" />
     </div>
   );
 }
@@ -191,9 +193,9 @@ function StatCard({
   color: string;
 }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-4 text-center">
-      <div className={`text-2xl font-bold ${color}`}>{value}</div>
-      <div className="text-xs text-gray-600 mt-1">{label}</div>
+    <div className="bg-white border border-gray-100 rounded-xl p-3 text-center shadow-sm">
+      <div className={`text-xl font-bold ${color}`}>{value}</div>
+      <div className="text-[11px] uppercase tracking-wide text-gray-500 mt-1 font-medium">{label}</div>
     </div>
   );
 }

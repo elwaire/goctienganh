@@ -22,7 +22,7 @@ export function DeckCard({ deck, onEdit, onDelete }: DeckCardProps) {
   const isOwner = deck.is_owner;
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 hover:shadow-lg transition-all p-6 group">
+    <div className="bg-white rounded-2xl border border-gray-200 hover:shadow-lg transition-all p-4 group">
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">

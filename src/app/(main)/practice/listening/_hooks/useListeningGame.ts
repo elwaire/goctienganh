@@ -62,6 +62,7 @@ export function useListeningGame({ deckId, cards }: UseListeningGameOptions) {
 
   // ─── Start ───
   const handleStart = useCallback(() => {
+    if (cards.length === 0) return;
     const generated = generateListeningQuestions(cards);
     setQuestions(generated);
 
@@ -69,6 +70,13 @@ export function useListeningGame({ deckId, cards }: UseListeningGameOptions) {
     questionStartRef.current = Date.now();
     setGameState("playing");
   }, [cards]);
+
+  // Auto-start if cards are present and we're in intro
+  useState(() => {
+    if (gameState === "intro" && cards.length > 0) {
+      handleStart();
+    }
+  });
 
   // ─── Check answer ───
   const checkAnswer = useCallback(() => {

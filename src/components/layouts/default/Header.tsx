@@ -7,6 +7,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { LanguageSwitcher } from "@/components/common/LanguageSwitcher";
 import { logout as authLogout } from "@/lib/auth";
+import { useStreak } from "@/hooks/useStreak";
 
 function getInitials(name: string): string {
   if (!name) return "U";
@@ -21,7 +22,8 @@ function getInitials(name: string): string {
 export default function Header() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const router = useRouter();
-  const user = useSelector((state: RootState) => state.auth.user);
+  const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { data: streak } = useStreak();
 
   const displayName = user?.fullname || user?.username || "Learner";
   const displayEmail = user?.email || "";
@@ -39,10 +41,17 @@ export default function Header() {
       {/* Right - Actions & Profile */}
       <div className="flex items-center gap-2">
         {/* Streak */}
-        <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-600 rounded-full">
-          🔥
-          <span className="text-sm font-medium">12</span>
-        </div>
+        {isAuthenticated && streak && (
+          <div 
+            title={`Kỷ lục: ${streak.longest_streak} ngày`}
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-600 rounded-full border border-amber-100/50 shadow-sm animate-in fade-in slide-in-from-right-4 duration-500 cursor-help"
+          >
+            <span className="animate-pulse">🔥</span>
+            <span className="text-sm font-bold tracking-tight">
+              {streak.current_streak}
+            </span>
+          </div>
+        )}
         <LanguageSwitcher />
 
         {/* Divider */}

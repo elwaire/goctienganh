@@ -92,4 +92,4 @@ export interface BulkCreateVocabularyWordsRequest {
 }
 
 export type StudyMode = "flashcard" | "writing" | "listening";
-export type WritingMode = "en_to_vi" | "vi_to_en" | "fill_blank";
+export type WritingMode = "en_to_vi" | "vi_to_en" | "fill_blank" | "random";

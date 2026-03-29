@@ -1,17 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
-import { useSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { Loader2, AlertCircle, ArrowLeft } from "lucide-react";
 import { vocabularyApi } from "@/api/vocabularyApi";
-import { queryKeys } from "@/lib/queryKeys";
-import { useListeningGame } from "./_hooks";
+import { useQuery } from "@tanstack/react-query";
+import { AlertCircle, ArrowLeft, Loader2 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 import {
-  ListeningIntroScreen,
   ListeningPlayingScreen,
   ListeningResultsScreen,
 } from "./_components";
+import { useListeningGame } from "./_hooks";
 
 export default function ListeningPage() {
   const searchParams = useSearchParams();
@@ -119,17 +117,6 @@ export default function ListeningPage() {
   }
 
   // ─── Screens ───
-  if (game.gameState === "intro") {
-    return (
-      <ListeningIntroScreen
-        deck={deckData}
-        cardCount={deckData.words.length}
-        isStarting={false}
-        onStart={game.handleStart}
-      />
-    );
-  }
-
   if (game.gameState === "results") {
     return (
       <ListeningResultsScreen

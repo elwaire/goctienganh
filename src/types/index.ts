@@ -5,3 +5,5 @@ export * from "./exam";
 export * from "./examDetail";
 export * from "./subject";
 export * from "./flashcard";
+export * from "./vocabulary";
+export * from "./streak";

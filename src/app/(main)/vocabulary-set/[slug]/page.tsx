@@ -73,6 +73,17 @@ export default function VocabularySetDetailPage() {
     },
   });
 
+  const createBulkCardsMutation = useMutation({
+    mutationFn: (data: CreateVocabularyWordRequest[]) =>
+      vocabularyApi.createWordsBulk(deckId, { words: data }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["vocabularySets", "detail", deckId],
+      });
+      setShowWordModal(false);
+    },
+  });
+
   const updateCardMutation = useMutation({
     mutationFn: ({
       cardId,
@@ -139,6 +150,10 @@ export default function VocabularySetDetailPage() {
     } else {
       createCardMutation.mutate(data);
     }
+  };
+
+  const handleSaveBulkWords = (data: CreateVocabularyWordRequest[]) => {
+    createBulkCardsMutation.mutate(data);
   };
 
   const handleDeleteWord = (cardId: string) => {
@@ -273,6 +288,7 @@ export default function VocabularySetDetailPage() {
             setEditingCard(null);
           }}
           onSave={handleSaveWord}
+          onSaveBulk={handleSaveBulkWords}
         />
       )}
 
