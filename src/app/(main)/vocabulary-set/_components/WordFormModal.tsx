@@ -1,3 +1,4 @@
+import { useState, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { X, Copy, Check, Languages, Loader2 } from "lucide-react";
 import type {
@@ -44,7 +45,24 @@ export function WordFormModal({
   if (!isOpen) return null;
 
   const updateField = (field: string, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev: any) => ({ ...prev, [field]: value }));
+  };
+
+  const handleTranslate = async () => {
+    if (!form.term.trim()) return;
+    setIsTranslating(true);
+    try {
+      // MyMemory API
+      const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(form.term)}&langpair=vi|en&mt=1`);
+      const data = await res.json();
+      if (data?.responseData?.translatedText) {
+        updateField("definition", data.responseData.translatedText);
+      }
+    } catch (err) {
+      console.error("Translation error:", err);
+    } finally {
+      setIsTranslating(false);
+    }
   };
 
   const handleSubmit = () => {
@@ -120,7 +138,7 @@ Chỉ trả về định dạng JSON array chuẩn, không kèm theo bất kỳ 
         <div className="sticky top-0 bg-white border-b border-gray-200 pt-5 px-5 flex flex-col z-10">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-xl font-bold text-gray-900">
-              {editingCard ? "Chỉnh sửa từ" : "Thêm từ mới"}
+              {editingCard ? t("editTitle") : t("addTitle")}
             </h3>
             <button
               onClick={onClose}
@@ -136,13 +154,13 @@ Chỉ trả về định dạng JSON array chuẩn, không kèm theo bất kỳ 
                 className={`py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === "manual" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
                 onClick={() => setActiveTab("manual")}
               >
-                Thêm thủ công
+                {t("manualTab")}
               </button>
               <button
                 className={`py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === "json" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
                 onClick={() => setActiveTab("json")}
               >
-                Thêm hàng loạt (JSON)
+                {t("bulkTab")}
               </button>
             </div>
           )}
