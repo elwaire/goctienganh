@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { useState, useRef, useEffect } from "react";
 import {
   ArrowLeft,
@@ -25,6 +26,7 @@ interface DeckHeaderProps {
 }
 
 export function DeckHeader({ deck, stats, onEditDeck, onDeleteDeck }: DeckHeaderProps) {
+  const t = useTranslations("vocabulary");
   const router = useRouter();
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -49,7 +51,7 @@ export function DeckHeader({ deck, stats, onEditDeck, onDeleteDeck }: DeckHeader
         className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors text-sm"
       >
         <ArrowLeft className="w-4 h-4" />
-        <span className="font-medium">Quay lại</span>
+        <span className="font-medium">{t("back") || "Back"}</span>
       </button>
 
       <div className="bg-white rounded-2xl border border-gray-200 p-6">
@@ -61,12 +63,12 @@ export function DeckHeader({ deck, stats, onEditDeck, onDeleteDeck }: DeckHeader
               {deck.is_public ? (
                 <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-md">
                   <Globe className="w-3 h-3" />
-                  Công khai
+                  {t("visibility.public")}
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-md">
                   <Lock className="w-3 h-3" />
-                  Riêng tư
+                  {t("visibility.private")}
                 </span>
               )}
             </div>
@@ -98,7 +100,7 @@ export function DeckHeader({ deck, stats, onEditDeck, onDeleteDeck }: DeckHeader
                       className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors cursor-pointer"
                     >
                       <Edit className="w-4 h-4" />
-                      Sửa bộ từ
+                      {t("card.edit") || "Edit"}
                     </button>
                     <button
                       onClick={() => {
@@ -108,7 +110,7 @@ export function DeckHeader({ deck, stats, onEditDeck, onDeleteDeck }: DeckHeader
                       className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors cursor-pointer"
                     >
                       <Trash2 className="w-4 h-4" />
-                      Xóa bộ từ
+                      {t("card.delete") || "Delete"}
                     </button>
                   </div>
                 )}
@@ -118,18 +120,18 @@ export function DeckHeader({ deck, stats, onEditDeck, onDeleteDeck }: DeckHeader
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <StatCard
             icon={<BookOpen className="w-5 h-5 text-blue-600" />}
             value={deck.words.length}
-            label="Từ vựng"
+            label={t("detail.words") || "Words"}
             bgColor="bg-blue-50"
             borderColor="border-blue-200"
           />
           <StatCard
             icon={<Clock className="w-5 h-5 text-purple-600" />}
             value={new Date(deck.created_at).toLocaleDateString("vi-VN")}
-            label="Ngày tạo"
+            label={t("card.createdOn")}
             bgColor="bg-purple-50"
             borderColor="border-purple-200"
           />
@@ -138,6 +140,7 @@ export function DeckHeader({ deck, stats, onEditDeck, onDeleteDeck }: DeckHeader
     </div>
   );
 }
+
 
 function StatCard({
   icon,
