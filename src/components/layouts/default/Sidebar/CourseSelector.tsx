@@ -44,12 +44,15 @@ export function CourseSelector() {
 
   const subjects = data?.subjects ?? [];
 
-  // Auto-select first subject if none selected yet
+  // Auto-select first subject if none selected yet or if selected one is no longer in the list
   useEffect(() => {
-    if (!selectedId && subjects.length > 0) {
-      const firstId = subjects[0].id;
-      setSelectedId(firstId);
-      Cookies.set(SUBJECT_COOKIE, firstId, { expires: 365 });
+    if (subjects.length > 0) {
+      const isValid = subjects.some((s) => s.id === selectedId);
+      if (!selectedId || !isValid) {
+        const firstId = subjects[0].id;
+        setSelectedId(firstId);
+        Cookies.set(SUBJECT_COOKIE, firstId, { expires: 365 });
+      }
     }
   }, [subjects, selectedId]);
 
@@ -112,12 +115,19 @@ export function CourseSelector() {
     ? getSubjectStyles(selectedSubject)
     : null;
 
+  const isMultiple = subjects.length > 1;
+
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Selector Button */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center gap-3 p-2 cursor-pointer rounded-xl border-2 border-transparent transition-all duration-200 hover:opacity-90"
+        onClick={() => {
+          if (isMultiple) setIsOpen(!isOpen);
+        }}
+        disabled={!isMultiple}
+        className={`w-full flex items-center gap-3 p-2 rounded-xl border-2 border-transparent transition-all duration-200 ${
+          isMultiple ? "cursor-pointer hover:opacity-90" : "cursor-default"
+        }`}
         style={{
           backgroundColor: currentStyles
             ? selectedSubject!.bg_color
@@ -147,11 +157,13 @@ export function CourseSelector() {
           </p>
           <p className="text-xs text-neutral-500">Đang học</p>
         </div>
-        <ChevronDown
-          className={`w-4 h-4 text-neutral-400 transition-transform duration-200 ${
-            isOpen ? "rotate-180" : ""
-          }`}
-        />
+        {isMultiple && (
+          <ChevronDown
+            className={`w-4 h-4 text-neutral-400 transition-transform duration-200 ${
+              isOpen ? "rotate-180" : ""
+            }`}
+          />
+        )}
       </button>
 
       {/* Dropdown */}

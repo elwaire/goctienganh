@@ -1,10 +1,5 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import type { FlashcardWord, CardResult, GameState } from "../_types";
-import type {
-  CompleteStudySessionResponse,
-  RecordStudyRequest,
-} from "@/types/flashcard";
-import { flashcardApi } from "@/api/flashcardApi";
 import { CARD_FLIP_DELAY_MS } from "../_constants";
 
 interface UseFlashcardGameOptions {
@@ -22,17 +17,14 @@ interface UseFlashcardGameReturn {
   progress: number;
   masteredCount: number;
   difficultCount: number;
-  sessionId: string | null;
-  completionData: CompleteStudySessionResponse | null;
-  isSubmitting: boolean;
 
   // Actions
   handleFlip: () => void;
   handleAnswer: (mastered: boolean) => void;
   handlePrevious: () => void;
   handleNext: () => void;
-  handleStart: () => Promise<void>;
-  handleRestart: () => Promise<void>;
+  handleStart: () => void;
+  handleRestart: () => void;
   handleExit: () => void;
   getElapsedTime: () => string;
 }
@@ -41,20 +33,16 @@ export function useFlashcardGame({
   deckId,
   words,
 }: UseFlashcardGameOptions): UseFlashcardGameReturn {
-  const [gameState, setGameState] = useState<GameState>("intro");
+  const [gameState, setGameState] = useState<GameState>("playing");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [results, setResults] = useState<CardResult[]>([]);
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [completionData, setCompletionData] =
-    useState<CompleteStudySessionResponse | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Track time spent per card
   const cardStartTimeRef = useRef<number>(Date.now());
   const sessionStartTimeRef = useRef<number>(Date.now());
 
-  const currentWord = words[currentIndex];
+  const currentWord = words[currentIndex] || null;
   const progress = words.length > 0 ? ((currentIndex + 1) / words.length) * 100 : 0;
   const masteredCount = results.filter((r) => r.mastered).length;
   const difficultCount = results.filter((r) => !r.mastered).length;
@@ -65,7 +53,7 @@ export function useFlashcardGame({
 
   const handleAnswer = useCallback(
     (mastered: boolean) => {
-      if (!isFlipped || isSubmitting) return;
+      if (!isFlipped) return;
 
       const timeSpentMs = Date.now() - cardStartTimeRef.current;
 
@@ -78,19 +66,6 @@ export function useFlashcardGame({
 
       setResults((prev) => [...prev, result]);
 
-      // Send record to API (fire-and-forget, don't block UI)
-      if (sessionId) {
-        const recordData: RecordStudyRequest = {
-          card_id: currentWord.id,
-          is_correct: mastered,
-          is_memorized: mastered,
-          time_spent_ms: timeSpentMs,
-        };
-        flashcardApi
-          .recordStudy(deckId, sessionId, recordData)
-          .catch((err) => console.error("Failed to record study:", err));
-      }
-
       const isLastCard = currentIndex >= words.length - 1;
 
       if (!isLastCard) {
@@ -101,26 +76,12 @@ export function useFlashcardGame({
         }, CARD_FLIP_DELAY_MS);
       } else {
         // Complete session
-        setTimeout(async () => {
-          if (sessionId) {
-            setIsSubmitting(true);
-            try {
-              const data = await flashcardApi.completeStudySession(
-                deckId,
-                sessionId,
-              );
-              setCompletionData(data);
-            } catch (err) {
-              console.error("Failed to complete session:", err);
-            } finally {
-              setIsSubmitting(false);
-            }
-          }
+        setTimeout(() => {
           setGameState("results");
         }, CARD_FLIP_DELAY_MS);
       }
     },
-    [isFlipped, isSubmitting, currentIndex, currentWord, words.length, sessionId, deckId],
+    [isFlipped, currentIndex, currentWord, words.length],
   );
 
   const handlePrevious = useCallback(() => {
@@ -140,50 +101,29 @@ export function useFlashcardGame({
     }
   }, [currentIndex, words.length, isFlipped]);
 
-  const startSession = useCallback(async () => {
-    try {
-      setIsSubmitting(true);
-      const session = await flashcardApi.startStudySession(deckId, {
-        mode: "flashcard",
-      });
-      setSessionId(session.id);
-      sessionStartTimeRef.current = Date.now();
-      cardStartTimeRef.current = Date.now();
-      setGameState("playing");
-    } catch (err) {
-      console.error("Failed to start study session:", err);
-      // Fallback: start anyway without session tracking
-      sessionStartTimeRef.current = Date.now();
-      cardStartTimeRef.current = Date.now();
-      setGameState("playing");
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [deckId]);
+  const handleStart = useCallback(() => {
+    sessionStartTimeRef.current = Date.now();
+    cardStartTimeRef.current = Date.now();
+    setGameState("playing");
+  }, []);
 
-  const handleStart = useCallback(async () => {
-    await startSession();
-  }, [startSession]);
-
-  const handleRestart = useCallback(async () => {
+  const handleRestart = useCallback(() => {
     setCurrentIndex(0);
     setIsFlipped(false);
     setResults([]);
-    setCompletionData(null);
-    await startSession();
-  }, [startSession]);
+    sessionStartTimeRef.current = Date.now();
+    cardStartTimeRef.current = Date.now();
+    setGameState("playing");
+  }, []);
 
   const handleExit = useCallback(() => {
-    // Navigate back to practice page
     if (typeof window !== "undefined") {
       window.history.back();
     }
   }, []);
 
   const getElapsedTime = useCallback(() => {
-    const diff = Math.floor(
-      (Date.now() - sessionStartTimeRef.current) / 1000,
-    );
+    const diff = Math.floor((Date.now() - sessionStartTimeRef.current) / 1000);
     const minutes = Math.floor(diff / 60);
     const seconds = diff % 60;
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
@@ -198,9 +138,6 @@ export function useFlashcardGame({
     progress,
     masteredCount,
     difficultCount,
-    sessionId,
-    completionData,
-    isSubmitting,
     handleFlip,
     handleAnswer,
     handlePrevious,

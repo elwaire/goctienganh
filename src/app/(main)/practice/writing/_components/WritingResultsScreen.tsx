@@ -1,7 +1,11 @@
-import { Check, XCircle, Clock, RotateCcw, Home, Loader2 } from "lucide-react";
+import { Check, XCircle, Clock, RotateCcw, Home } from "lucide-react";
 import type { WritingResult } from "../_types";
 import { WRITING_MODES } from "../_types";
-import type { WritingMode } from "@/types/flashcard";
+import type { WritingMode } from "@/types/vocabulary";
+import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
+
+const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
 
 interface WritingResultsScreenProps {
   mode: WritingMode | null;
@@ -10,7 +14,6 @@ interface WritingResultsScreenProps {
   totalCount: number;
   elapsedTime: string;
   results: WritingResult[];
-  isRestarting: boolean;
   onRestart: () => void;
   onExit: () => void;
 }
@@ -22,116 +25,172 @@ export function WritingResultsScreen({
   totalCount,
   elapsedTime,
   results,
-  isRestarting,
   onRestart,
   onExit,
 }: WritingResultsScreenProps) {
   const accuracy =
     totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
   const modeInfo = WRITING_MODES.find((m) => m.id === mode);
+  const [animationData, setAnimationData] = useState<any>(null);
+  const [showOverlay, setShowOverlay] = useState(true);
+
+  useEffect(() => {
+    // Luôn phát âm thanh hoàn thành (không bị chặn bởi spam)
+    const audio = new Audio("/sounds/level-complete.mp3");
+    audio.play().catch(console.error);
+
+    // Fetch lottie
+    fetch("/lotties/firework.json")
+      .then((res) => res.json())
+      .then((data) => setAnimationData(data))
+      .catch(console.error);
+
+    const timer = setTimeout(() => {
+      setShowOverlay(false);
+    }, 3000); // Hide after 3 seconds
+
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-      <div className="max-w-md w-full">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-          <div className="text-center mb-6">
-            <div className="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-              <Check className="w-7 h-7 text-white" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Hoàn thành!
-            </h2>
-            <p className="text-gray-600 text-sm">
-              Bạn đã hoàn thành: {modeInfo?.name}
-            </p>
-          </div>
+    <div className="min-h-screen flex justify-center relative">
+      {/* Lottie Overlay without dark background */}
+      {showOverlay && animationData && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center pointer-events-none transition-opacity duration-500">
+          <Lottie
+            animationData={animationData}
+            loop={false}
+            className="w-full max-w-[600px] aspect-square drop-shadow-2xl scale-125 md:scale-150"
+          />
+        </div>
+      )}
 
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            <div className="bg-gray-50 rounded-xl p-4 text-center">
-              <div className="text-3xl font-bold text-blue-600 mb-1">
-                {correctCount}
+      <div className="max-w-4xl w-full relative z-10 px-4 mt-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+          {/* Cột trái: Thống kê tổng quan (Box 1) */}
+          <div className="flex flex-col bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+            <div className="text-center mb-8">
+              <div className="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-200">
+                <Check className="w-7 h-7 text-white" />
               </div>
-              <div className="text-xs text-gray-600">Đúng</div>
+              <h2 className="text-xl font-bold text-gray-900 mb-1">
+                Hoàn thành!
+              </h2>
+              <p className="text-gray-500 text-sm font-medium">
+                {modeInfo?.name}
+              </p>
             </div>
-            <div className="bg-gray-50 rounded-xl p-4 text-center">
-              <div className="text-3xl font-bold text-gray-900 mb-1">
-                {wrongCount}
+
+            {/* Vòng thời gian */}
+            <div className="flex justify-center mb-5">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 text-gray-600 rounded-lg font-medium text-xs border border-gray-100">
+                <Clock className="w-3.5 h-3.5" />
+                Thời gian: {elapsedTime}
+              </span>
+            </div>
+
+            {/* Box thống kê */}
+            <div className="grid grid-cols-2 gap-3 mb-5">
+              <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-3 text-center">
+                <div className="text-2xl font-bold text-blue-600 mb-0.5">
+                  {correctCount}
+                </div>
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-blue-800/60">
+                  Đúng
+                </div>
               </div>
-              <div className="text-xs text-gray-600">Sai</div>
+              <div className="bg-orange-50/50 border border-orange-100 rounded-xl p-3 text-center">
+                <div className="text-2xl font-bold text-orange-600 mb-0.5">
+                  {wrongCount}
+                </div>
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-orange-800/60">
+                  Sai
+                </div>
+              </div>
+            </div>
+
+            <div className="text-center mb-8">
+              <div className="text-4xl font-black text-gray-900 mb-1">
+                {accuracy}
+                <span className="text-lg text-gray-400 ml-0.5">%</span>
+              </div>
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                Độ chính xác
+              </div>
+            </div>
+
+            <div className="flex gap-2 mt-auto">
+              <button
+                onClick={onRestart}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold text-sm py-2.5 rounded-lg transition-all shadow-sm active:scale-[0.98] flex items-center justify-center gap-2"
+              >
+                <RotateCcw className="w-4 h-4" />
+                Học lại
+              </button>
+              <button
+                onClick={onExit}
+                className="flex-1 bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 text-gray-700 font-semibold text-sm py-2.5 rounded-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+              >
+                <Home className="w-4 h-4" />
+                Thoát
+              </button>
             </div>
           </div>
 
-          <div className="text-center mb-6">
-            <div className="text-4xl font-bold text-blue-600 mb-1">
-              {accuracy}%
+          {/* Cột phải: Kết quả chi tiết (Box 2) */}
+          <div className="flex flex-col bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+            <div className="mb-3 flex items-center justify-between px-1">
+              <h4 className="font-bold text-gray-900 text-base">
+                Chi tiết câu hỏi
+              </h4>
+              <div className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded text-[10px] font-bold uppercase tracking-wider">
+                {results.length} câu
+              </div>
             </div>
-            <div className="text-sm text-gray-600">Độ chính xác</div>
-          </div>
 
-          <div className="flex items-center justify-center gap-2 text-gray-600 mb-6 text-sm">
-            <Clock className="w-4 h-4" />
-            <span>Thời gian: {elapsedTime}</span>
-          </div>
-
-          <div className="mb-6">
-            <h4 className="font-semibold text-gray-900 mb-3 text-sm">
-              Kết quả chi tiết:
-            </h4>
-            <div className="space-y-2 max-h-60 overflow-y-auto">
+            <div className="space-y-2.5 overflow-y-auto pr-1.5 custom-scrollbar flex-1 max-h-[420px]">
               {results.map((result, index) => (
                 <div
                   key={index}
-                  className={`p-3 rounded-lg text-sm ${
-                    result.correct ? "bg-blue-50" : "bg-red-50"
+                  className={`p-3 rounded-xl border ${
+                    result.correct
+                      ? "bg-white border-blue-100 shadow-sm"
+                      : "bg-red-50/30 border-red-100"
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-start justify-between gap-3">
                     <div className="flex-1">
-                      <p className="font-medium text-gray-900 mb-1">
+                      <p
+                        className={`font-semibold text-sm mb-1 ${result.correct ? "text-gray-900" : "text-red-900"}`}
+                      >
                         {result.term}
                       </p>
                       {!result.correct && (
                         <div className="text-xs space-y-0.5">
-                          <p className="text-red-600">
-                            Bạn trả lời: {result.userAnswer}
+                          <p className="text-red-600/80">
+                            <span className="opacity-75">Bạn nhập:</span>{" "}
+                            {result.userAnswer || "(bỏ trống)"}
                           </p>
-                          <p className="text-gray-600">
-                            Đáp án đúng: {result.correctAnswer}
+                          <p className="text-gray-700 font-medium">
+                            <span className="opacity-75">Đáp án:</span>{" "}
+                            {result.correctAnswer}
                           </p>
                         </div>
                       )}
                     </div>
-                    {result.correct ? (
-                      <Check className="w-5 h-5 text-blue-600 shrink-0" />
-                    ) : (
-                      <XCircle className="w-5 h-5 text-red-600 shrink-0" />
-                    )}
+                    <div
+                      className={`flex items-center justify-center w-6 h-6 rounded-full shrink-0 ${result.correct ? "bg-blue-50" : "bg-red-50"}`}
+                    >
+                      {result.correct ? (
+                        <Check className="w-3.5 h-3.5 text-blue-600" />
+                      ) : (
+                        <XCircle className="w-3.5 h-3.5 text-red-600" />
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              onClick={onRestart}
-              disabled={isRestarting}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
-            >
-              {isRestarting ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <RotateCcw className="w-5 h-5" />
-              )}
-              Học lại
-            </button>
-            <button
-              onClick={onExit}
-              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
-            >
-              <Home className="w-5 h-5" />
-              Thoát
-            </button>
           </div>
         </div>
       </div>

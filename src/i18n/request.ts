@@ -22,7 +22,7 @@ export default getRequestConfig(async () => {
 
   const messages = messageModules.reduce(
     (merged, mod) => deepmerge(merged, mod.default),
-    {} as Record<string, unknown>
+    {} as Record<string, unknown>,
   );
 
   return {

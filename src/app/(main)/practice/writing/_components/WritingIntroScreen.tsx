@@ -1,17 +1,18 @@
-import { PenTool, Play, Check, Keyboard, Loader2 } from "lucide-react";
+import { PenTool, Play, Check, Keyboard, Loader2, Shuffle } from "lucide-react";
 import { FileText, Languages, Type } from "lucide-react";
-import type { WritingMode } from "@/types/flashcard";
-import type { DeckResponse } from "@/types/flashcard";
+import type { WritingMode } from "@/types/vocabulary";
+import type { VocabularySetWithWords } from "@/types/vocabulary";
 import { WRITING_MODES } from "../_types";
 
 const MODE_ICONS: Record<WritingMode, React.ReactNode> = {
   en_to_vi: <FileText className="w-6 h-6" />,
   vi_to_en: <Languages className="w-6 h-6" />,
   fill_blank: <Type className="w-6 h-6" />,
+  random: <Shuffle className="w-6 h-6" />,
 };
 
 interface WritingIntroScreenProps {
-  deck: DeckResponse;
+  deck: VocabularySetWithWords;
   cardCount: number;
   selectedMode: WritingMode | null;
   isStarting: boolean;
@@ -28,7 +29,7 @@ export function WritingIntroScreen({
   onStart,
 }: WritingIntroScreenProps) {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+    <div className="min-h-screen  flex items-center justify-center ">
       <div className="max-w-2xl w-full">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
           <div className="text-center mb-6">
@@ -59,7 +60,7 @@ export function WritingIntroScreen({
             <h3 className="font-semibold text-gray-900 mb-3 text-sm">
               Chọn phương thức luyện tập:
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {WRITING_MODES.map((mode) => (
                 <button
                   key={mode.id}
@@ -100,9 +101,7 @@ export function WritingIntroScreen({
           <div className="bg-gray-50 rounded-xl p-4 mb-6">
             <div className="flex items-center gap-2 mb-3">
               <Keyboard className="w-4 h-4 text-blue-600" />
-              <h4 className="font-semibold text-gray-900 text-sm">
-                Phím tắt:
-              </h4>
+              <h4 className="font-semibold text-gray-900 text-sm">Phím tắt:</h4>
             </div>
             <div className="space-y-1.5 text-sm text-gray-600">
               <div className="flex items-center justify-between">

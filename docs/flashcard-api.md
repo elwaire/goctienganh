@@ -29,10 +29,11 @@ Trả về ở hầu hết mọi API liên quan đến deck.
 
 ```ts
 interface DeckResponse {
-  id: string;              // UUID
-  user_id: string;         // UUID — chủ sở hữu
-  subject_id?: string;     // UUID — môn học liên kết (nullable)
-  owner?: {                // chỉ có trong Admin APIs
+  id: string; // UUID
+  user_id: string; // UUID — chủ sở hữu
+  subject_id?: string; // UUID — môn học liên kết (nullable)
+  owner?: {
+    // chỉ có trong Admin APIs
     id: string;
     username: string;
     email: string;
@@ -43,10 +44,10 @@ interface DeckResponse {
   description: string;
   is_public: boolean;
   card_count: number;
-  is_owner: boolean;       // true nếu user hiện tại là chủ deck
-  accuracy?: number;       // 0.0–1.0, null nếu chưa học lần nào
-  created_at: string;      // ISO 8601
-  updated_at: string;      // ISO 8601
+  is_owner: boolean; // true nếu user hiện tại là chủ deck
+  accuracy?: number; // 0.0–1.0, null nếu chưa học lần nào
+  created_at: string; // ISO 8601
+  updated_at: string; // ISO 8601
 }
 ```
 
@@ -54,16 +55,16 @@ interface DeckResponse {
 
 ```ts
 interface CardResponse {
-  id: string;              // UUID
-  deck_id: string;         // UUID
-  term: string;            // từ/cụm từ tiếng Anh
-  phonetic?: string;       // phiên âm IPA, e.g. "/ɪˈfɪʃ.ənt/"
-  word_type?: string;      // loại từ: "noun", "verb", "adjective", ...
-  definition: string;      // nghĩa tiếng Việt
-  example_sentence?: string;    // câu ví dụ tiếng Anh
+  id: string; // UUID
+  deck_id: string; // UUID
+  term: string; // từ/cụm từ tiếng Anh
+  phonetic?: string; // phiên âm IPA, e.g. "/ɪˈfɪʃ.ənt/"
+  word_type?: string; // loại từ: "noun", "verb", "adjective", ...
+  definition: string; // nghĩa tiếng Việt
+  example_sentence?: string; // câu ví dụ tiếng Anh
   example_translation?: string; // dịch câu ví dụ sang tiếng Việt
-  order: number;           // thứ tự hiển thị
-  masked_term?: string;    // chỉ có khi session mode = "fill_blank", e.g. "E_fic__nt"
+  order: number; // thứ tự hiển thị
+  masked_term?: string; // chỉ có khi session mode = "fill_blank", e.g. "E_fic__nt"
   created_at: string;
   updated_at: string;
 }
@@ -73,7 +74,7 @@ interface CardResponse {
 
 ```ts
 interface StudySessionResponse {
-  id: string;              // UUID — session ID
+  id: string; // UUID — session ID
   user_id: string;
   deck_id: string;
   mode: "flashcard" | "writing" | "listening";
@@ -83,7 +84,7 @@ interface StudySessionResponse {
   status: "in_progress" | "completed";
   started_at: string;
   completed_at?: string;
-  cards?: CardResponse[];  // trả về khi Start Session, không có khi Get Session (sau start)
+  cards?: CardResponse[]; // trả về khi Start Session, không có khi Get Session (sau start)
 }
 ```
 
@@ -92,14 +93,14 @@ interface StudySessionResponse {
 ```ts
 interface DeckStudyStatsResponse {
   deck_id: string;
-  total_cards: number;     // tổng số thẻ trong deck
-  studied_cards: number;   // số thẻ đã học ít nhất 1 lần
-  mastered_cards: number;  // số thẻ đã thuộc (is_memorized = true ở lần học gần nhất)
-  total_sessions: number;  // tổng số phiên học đã hoàn thành
-  accuracy: number;        // 0.0–1.0 — độ chính xác tổng hợp
-  progress: number;        // 0.0–1.0 — mastered / total (tiến độ)
-  total_time_ms: number;   // tổng thời gian học (ms)
-  last_studied_at?: string;// ISO 8601
+  total_cards: number; // tổng số thẻ trong deck
+  studied_cards: number; // số thẻ đã học ít nhất 1 lần
+  mastered_cards: number; // số thẻ đã thuộc (is_memorized = true ở lần học gần nhất)
+  total_sessions: number; // tổng số phiên học đã hoàn thành
+  accuracy: number; // 0.0–1.0 — độ chính xác tổng hợp
+  progress: number; // 0.0–1.0 — mastered / total (tiến độ)
+  total_time_ms: number; // tổng thời gian học (ms)
+  last_studied_at?: string; // ISO 8601
 }
 ```
 
@@ -113,12 +114,12 @@ Trả về các deck **public** + deck **của chính user**. Filter theo môn h
 
 **Query Params:**
 
-| Param | Type | Required | Description |
-|-------|------|----------|-------------|
-| `page` | int | No | Số trang, mặc định `1` |
-| `limit` | int | No | Số item/trang, mặc định `20`, tối đa `100` |
-| `search` | string | No | Tìm kiếm theo tên deck (ILIKE) |
-| `subject_id` | UUID | No | Filter theo môn học *(ưu tiên hơn header)* |
+| Param        | Type   | Required | Description                                |
+| ------------ | ------ | -------- | ------------------------------------------ |
+| `page`       | int    | No       | Số trang, mặc định `1`                     |
+| `limit`      | int    | No       | Số item/trang, mặc định `20`, tối đa `100` |
+| `search`     | string | No       | Tìm kiếm theo tên deck (ILIKE)             |
+| `subject_id` | UUID   | No       | Filter theo môn học _(ưu tiên hơn header)_ |
 
 **Header (tuỳ chọn):**
 
@@ -143,6 +144,7 @@ X-Subject-Id: <uuid>
 ### `POST /flashcard-decks` — Tạo bộ thẻ
 
 **Header (tuỳ chọn):**
+
 ```
 X-Subject-Id: <uuid>   ← gán subject_id tự động nếu body không có
 ```
@@ -154,22 +156,24 @@ X-Subject-Id: <uuid>   ← gán subject_id tự động nếu body không có
   "title": "English Vocabulary Unit 5",
   "description": "Từ vựng chủ đề Business (optional)",
   "is_public": false,
-  "subject_id": "uuid-của-môn-học"   // optional; fallback sang header X-Subject-Id
+  "subject_id": "uuid-của-môn-học" // optional; fallback sang header X-Subject-Id
 }
 ```
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `title` | string | ✅ | Tối đa 255 ký tự |
-| `description` | string | No | |
-| `is_public` | boolean | No | Mặc định `false` |
-| `subject_id` | UUID | No | Nếu bỏ trống → lấy từ header `X-Subject-Id` |
+| Field         | Type    | Required | Notes                                       |
+| ------------- | ------- | -------- | ------------------------------------------- |
+| `title`       | string  | ✅       | Tối đa 255 ký tự                            |
+| `description` | string  | No       |                                             |
+| `is_public`   | boolean | No       | Mặc định `false`                            |
+| `subject_id`  | UUID    | No       | Nếu bỏ trống → lấy từ header `X-Subject-Id` |
 
 **Response `201`:**
 
 ```json
 {
-  "data": { /* DeckResponse */ },
+  "data": {
+    /* DeckResponse */
+  },
   "message": "Deck created successfully"
 }
 ```
@@ -205,7 +209,7 @@ Chỉ chủ deck mới được cập nhật. Tất cả field đều **optional
   "title": "Tên mới (optional)",
   "description": "Mô tả mới (optional)",
   "is_public": true,
-  "subject_id": "uuid-môn-học-mới"  // optional — để gán/thay đổi môn học
+  "subject_id": "uuid-môn-học-mới" // optional — để gán/thay đổi môn học
 }
 ```
 
@@ -218,6 +222,91 @@ Chỉ chủ deck mới được cập nhật. Tất cả field đều **optional
 Chỉ chủ deck mới được xoá. Soft delete.
 
 **Response `204`:** No content
+
+---
+
+### `POST /flashcard-decks/{deckId}/copy` — Copy (Fork) bộ thẻ ⭐
+
+Sao chép toàn bộ deck (metadata + cards) thành **bộ thẻ mới thuộc về user hiện tại**.
+
+> **Điều kiện truy cập:** Deck nguồn phải là `is_public = true` HOẶC user là chủ deck đó.  
+> **Deck gốc không bị thay đổi** — đây là thao tác "fork"/clone.
+
+**URL Param:**
+
+| Param    | Mô tả                                |
+| -------- | ------------------------------------ |
+| `deckId` | UUID của deck **nguồn** cần sao chép |
+
+**Request Body (tất cả optional):**
+
+```json
+{
+  "title": "Từ vựng của tôi",
+  "description": "Bản copy để tự ôn tập",
+  "is_public": false,
+  "subject_id": "uuid-môn-học"
+}
+```
+
+| Field         | Type    | Required | Mặc định khi bỏ trống                       |
+| ------------- | ------- | -------- | ------------------------------------------- |
+| `title`       | string  | No       | `"Copy of <title gốc>"`                     |
+| `description` | string  | No       | Giữ nguyên description của deck gốc         |
+| `is_public`   | boolean | No       | `false` (deck copy là **private** mặc định) |
+| `subject_id`  | UUID    | No       | Giữ nguyên `subject_id` của deck gốc        |
+
+**Response `201`:** `DeckWithCardsResponse`
+
+```json
+{
+  "data": {
+    "id": "new-deck-uuid",
+    "user_id": "current-user-uuid",
+    "title": "Copy of English Vocabulary Unit 5",
+    "description": "...",
+    "is_public": false,
+    "card_count": 15,
+    "is_owner": true,
+    "subject_id": "subject-uuid",
+    "cards": [
+      /* CardResponse[] — toàn bộ cards đã được copy */
+    ]
+  },
+  "message": "Deck copied successfully"
+}
+```
+
+**Error cases:**
+
+| Status | Khi nào                                  |
+| ------ | ---------------------------------------- |
+| `404`  | `deckId` nguồn không tồn tại             |
+| `403`  | Deck không public và user không phải chủ |
+
+**Gợi ý FE:**
+
+```ts
+// Nút "Lưu bộ thẻ về tài khoản" / "Fork deck"
+async function copyDeck(
+  deckId: string,
+  options?: {
+    title?: string;
+    description?: string;
+    isPublic?: boolean;
+    subjectId?: string;
+  },
+) {
+  const res = await api.post(`/flashcard-decks/${deckId}/copy`, {
+    title: options?.title,
+    description: options?.description,
+    is_public: options?.isPublic ?? false,
+    subject_id: options?.subjectId,
+  });
+  // res.data → DeckWithCardsResponse (deck mới)
+  return res.data;
+}
+```
 
 ---
 
@@ -258,15 +347,15 @@ Chỉ chủ deck mới được thêm.
 }
 ```
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `term` | string | ✅ | Từ/cụm từ tiếng Anh |
-| `definition` | string | ✅ | Nghĩa tiếng Việt |
-| `phonetic` | string | No | Phiên âm IPA |
-| `word_type` | string | No | `noun`, `verb`, `adjective`, `adverb`, ... |
-| `example_sentence` | string | No | Câu ví dụ tiếng Anh *(cần có để dùng fill_blank)* |
-| `example_translation` | string | No | Dịch câu ví dụ |
-| `order` | int | No | Thứ tự, mặc định `0` |
+| Field                 | Type   | Required | Notes                                             |
+| --------------------- | ------ | -------- | ------------------------------------------------- |
+| `term`                | string | ✅       | Từ/cụm từ tiếng Anh                               |
+| `definition`          | string | ✅       | Nghĩa tiếng Việt                                  |
+| `phonetic`            | string | No       | Phiên âm IPA                                      |
+| `word_type`           | string | No       | `noun`, `verb`, `adjective`, `adverb`, ...        |
+| `example_sentence`    | string | No       | Câu ví dụ tiếng Anh _(cần có để dùng fill_blank)_ |
+| `example_translation` | string | No       | Dịch câu ví dụ                                    |
+| `order`               | int    | No       | Thứ tự, mặc định `0`                              |
 
 **Response `201`:** `CardResponse`
 
@@ -331,24 +420,24 @@ Chỉ chủ deck mới được cập nhật. Tất cả field **optional**.
 }
 ```
 
-| Field | Type | Required | Values |
-|-------|------|----------|--------|
-| `mode` | string | No | `flashcard` *(mặc định)*, `writing`, `listening` |
-| `writing_mode` | string | No | `vi_to_en` *(mặc định)*, `en_to_vi`, `fill_blank` *(chỉ khi mode=writing)* |
+| Field          | Type   | Required | Values                                                                     |
+| -------------- | ------ | -------- | -------------------------------------------------------------------------- |
+| `mode`         | string | No       | `flashcard` _(mặc định)_, `writing`, `listening`                           |
+| `writing_mode` | string | No       | `vi_to_en` _(mặc định)_, `en_to_vi`, `fill_blank` _(chỉ khi mode=writing)_ |
 
 **Ý nghĩa từng mode:**
 
-| Mode | Mô tả | FE hiển thị |
-|------|-------|-------------|
-| `flashcard` | Lật thẻ, tự đánh giá | Mặt trước: `term` → lật → `definition`. User chọn "Đã thuộc" / "Chưa thuộc" |
-| `writing / vi_to_en` | Cho nghĩa tiếng Việt, điền tiếng Anh | Hiển thị `definition` → user nhập `term` |
-| `writing / en_to_vi` | Cho tiếng Anh, điền nghĩa tiếng Việt | Hiển thị `term` → user nhập `definition` |
-| `writing / fill_blank` | Điền từ thiếu trong từ | Hiển thị `masked_term` (e.g `E_fic__nt`) → user nhập lại `term` đầy đủ |
-| `listening` | Nghe TTS, điền nghĩa | FE phát TTS của `term` → user nhập `definition` |
+| Mode                   | Mô tả                                | FE hiển thị                                                                 |
+| ---------------------- | ------------------------------------ | --------------------------------------------------------------------------- |
+| `flashcard`            | Lật thẻ, tự đánh giá                 | Mặt trước: `term` → lật → `definition`. User chọn "Đã thuộc" / "Chưa thuộc" |
+| `writing / vi_to_en`   | Cho nghĩa tiếng Việt, điền tiếng Anh | Hiển thị `definition` → user nhập `term`                                    |
+| `writing / en_to_vi`   | Cho tiếng Anh, điền nghĩa tiếng Việt | Hiển thị `term` → user nhập `definition`                                    |
+| `writing / fill_blank` | Điền từ thiếu trong từ               | Hiển thị `masked_term` (e.g `E_fic__nt`) → user nhập lại `term` đầy đủ      |
+| `listening`            | Nghe TTS, điền nghĩa                 | FE phát TTS của `term` → user nhập `definition`                             |
 
 **Response `201`:** `StudySessionResponse` **kèm** `cards[]`
 
-> ⚠️ **Lưu ý:** `cards` chỉ trả về khi *start session*. Sau đó dùng deck detail nếu cần thẻ lại.  
+> ⚠️ **Lưu ý:** `cards` chỉ trả về khi _start session_. Sau đó dùng deck detail nếu cần thẻ lại.  
 > Với `fill_blank`: mỗi card có thêm field `masked_term` (một phần ký tự bị ẩn bằng `_`).
 
 **Response ví dụ:**
@@ -401,20 +490,20 @@ Gọi sau mỗi lần user trả lời xong 1 thẻ.
 }
 ```
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `card_id` | UUID | ✅ | ID của thẻ vừa học |
-| `is_correct` | boolean | ✅ | Kết quả đúng/sai (server dùng để tính accuracy) |
-| `is_memorized` | boolean | No | Dành cho mode `flashcard`: `true` = "Đã thuộc" (Got it) |
-| `time_spent_ms` | int | No | Thời gian user mất để trả lời (milliseconds) |
+| Field           | Type    | Required | Notes                                                   |
+| --------------- | ------- | -------- | ------------------------------------------------------- |
+| `card_id`       | UUID    | ✅       | ID của thẻ vừa học                                      |
+| `is_correct`    | boolean | ✅       | Kết quả đúng/sai (server dùng để tính accuracy)         |
+| `is_memorized`  | boolean | No       | Dành cho mode `flashcard`: `true` = "Đã thuộc" (Got it) |
+| `time_spent_ms` | int     | No       | Thời gian user mất để trả lời (milliseconds)            |
 
 **Logic `is_correct` + `is_memorized` theo mode:**
 
-| Mode | `is_correct` | `is_memorized` |
-|------|-------------|----------------|
-| `flashcard` | = `is_memorized` | User tự đánh giá |
-| `writing` | FE so sánh input với đáp án, truyền kết quả | Tuỳ FE (có thể = `is_correct`) |
-| `listening` | FE so sánh input với `definition`, truyền kết quả | Tuỳ FE |
+| Mode        | `is_correct`                                      | `is_memorized`                 |
+| ----------- | ------------------------------------------------- | ------------------------------ |
+| `flashcard` | = `is_memorized`                                  | User tự đánh giá               |
+| `writing`   | FE so sánh input với đáp án, truyền kết quả       | Tuỳ FE (có thể = `is_correct`) |
+| `listening` | FE so sánh input với `definition`, truyền kết quả | Tuỳ FE                         |
 
 **Response `200`:**
 
@@ -489,13 +578,13 @@ Trả về danh sách phiên học **đã hoàn thành** của user trên deck n
 
 **Gợi ý hiển thị UI (panel "Lịch sử luyện tập"):**
 
-| Field | Hiển thị |
-|-------|---------|
-| `mode` | Icon: 🃏 flashcard / ✏️ writing / 🎧 listening |
-| `writing_mode` | Badge: "Việt → Anh" / "Anh → Việt" / "Điền từ" |
-| `accuracy` | `(accuracy * 100).toFixed(0) + "%"` |
-| `total_time_ms` | Format: `"2m 30s"` |
-| `started_at` | Format: `"28/03/2026 09:00"` |
+| Field           | Hiển thị                                       |
+| --------------- | ---------------------------------------------- |
+| `mode`          | Icon: 🃏 flashcard / ✏️ writing / 🎧 listening |
+| `writing_mode`  | Badge: "Việt → Anh" / "Anh → Việt" / "Điền từ" |
+| `accuracy`      | `(accuracy * 100).toFixed(0) + "%"`            |
+| `total_time_ms` | Format: `"2m 30s"`                             |
+| `started_at`    | Format: `"28/03/2026 09:00"`                   |
 
 ---
 
@@ -523,14 +612,14 @@ Trả về danh sách phiên học **đã hoàn thành** của user trên deck n
 
 **Gợi ý hiển thị UI (panel "Thống kê"):**
 
-| Field | Label UI | Hiển thị |
-|-------|---------|---------|
-| `accuracy` | Độ chính xác | `"87%"` |
-| `progress` | Tiến độ | `"50%"` hoặc progress bar |
-| `total_sessions` | Lần học | `"8 lần"` |
-| `total_time_ms` | Thời gian | `"1 giờ"` |
-| `last_studied_at` | Lần cuối học | `"28/03/2026"` |
-| `mastered_cards` / `total_cards` | Đã thuộc | `"10/20 từ"` |
+| Field                            | Label UI     | Hiển thị                  |
+| -------------------------------- | ------------ | ------------------------- |
+| `accuracy`                       | Độ chính xác | `"87%"`                   |
+| `progress`                       | Tiến độ      | `"50%"` hoặc progress bar |
+| `total_sessions`                 | Lần học      | `"8 lần"`                 |
+| `total_time_ms`                  | Thời gian    | `"1 giờ"`                 |
+| `last_studied_at`                | Lần cuối học | `"28/03/2026"`            |
+| `mastered_cards` / `total_cards` | Đã thuộc     | `"10/20 từ"`              |
 
 ---
 
@@ -640,30 +729,50 @@ Gọi song song 3 API:
 
 ---
 
+### Luồng 6: Fork bộ thẻ của người khác
+
+```
+1. User xem trang chi tiết deck (deck.is_public = true, deck.is_owner = false)
+2. FE hiển thị nút "Lưu về tài khoản" / "Copy bộ thẻ"
+3. (Optional) Hiển thị modal cho user đặt lại tên bộ thẻ
+4. POST /flashcard-decks/{deckId}/copy
+   Body: { "title": "Tên tuỳ chọn" }   ← hoặc {} để dùng default
+5. Nhận DeckWithCardsResponse (deck mới — is_owner = true)
+6. Chuyển hướng đến trang chi tiết deck mới
+7. Toast: "Đã lưu bộ thẻ về tài khoản của bạn!"
+```
+
+> **Lưu ý:**
+>
+> - Nếu `deck.is_owner = true` có thể ẩn nút fork hoặc đổi thành "Sao lưu bộ thẻ".
+> - Body có thể để trống `{}` — server tự tạo title `"Copy of <tên gốc>"` và set `is_public = false`.
+
+---
+
 ## 9. Enums & Constants
 
 ### Study Mode
 
-| Value | Mô tả |
-|-------|-------|
-| `flashcard` | Lật thẻ, tự đánh giá |
-| `writing` | Luyện viết từ (có 3 sub-mode) |
-| `listening` | Nghe TTS, viết nghĩa |
+| Value       | Mô tả                         |
+| ----------- | ----------------------------- |
+| `flashcard` | Lật thẻ, tự đánh giá          |
+| `writing`   | Luyện viết từ (có 3 sub-mode) |
+| `listening` | Nghe TTS, viết nghĩa          |
 
 ### Writing Mode (chỉ khi mode = `writing`)
 
-| Value | Hiển thị | Mô tả |
-|-------|---------|-------|
-| `vi_to_en` | Việt → Anh | Cho `definition` → user điền `term` |
-| `en_to_vi` | Anh → Việt | Cho `term` → user điền `definition` |
-| `fill_blank` | Điền từ | Cho `masked_term` → user điền `term` đầy đủ |
+| Value        | Hiển thị   | Mô tả                                       |
+| ------------ | ---------- | ------------------------------------------- |
+| `vi_to_en`   | Việt → Anh | Cho `definition` → user điền `term`         |
+| `en_to_vi`   | Anh → Việt | Cho `term` → user điền `definition`         |
+| `fill_blank` | Điền từ    | Cho `masked_term` → user điền `term` đầy đủ |
 
 ### Session Status
 
-| Value | Mô tả |
-|-------|-------|
+| Value         | Mô tả              |
+| ------------- | ------------------ |
 | `in_progress` | Phiên đang diễn ra |
-| `completed` | Đã hoàn thành |
+| `completed`   | Đã hoàn thành      |
 
 ### Deck Status (internal — không dùng trực tiếp ở FE)
 
@@ -675,18 +784,19 @@ Gọi song song 3 API:
 
 ### HTTP Status Codes
 
-| Status | Khi nào xảy ra |
-|--------|---------------|
-| `400 Bad Request` | Body thiếu field bắt buộc hoặc sai format |
-| `401 Unauthorized` | Thiếu/hết hạn JWT token |
-| `403 Forbidden` | Không phải chủ deck (khi cần quyền) |
-| `404 Not Found` | Deck / Card / Session không tồn tại |
-| `409 Conflict` | Session đã `completed` nhưng vẫn gọi record/complete |
-| `500 Internal Server Error` | Lỗi server |
+| Status                      | Khi nào xảy ra                                       |
+| --------------------------- | ---------------------------------------------------- |
+| `400 Bad Request`           | Body thiếu field bắt buộc hoặc sai format            |
+| `401 Unauthorized`          | Thiếu/hết hạn JWT token                              |
+| `403 Forbidden`             | Không phải chủ deck (khi cần quyền)                  |
+| `404 Not Found`             | Deck / Card / Session không tồn tại                  |
+| `409 Conflict`              | Session đã `completed` nhưng vẫn gọi record/complete |
+| `500 Internal Server Error` | Lỗi server                                           |
 
 ### Response Format chung
 
 **Thành công:**
+
 ```json
 {
   "data": { ... },
@@ -695,6 +805,7 @@ Gọi song song 3 API:
 ```
 
 **Lỗi:**
+
 ```json
 {
   "error": "Not Found",
@@ -703,6 +814,7 @@ Gọi song song 3 API:
 ```
 
 **Validation error (`400`):**
+
 ```json
 {
   "error": "Validation Error",
@@ -732,7 +844,14 @@ Gọi song song 3 API:
 7. **`progress`** — `mastered_cards / total_cards`. Dùng cho progress bar.
 
 8. **X-Subject-Id header** — nên set ở mức Axios interceptor/fetch wrapper theo context môn học hiện tại:
+
    ```ts
    // Ví dụ với Axios
-   axiosInstance.defaults.headers['X-Subject-Id'] = currentSubjectId ?? '';
+   axiosInstance.defaults.headers["X-Subject-Id"] = currentSubjectId ?? "";
    ```
+
+9. **`is_owner` trong `DeckResponse`** — dùng để kiểm soát UI theo quyền:
+   - `true` → Hiển thị nút **Edit / Delete**. Ẩn hoặc thay nút "Fork" bằng "Sao lưu".
+   - `false` → Ẩn nút Edit/Delete. Hiển thị nút **"Lưu về tài khoản"** (chỉ khi `is_public = true`).
+
+10. **Copy Deck — title mặc định** — nếu không truyền `title` trong body, server tự tạo `"Copy of <title gốc>"`. FE nên hiển thị giá trị này trong modal xác nhận để user có thể sửa trước khi submit.

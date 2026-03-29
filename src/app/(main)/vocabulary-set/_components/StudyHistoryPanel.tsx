@@ -1,5 +1,6 @@
 import { Clock, CreditCard, PenTool, Headphones, BookOpen, BarChart3 } from "lucide-react";
-import type { StudyHistorySession, StudyMode } from "@/types/flashcard";
+import type { StudyHistorySession } from "@/types/flashcard";
+import type { StudyMode } from "@/types/vocabulary";
 
 interface StudyHistoryPanelProps {
   sessions: StudyHistorySession[];
@@ -33,7 +34,7 @@ export function StudyHistoryPanel({ sessions }: StudyHistoryPanelProps) {
       ) : (
         <div className="space-y-2 max-h-[600px] overflow-y-auto">
           {sessions.map((session) => {
-            const config = MODE_CONFIG[session.mode];
+            const config = MODE_CONFIG[session.mode as StudyMode] || { name: "N/A", icon: null };
             const accuracyPercent = Math.round(session.accuracy * 100);
 
             return (

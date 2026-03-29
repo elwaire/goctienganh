@@ -10,10 +10,12 @@ type ButtonVariant =
   | "success"
   | "gray";
 type ButtonSize = "sm" | "md" | "lg";
+type ButtonRounded = "full" | "md";
 
 interface ButtonPrimaryProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
+  rounded?: ButtonRounded;
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
@@ -26,6 +28,7 @@ const ButtonPrimary = forwardRef<HTMLButtonElement, ButtonPrimaryProps>(
       children,
       variant = "primary",
       size = "md",
+      rounded = "full",
       isLoading = false,
       leftIcon,
       rightIcon,
@@ -38,11 +41,15 @@ const ButtonPrimary = forwardRef<HTMLButtonElement, ButtonPrimaryProps>(
   ) => {
     const baseStyles = `
       inline-flex items-center cursor-pointer justify-center gap-2
-     rounded-full
       transition-all duration-200
       focus:outline-none focus:ring-2 focus:ring-offset-2
       disabled:opacity-50 disabled:cursor-not-allowed
     `;
+
+    const roundedStyles: Record<ButtonRounded, string> = {
+      full: "rounded-full",
+      md: "rounded-xl",
+    };
 
     const variants: Record<ButtonVariant, string> = {
       primary: `
@@ -95,6 +102,7 @@ const ButtonPrimary = forwardRef<HTMLButtonElement, ButtonPrimaryProps>(
         disabled={disabled || isLoading}
         className={`
           ${baseStyles}
+          ${roundedStyles[rounded]}
           ${variants[variant]}
           ${sizes[size]}
           ${fullWidth ? "w-full" : ""}

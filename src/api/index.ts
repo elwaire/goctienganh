@@ -1,3 +1,4 @@
 export { subjectsApi } from "./subjectsApi";
 export { examsApi } from "./examsApi";
-export { flashcardApi } from "./flashcardApi";
+export { vocabularyApi } from "./vocabularyApi";
+export { streakApi } from "./streakApi";

@@ -1,4 +1,4 @@
-import type { StudyMode } from "@/types/flashcard";
+import type { StudyMode } from "@/types/vocabulary";
 import { CreditCard, PenTool, Headphones } from "lucide-react";
 import type { ReactNode } from "react";
 

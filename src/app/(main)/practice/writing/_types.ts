@@ -1,12 +1,12 @@
-import type { WritingMode } from "@/types/flashcard";
-import type { CardResponse } from "@/types/flashcard";
+import type { WritingMode } from "@/types/vocabulary";
+import type { VocabularyWord } from "@/types/vocabulary";
 
 export type GameState = "intro" | "playing" | "results";
 
 export interface WritingQuestion {
   id: string;
   mode: WritingMode;
-  card: CardResponse;
+  card: VocabularyWord;
   prompt: string;
   correctAnswer: string;
   blankedWord?: string;
@@ -47,11 +47,17 @@ export const WRITING_MODES: WritingModeOption[] = [
     description: "Cho từ bị thiếu chữ cái, điền đầy đủ",
     example: 'VD: "P_rs_v_rance" → "Perseverance"',
   },
+  {
+    id: "random",
+    name: "Trộn lẫn",
+    description: "Câu hỏi được chọn ngẫu nhiên từ 3 kiểu học",
+    example: "Học đa chiều",
+  },
 ];
 
 /** Generate questions from cards for the given writing mode */
 export function generateQuestions(
-  cards: CardResponse[],
+  cards: VocabularyWord[],
   mode: WritingMode,
 ): WritingQuestion[] {
   return cards.map((card) => {
@@ -59,7 +65,14 @@ export function generateQuestions(
     let correctAnswer = "";
     let blankedWord = "";
 
-    switch (mode) {
+    const actualMode =
+      mode === "random"
+        ? (["en_to_vi", "vi_to_en", "fill_blank"][
+            Math.floor(Math.random() * 3)
+          ] as WritingMode)
+        : mode;
+
+    switch (actualMode) {
       case "en_to_vi":
         prompt = `Nghĩa của từ "${card.term}" là gì?`;
         correctAnswer = card.definition;
@@ -69,9 +82,7 @@ export function generateQuestions(
         correctAnswer = card.term;
         break;
       case "fill_blank":
-        blankedWord =
-          card.masked_term ??
-          card.term
+        blankedWord = card.term
             .split("")
             .map((char, i) => {
               if (i > 0 && i < card.term.length - 1 && Math.random() < 0.4) {
@@ -81,6 +92,10 @@ export function generateQuestions(
             })
             .join("");
         prompt = `Điền đầy đủ từ: ${blankedWord}`;
+        correctAnswer = card.term;
+        break;
+      default:
+        prompt = `"${card.definition}" trong tiếng Anh là gì?`;
         correctAnswer = card.term;
         break;
     }
@@ -104,4 +119,5 @@ export const MODE_LABELS: Record<WritingMode, string> = {
   en_to_vi: "Viết nghĩa tiếng Việt",
   vi_to_en: "Viết từ tiếng Anh",
   fill_blank: "Điền chữ còn thiếu",
+  random: "Trộn ngẫu nhiên",
 };

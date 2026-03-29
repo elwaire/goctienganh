@@ -1,30 +1,43 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Globe, Loader2 } from "lucide-react";
 
 interface CreateDeckModalProps {
   isOpen: boolean;
-  isCreating: boolean;
+  isCreating: boolean; // can also be isSaving
+  editingDeck?: { title: string; description?: string; is_public: boolean };
   onClose: () => void;
-  onCreate: (data: { title: string; description: string; is_public: boolean }) => void;
+  onSave: (data: { title: string; description: string; is_public: boolean }) => void;
 }
 
 export function CreateDeckModal({
   isOpen,
   isCreating,
+  editingDeck,
   onClose,
-  onCreate,
+  onSave,
 }: CreateDeckModalProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [isPublic, setIsPublic] = useState(false);
 
+  useEffect(() => {
+    if (isOpen) {
+      if (editingDeck) {
+        setTitle(editingDeck.title);
+        setDescription(editingDeck.description || "");
+        setIsPublic(editingDeck.is_public);
+      } else {
+        setTitle("");
+        setDescription("");
+        setIsPublic(false);
+      }
+    }
+  }, [isOpen, editingDeck]);
+
   if (!isOpen) return null;
 
   const handleSubmit = () => {
-    onCreate({ title: title.trim(), description, is_public: isPublic });
-    setTitle("");
-    setDescription("");
-    setIsPublic(false);
+    onSave({ title: title.trim(), description, is_public: isPublic });
   };
 
   return (
@@ -37,7 +50,9 @@ export function CreateDeckModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-gray-900">Tạo bộ từ mới</h3>
+          <h3 className="text-xl font-bold text-gray-900">
+            {editingDeck ? "Sửa bộ từ" : "Tạo bộ từ mới"}
+          </h3>
           <button
             onClick={onClose}
             className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100"
@@ -110,7 +125,7 @@ export function CreateDeckModal({
               className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isCreating && <Loader2 className="w-4 h-4 animate-spin" />}
-              Tạo bộ từ
+              {editingDeck ? "Lưu thay đổi" : "Tạo bộ từ"}
             </button>
           </div>
         </div>

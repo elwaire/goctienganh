@@ -1,17 +1,16 @@
 "use client";
 
-import { useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { vocabularyApi } from "@/api/vocabularyApi";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, AlertCircle, ArrowLeft } from "lucide-react";
-import { flashcardApi } from "@/api/flashcardApi";
-import { queryKeys } from "@/lib/queryKeys";
-import { useWritingGame } from "./_hooks";
+import { AlertCircle, ArrowLeft, Loader2 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 import {
   WritingIntroScreen,
   WritingPlayingScreen,
   WritingResultsScreen,
 } from "./_components";
+import { useWritingGame } from "./_hooks";
 
 export default function WritingPage() {
   const searchParams = useSearchParams();
@@ -23,14 +22,14 @@ export default function WritingPage() {
     isLoading,
     isError,
   } = useQuery({
-    queryKey: queryKeys.flashcardDecks.detail(deckId ?? ""),
-    queryFn: () => flashcardApi.getDeck(deckId!),
+    queryKey: ["vocabularySets", "detail", deckId ?? ""],
+    queryFn: () => vocabularyApi.getSet(deckId!),
     enabled: !!deckId,
   });
 
   const game = useWritingGame({
     deckId: deckId ?? "",
-    cards: deckData?.cards ?? [],
+    cards: deckData?.words ?? [],
   });
 
   // Auto-focus input on game state changes
@@ -49,7 +48,7 @@ export default function WritingPage() {
           Thiếu deckId. Hãy chọn bộ từ từ trang Luyện tập.
         </p>
         <a
-          href="/practice"
+          href="/vocabulary-set"
           className="flex items-center gap-2 text-sm text-blue-600 hover:underline"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -74,7 +73,7 @@ export default function WritingPage() {
         <AlertCircle className="w-10 h-10 text-rose-400" />
         <p className="text-sm text-neutral-500">Không tìm thấy bộ từ.</p>
         <a
-          href="/practice"
+          href="/vocabulary-set"
           className="flex items-center gap-2 text-sm text-blue-600 hover:underline"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -100,9 +99,9 @@ export default function WritingPage() {
     return (
       <WritingIntroScreen
         deck={deckData}
-        cardCount={deckData.cards.length}
+        cardCount={deckData.words.length}
         selectedMode={game.selectedMode}
-        isStarting={game.isSubmitting}
+        isStarting={false}
         onSelectMode={game.setSelectedMode}
         onStart={game.handleStart}
       />
@@ -119,7 +118,6 @@ export default function WritingPage() {
         totalCount={game.questions.length}
         elapsedTime={game.getElapsedTime()}
         results={game.results}
-        isRestarting={game.isSubmitting}
         onRestart={game.handleRestart}
         onExit={game.handleExit}
       />

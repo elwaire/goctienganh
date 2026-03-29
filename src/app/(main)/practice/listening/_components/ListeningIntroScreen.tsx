@@ -1,8 +1,8 @@
 import { Headphones, Play, Info, Keyboard, Loader2 } from "lucide-react";
-import type { DeckResponse } from "@/types/flashcard";
+import type { VocabularySetWithWords } from "@/types/vocabulary";
 
 interface ListeningIntroScreenProps {
-  deck: DeckResponse;
+  deck: VocabularySetWithWords;
   cardCount: number;
   isStarting: boolean;
   onStart: () => void;
