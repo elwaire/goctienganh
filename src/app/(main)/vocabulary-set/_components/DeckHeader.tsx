@@ -3,14 +3,14 @@ import { useState, useRef, useEffect } from "react";
 import {
   ArrowLeft,
   BookOpen,
-  TrendingUp,
-  Award,
   Clock,
   MoreVertical,
   Globe,
   Lock,
   Edit,
   Trash2,
+  Copy,
+  Loader2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type {
@@ -23,9 +23,19 @@ interface DeckHeaderProps {
   stats?: any; // Temporarily any until we have stats in new API
   onEditDeck?: () => void;
   onDeleteDeck?: () => void;
+  /** Bộ public của người khác — sao chép về tài khoản */
+  onCopyToMyAccount?: () => void;
+  copyLoading?: boolean;
 }
 
-export function DeckHeader({ deck, stats, onEditDeck, onDeleteDeck }: DeckHeaderProps) {
+export function DeckHeader({
+  deck,
+  stats,
+  onEditDeck,
+  onDeleteDeck,
+  onCopyToMyAccount,
+  copyLoading,
+}: DeckHeaderProps) {
   const t = useTranslations("vocabulary");
   const router = useRouter();
   const [showDropdown, setShowDropdown] = useState(false);
@@ -78,7 +88,22 @@ export function DeckHeader({ deck, stats, onEditDeck, onDeleteDeck }: DeckHeader
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-2 ml-4">
+          <div className="flex items-center gap-2 ml-4 flex-shrink-0">
+            {!deck.is_owner && deck.is_public && onCopyToMyAccount && (
+              <button
+                type="button"
+                onClick={onCopyToMyAccount}
+                disabled={copyLoading}
+                className="inline-flex items-center gap-2 h-[44px] px-4 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-medium transition-colors"
+              >
+                {copyLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Copy className="w-4 h-4" />
+                )}
+                Sao chép về tài khoản
+              </button>
+            )}
             {deck.is_owner && (
               <div className="relative" ref={dropdownRef}>
                 <button

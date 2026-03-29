@@ -11,6 +11,7 @@ import type {
   UpdateVocabularySetRequest,
   CreateVocabularyWordRequest,
   BulkCreateVocabularyWordsRequest,
+  CopyVocabularySetRequest,
 } from "@/types/vocabulary";
 
 // ─── API Response Wrappers ───
@@ -69,6 +70,21 @@ export const vocabularyApi = {
   /** DELETE /vocabulary-sets/:setId — Xoá bộ từ vựng */
   deleteSet: async (setId: string): Promise<void> => {
     await axiosInstance.delete(`/vocabulary-sets/${setId}`);
+  },
+
+  /**
+   * POST /vocabulary-sets/:setId/copy — Sao chép bộ public của người khác về tài khoản mình (201)
+   * Body có thể bỏ trống.
+   */
+  copySet: async (
+    setId: string,
+    body?: CopyVocabularySetRequest,
+  ): Promise<VocabularySetWithWords> => {
+    const response = await axiosInstance.post<ApiResponse<VocabularySetWithWords>>(
+      `/vocabulary-sets/${setId}/copy`,
+      body ?? {},
+    );
+    return response.data.data;
   },
 
   // ════════════════════════════════

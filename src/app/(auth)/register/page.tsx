@@ -7,6 +7,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useDispatch } from "react-redux";
 import { setUser } from "@/store/authSlice";
 import { registerUser, loginWithGoogle, saveSession, authApi } from "@/lib/auth";
+import { normalizeAuthLoginUser } from "@/types/auth";
 import { ApiError } from "@/lib/api";
 import { AxiosError } from "axios";
 import { useForm } from "react-hook-form";
@@ -53,7 +54,7 @@ export default function RegisterPage() {
         const fullUser = await authApi.getMe();
         dispatch(setUser(fullUser));
       } catch {
-        dispatch(setUser(data.user));
+        dispatch(setUser(normalizeAuthLoginUser(data.user)));
       }
       window.location.href = "/";
     },
@@ -77,7 +78,7 @@ export default function RegisterPage() {
         const fullUser = await authApi.getMe();
         dispatch(setUser(fullUser));
       } catch {
-        dispatch(setUser(data.user));
+        dispatch(setUser(normalizeAuthLoginUser(data.user)));
       }
       window.location.href = "/";
     },

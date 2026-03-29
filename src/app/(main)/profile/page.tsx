@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useDispatch, useSelector } from "react-redux";
 import {
   Camera,
   Check,
   Lock,
-  User,
+  User as UserIcon,
   Mail,
   Phone,
   Calendar,
@@ -19,28 +22,89 @@ import {
   Heart,
   BookOpen,
   Award,
+  Loader2,
 } from "lucide-react";
+import { userApi, avatarUrl } from "@/api/userApi";
+import { getAccessToken } from "@/lib/auth";
+import { setUser } from "@/store/authSlice";
+import type { RootState } from "@/store";
+import type { User } from "@/types/auth";
+import { dobToDateInput } from "@/types/auth";
 
 type TabType = "info" | "security";
 
+function formStateFromUser(u: User) {
+  return {
+    fullname: u.fullname ?? "",
+    email: u.email ?? "",
+    phone: u.phone ?? "",
+    dob: dobToDateInput(u.dob) || "",
+    bio: u.bio ?? "",
+    goal: u.goal ?? "",
+    level: u.current_level ?? "",
+    interests: u.interests ?? "",
+  };
+}
+
 export default function ProfilePage() {
+  const dispatch = useDispatch();
+  const queryClient = useQueryClient();
+  const { isAuthenticated } = useSelector((s: RootState) => s.auth);
+
   const [activeTab, setActiveTab] = useState<TabType>("info");
-  const [selectedAvatar, setSelectedAvatar] = useState(0);
+  const [selectedAvatarUrl, setSelectedAvatarUrl] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [profileError, setProfileError] = useState("");
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const [profileForm, setProfileForm] = useState({
-    fullname: "Võ Ngọc Min",
-    email: "elwairestudio@gmail.com",
-    phone: "0985940157",
-    dob: "2026-02-28",
-    bio: "Học viên đam mê tiếng Anh, mong muốn đạt IELTS 7.0 trong 6 tháng tới. Yêu thích giao tiếp và du lịch.",
-    goal: "Đạt IELTS 7.0 để du học",
-    level: "Intermediate (B1)",
-    interests: "Du lịch, Phim, Âm nhạc",
+    fullname: "",
+    email: "",
+    phone: "",
+    dob: "",
+    bio: "",
+    goal: "",
+    level: "",
+    interests: "",
   });
+
+  const canLoadProfile = !!getAccessToken() || isAuthenticated;
+
+  const {
+    data: userMe,
+    isLoading: profileLoading,
+    isError: profileLoadError,
+  } = useQuery({
+    queryKey: ["user", "me"],
+    queryFn: () => userApi.getMe(),
+    enabled: canLoadProfile,
+    staleTime: 60_000,
+  });
+
+  const { data: avatarList, isLoading: avatarsLoading } = useQuery({
+    queryKey: ["avatars", "presets"],
+    queryFn: () => userApi.getAvatars({ limit: 100 }),
+    enabled: canLoadProfile && isEditing,
+  });
+
+  const presetAvatarUrls = useMemo(() => {
+    const presets = avatarList?.avatars ?? [];
+    const urls = presets.map(avatarUrl).filter(Boolean);
+    if (selectedAvatarUrl && !urls.includes(selectedAvatarUrl)) {
+      return [selectedAvatarUrl, ...urls];
+    }
+    return urls.length ? urls : selectedAvatarUrl ? [selectedAvatarUrl] : [];
+  }, [avatarList?.avatars, selectedAvatarUrl]);
+
+  useEffect(() => {
+    if (!userMe) return;
+    setProfileForm(formStateFromUser(userMe));
+    setSelectedAvatarUrl(userMe.avatar ?? "");
+  }, [userMe]);
 
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
@@ -48,14 +112,33 @@ export default function ProfilePage() {
     confirmPassword: "",
   });
 
-  const presetAvatars = [
-    "https://api.dicebear.com/7.x/avataaars/svg?seed=1",
-    "https://api.dicebear.com/7.x/avataaars/svg?seed=2",
-    "https://api.dicebear.com/7.x/avataaars/svg?seed=3",
-    "https://api.dicebear.com/7.x/avataaars/svg?seed=4",
-    "https://api.dicebear.com/7.x/avataaars/svg?seed=5",
-    "https://api.dicebear.com/7.x/avataaars/svg?seed=6",
-  ];
+  const updateProfileMutation = useMutation({
+    mutationFn: () =>
+      userApi.updateProfile({
+        fullname: profileForm.fullname,
+        avatar: selectedAvatarUrl,
+        phone: profileForm.phone,
+        dob: profileForm.dob || undefined,
+        bio: profileForm.bio,
+        current_level: profileForm.level,
+        goal: profileForm.goal,
+        interests: profileForm.interests,
+      }),
+    onSuccess: (updated) => {
+      dispatch(setUser(updated));
+      queryClient.setQueryData(["user", "me"], updated);
+      setProfileError("");
+      setIsEditing(false);
+    },
+    onError: (e: unknown) => {
+      const msg =
+        e && typeof e === "object" && "response" in e
+          ? (e as { response?: { data?: { message?: string } } }).response?.data
+              ?.message
+          : undefined;
+      setProfileError(msg || "Không thể lưu hồ sơ. Thử lại sau.");
+    },
+  });
 
   const levelOptions = [
     "Beginner (A1)",
@@ -67,14 +150,17 @@ export default function ProfilePage() {
   ];
 
   const handleSaveProfile = () => {
-    console.log("Saving profile:", profileForm);
-    setIsEditing(false);
-    // TODO: API call to save profile
+    setProfileError("");
+    updateProfileMutation.mutate();
   };
 
   const handleCancelEdit = () => {
+    if (userMe) {
+      setProfileForm(formStateFromUser(userMe));
+      setSelectedAvatarUrl(userMe.avatar ?? "");
+    }
+    setProfileError("");
     setIsEditing(false);
-    // TODO: Reset form to original values
   };
 
   const handleChangePassword = () => {
@@ -99,6 +185,56 @@ export default function ProfilePage() {
       year: "numeric",
     });
   };
+
+  if (!mounted) {
+    return (
+      <div className="min-h-[40vh] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!canLoadProfile) {
+    return (
+      <div className="min-h-[40vh] flex flex-col items-center justify-center gap-4 max-w-md mx-auto text-center p-6">
+        <p className="text-gray-600">Đăng nhập để xem và chỉnh sửa hồ sơ.</p>
+        <Link
+          href="/login"
+          className="text-blue-600 font-medium hover:underline"
+        >
+          Đăng nhập
+        </Link>
+      </div>
+    );
+  }
+
+  if (profileLoading && !userMe) {
+    return (
+      <div className="min-h-[40vh] flex flex-col items-center justify-center gap-3">
+        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+        <p className="text-sm text-gray-500">Đang tải hồ sơ...</p>
+      </div>
+    );
+  }
+
+  if (profileLoadError || !userMe) {
+    return (
+      <div className="min-h-[40vh] flex flex-col items-center justify-center gap-4 p-6 text-center">
+        <AlertCircle className="w-10 h-10 text-amber-500" />
+        <p className="text-gray-600 text-sm">
+          Không tải được hồ sơ. Thử đăng nhập lại.
+        </p>
+        <Link
+          href="/login"
+          className="text-blue-600 font-medium hover:underline"
+        >
+          Đăng nhập
+        </Link>
+      </div>
+    );
+  }
+
+  const displayAvatarUrl = selectedAvatarUrl || userMe.avatar || "";
 
   return (
     <div className="min-h-screen ">
@@ -125,7 +261,7 @@ export default function ProfilePage() {
                       : "text-gray-500 hover:text-gray-700"
                   }`}
                 >
-                  <User className="w-4 h-4" />
+                  <UserIcon className="w-4 h-4" />
                   Thông tin
                   {activeTab === "info" && (
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />
@@ -159,11 +295,17 @@ export default function ProfilePage() {
                         {/* Avatar & Name */}
                         <div className="flex items-center gap-4 mb-5 pb-5 border-b border-gray-200">
                           <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200 flex-shrink-0">
-                            <img
-                              src={presetAvatars[selectedAvatar]}
-                              alt="Avatar"
-                              className="w-full h-full object-cover"
-                            />
+                            {displayAvatarUrl ? (
+                              <img
+                                src={displayAvatarUrl}
+                                alt="Avatar"
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-gray-400 text-lg font-medium bg-gray-200">
+                                {(profileForm.fullname || "?").slice(0, 1).toUpperCase()}
+                              </div>
+                            )}
                           </div>
                           <div className="flex-1 min-w-0">
                             <h2 className="text-xl font-bold text-gray-900 truncate">
@@ -188,7 +330,7 @@ export default function ProfilePage() {
                         {profileForm.bio && (
                           <div className="mb-5 pb-5 border-b border-gray-200">
                             <div className="flex items-start gap-3">
-                              <User className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
+                              <UserIcon className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
                               <div className="flex-1 min-w-0">
                                 <p className="text-xs text-gray-600 mb-1">
                                   Giới thiệu
@@ -276,11 +418,19 @@ export default function ProfilePage() {
                           <div className="flex items-center gap-4">
                             <div className="relative flex-shrink-0">
                               <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200">
-                                <img
-                                  src={presetAvatars[selectedAvatar]}
-                                  alt="Avatar"
-                                  className="w-full h-full object-cover"
-                                />
+                                {displayAvatarUrl ? (
+                                  <img
+                                    src={displayAvatarUrl}
+                                    alt="Avatar"
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-lg font-medium bg-gray-200">
+                                    {(profileForm.fullname || "?")
+                                      .slice(0, 1)
+                                      .toUpperCase()}
+                                  </div>
+                                )}
                               </div>
                               <button className="absolute -bottom-1 -right-1 w-7 h-7 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center border-2 border-white transition-colors">
                                 <Camera className="w-3.5 h-3.5 text-white" />
@@ -290,24 +440,26 @@ export default function ProfilePage() {
                             <div className="flex-1">
                               <p className="text-xs text-gray-600 mb-2">
                                 Chọn avatar
+                                {avatarsLoading && " (đang tải...)"}
                               </p>
                               <div className="flex gap-2 flex-wrap">
-                                {presetAvatars.map((avatar, index) => (
+                                {presetAvatarUrls.map((url) => (
                                   <button
-                                    key={index}
-                                    onClick={() => setSelectedAvatar(index)}
+                                    key={url}
+                                    type="button"
+                                    onClick={() => setSelectedAvatarUrl(url)}
                                     className={`relative w-10 h-10 rounded-full overflow-hidden transition-all border-2 ${
-                                      selectedAvatar === index
+                                      selectedAvatarUrl === url
                                         ? "border-blue-600 scale-105"
                                         : "border-gray-200 hover:border-gray-300"
                                     }`}
                                   >
                                     <img
-                                      src={avatar}
-                                      alt={`Avatar ${index + 1}`}
+                                      src={url}
+                                      alt=""
                                       className="w-full h-full object-cover"
                                     />
-                                    {selectedAvatar === index && (
+                                    {selectedAvatarUrl === url && (
                                       <div className="absolute inset-0 bg-blue-600/20 flex items-center justify-center">
                                         <Check className="w-4 h-4 text-blue-600" />
                                       </div>
@@ -426,16 +578,16 @@ export default function ProfilePage() {
                             </label>
                             <input
                               type="email"
+                              readOnly
+                              disabled
                               value={profileForm.email}
-                              onChange={(e) =>
-                                setProfileForm({
-                                  ...profileForm,
-                                  email: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                              title="Email không đổi qua hồ sơ"
+                              className="w-full px-3 py-2 bg-gray-100 border border-gray-200 rounded-lg text-sm text-gray-600 cursor-not-allowed"
                               placeholder="email@example.com"
                             />
+                            <p className="text-xs text-gray-500 mt-1">
+                              Email đăng nhập chỉ hiển thị, không sửa tại đây.
+                            </p>
                           </div>
 
                           <div className="grid grid-cols-2 gap-3">
@@ -476,19 +628,36 @@ export default function ProfilePage() {
                           </div>
                         </div>
 
+                        {profileError && (
+                          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                            {profileError}
+                          </div>
+                        )}
+
                         {/* Actions */}
                         <div className="flex gap-2 mt-5">
                           <button
+                            type="button"
                             onClick={handleCancelEdit}
-                            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-xl transition-colors text-sm"
+                            disabled={updateProfileMutation.isPending}
+                            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-xl transition-colors text-sm disabled:opacity-50"
                           >
                             Hủy
                           </button>
                           <button
+                            type="button"
                             onClick={handleSaveProfile}
-                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-xl transition-colors text-sm"
+                            disabled={updateProfileMutation.isPending}
+                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-xl transition-colors text-sm disabled:opacity-50 inline-flex items-center justify-center gap-2"
                           >
-                            Lưu
+                            {updateProfileMutation.isPending ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Đang lưu...
+                              </>
+                            ) : (
+                              "Lưu"
+                            )}
                           </button>
                         </div>
                       </div>
@@ -668,7 +837,9 @@ export default function ProfilePage() {
                 <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                   <span className="text-xs text-gray-600">Tham gia</span>
                   <span className="text-xs font-semibold text-gray-900">
-                    15/03/2024
+                    {userMe.created_at
+                      ? formatDate(userMe.created_at)
+                      : "—"}
                   </span>
                 </div>
               </div>

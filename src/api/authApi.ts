@@ -1,5 +1,5 @@
 import { axiosInstance } from "@/lib/axios";
-import type { User } from "@/types/auth";
+import type { AuthLoginUser } from "@/types/auth";
 
 type AuthApiResponse = {
   success: boolean;
@@ -8,14 +8,14 @@ type AuthApiResponse = {
     access_token: string;
     refresh_token: string;
     token_type: string;
-    user: User;
+    user: AuthLoginUser;
   };
 };
 
 export type LoginResponse = {
   access_token: string;
   refresh_token: string;
-  user: User;
+  user: AuthLoginUser;
 };
 
 export const authApi = {

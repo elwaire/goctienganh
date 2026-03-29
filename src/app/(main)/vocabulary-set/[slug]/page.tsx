@@ -133,6 +133,24 @@ export default function VocabularySetDetailPage() {
     },
   });
 
+  const copyDeckMutation = useMutation({
+    mutationFn: () => vocabularyApi.copySet(deckId),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["vocabularySets"] });
+      router.push(`/vocabulary-set/${data.id}`);
+    },
+    onError: (err: unknown) => {
+      const msg =
+        err && typeof err === "object" && "response" in err
+          ? String(
+              (err as { response?: { data?: { message?: string } } }).response?.data
+                ?.message ?? "",
+            )
+          : "";
+      alert(msg || "Không thể sao chép bộ từ. Chỉ áp dụng với bộ công khai của người khác.");
+    },
+  });
+
   // ─── Handlers ───
   const handleOpenAddModal = () => {
     setEditingCard(null);
@@ -219,6 +237,12 @@ export default function VocabularySetDetailPage() {
           stats={studyStats}
           onEditDeck={handleEditDeck}
           onDeleteDeck={handleDeleteDeck}
+          onCopyToMyAccount={
+            !deckData.is_owner && deckData.is_public
+              ? () => copyDeckMutation.mutate()
+              : undefined
+          }
+          copyLoading={copyDeckMutation.isPending}
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -91,5 +91,14 @@ export interface BulkCreateVocabularyWordsRequest {
   words: CreateVocabularyWordRequest[];
 }
 
+/** Body tùy chọn cho POST /vocabulary-sets/{setId}/copy */
+export interface CopyVocabularySetRequest {
+  title?: string;
+  description?: string;
+  is_public?: boolean;
+  subject_id?: string | null;
+  category_id?: string | null;
+}
+
 export type StudyMode = "flashcard" | "writing" | "listening";
 export type WritingMode = "en_to_vi" | "vi_to_en" | "fill_blank" | "random";

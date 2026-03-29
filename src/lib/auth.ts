@@ -2,6 +2,8 @@ import Cookies from "js-cookie";
 import { store, persistor } from "@/store";
 import { clearUser } from "@/store/authSlice";
 import type { LoginPayload, RegisterPayload, AuthResponse, User } from "@/types/auth";
+import { normalizeAuthLoginUser } from "@/types/auth";
+import { userApi } from "@/api/userApi";
 import { axiosInstance } from "./axios";
 
 const COOKIE_OPTIONS = { expires: 7, secure: true, sameSite: "strict" } as const;
@@ -55,12 +57,9 @@ export const authApi = {
   },
 
   /**
-   * Get current user profile
+   * Get current user profile (UserResponse phẳng — đồng bộ với Redux)
    */
-  getMe: async (): Promise<User> => {
-    const response = await axiosInstance.get<{ success: boolean; data: User }>("/users/me");
-    return response.data.data;
-  },
+  getMe: () => userApi.getMe(),
 };
 
 // Aliases for compatibility if needed (or we can update the callers)
@@ -75,7 +74,8 @@ export const saveSession = (data: AuthResponse) => {
   Cookies.set("access_token", data.access_token, { ...COOKIE_OPTIONS });
   Cookies.set("refresh_token", data.refresh_token, { ...COOKIE_OPTIONS, expires: 30 });
   if (typeof window !== "undefined") {
-    localStorage.setItem("user", JSON.stringify(data.user));
+    const normalized = normalizeAuthLoginUser(data.user);
+    localStorage.setItem("user", JSON.stringify(normalized));
   }
 };
 
