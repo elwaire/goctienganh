@@ -21,17 +21,17 @@ export function DeckCard({ deck }: DeckCardProps) {
       {/* Header */}
       <div className="flex flex-col mb-4">
         <div className="flex items-center justify-between mb-1">
-          <h3 className="font-bold text-lg text-gray-900 mb-1 line-clamp-1 group-hover:text-blue-600 transition-colors uppercase">
+          <h3 className="font-bold text-lg text-gray-900 mb-1 line-clamp-1  group-hover:text-blue-600 transition-colors ">
             {deck.title}
           </h3>
-          <div className="ml-3">
+          <div className="ml-3 ">
             {deck.is_public ? (
-              <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-medium">
+              <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-medium whitespace-nowrap">
                 <Globe className="w-3 h-3" />
                 {t("public")}
               </div>
             ) : (
-              <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium">
+              <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium whitespace-nowrap">
                 <Lock className="w-3 h-3" />
                 {t("private")}
               </div>
