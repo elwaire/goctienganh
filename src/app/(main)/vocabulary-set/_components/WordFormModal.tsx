@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { X, Copy, Check } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { X, Copy, Check, Languages, Loader2 } from "lucide-react";
 import type {
   VocabularyWord,
   CreateVocabularyWordRequest,
@@ -21,10 +21,13 @@ export function WordFormModal({
   onSave,
   onSaveBulk,
 }: WordFormModalProps) {
+  const t = useTranslations("vocabulary.form");
   const [activeTab, setActiveTab] = useState<"manual" | "json">("manual");
+  const [isTranslating, setIsTranslating] = useState(false);
   const [jsonInput, setJsonInput] = useState("");
   const [jsonError, setJsonError] = useState("");
   const [copied, setCopied] = useState(false);
+
   const [form, setForm] = useState(() =>
     editingCard
       ? {
