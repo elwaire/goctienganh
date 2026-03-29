@@ -25,7 +25,12 @@ import {
   Loader2,
 } from "lucide-react";
 import { userApi, avatarUrl } from "@/api/userApi";
-import { getAccessToken } from "@/lib/auth";
+import { authApi, getAccessToken } from "@/lib/auth";
+import {
+  getChangePasswordClientHint,
+  isChangePasswordFormValid,
+} from "@/lib/passwordPolicy";
+import { isAxiosError } from "axios";
 import { setUser } from "@/store/authSlice";
 import type { RootState } from "@/store";
 import type { User } from "@/types/auth";
@@ -111,6 +116,8 @@ export default function ProfilePage() {
     newPassword: "",
     confirmPassword: "",
   });
+  const [passwordApiError, setPasswordApiError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState("");
 
   const updateProfileMutation = useMutation({
     mutationFn: () =>
@@ -140,6 +147,51 @@ export default function ProfilePage() {
     },
   });
 
+  const changePasswordMutation = useMutation({
+    mutationFn: () =>
+      authApi.changePassword({
+        current_password: passwordForm.currentPassword,
+        new_password: passwordForm.newPassword,
+        confirm_password: passwordForm.confirmPassword,
+      }),
+    onSuccess: () => {
+      setPasswordApiError("");
+      setPasswordSuccess("Đã cập nhật mật khẩu thành công.");
+      setPasswordForm({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+    },
+    onError: (err: unknown) => {
+      setPasswordSuccess("");
+      if (isAxiosError(err)) {
+        const data = err.response?.data as
+          | { message?: string; error?: string }
+          | undefined;
+        setPasswordApiError(
+          data?.message ||
+            data?.error ||
+            err.message ||
+            "Không thể đổi mật khẩu.",
+        );
+        return;
+      }
+      setPasswordApiError(
+        err instanceof Error ? err.message : "Không thể đổi mật khẩu.",
+      );
+    },
+  });
+
+  const setPasswordField = (
+    field: "currentPassword" | "newPassword" | "confirmPassword",
+    value: string,
+  ) => {
+    setPasswordApiError("");
+    setPasswordSuccess("");
+    setPasswordForm((prev) => ({ ...prev, [field]: value }));
+  };
+
   const levelOptions = [
     "Beginner (A1)",
     "Elementary (A2)",
@@ -164,18 +216,19 @@ export default function ProfilePage() {
   };
 
   const handleChangePassword = () => {
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      alert("Mật khẩu mới không khớp!");
+    setPasswordApiError("");
+    setPasswordSuccess("");
+    if (!isChangePasswordFormValid(passwordForm)) {
+      setPasswordApiError(
+        getChangePasswordClientHint(passwordForm) ||
+          "Vui lòng kiểm tra lại các trường mật khẩu.",
+      );
       return;
     }
-    console.log("Changing password");
-    // TODO: API call to change password
-    setPasswordForm({
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    });
+    changePasswordMutation.mutate();
   };
+
+  const changePasswordReady = isChangePasswordFormValid(passwordForm);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -683,10 +736,7 @@ export default function ProfilePage() {
                             type={showCurrentPassword ? "text" : "password"}
                             value={passwordForm.currentPassword}
                             onChange={(e) =>
-                              setPasswordForm({
-                                ...passwordForm,
-                                currentPassword: e.target.value,
-                              })
+                              setPasswordField("currentPassword", e.target.value)
                             }
                             className="w-full px-3 py-2 pr-10 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                             placeholder="••••••••"
@@ -716,10 +766,7 @@ export default function ProfilePage() {
                             type={showNewPassword ? "text" : "password"}
                             value={passwordForm.newPassword}
                             onChange={(e) =>
-                              setPasswordForm({
-                                ...passwordForm,
-                                newPassword: e.target.value,
-                              })
+                              setPasswordField("newPassword", e.target.value)
                             }
                             className="w-full px-3 py-2 pr-10 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                             placeholder="••••••••"
@@ -748,10 +795,7 @@ export default function ProfilePage() {
                             type={showConfirmPassword ? "text" : "password"}
                             value={passwordForm.confirmPassword}
                             onChange={(e) =>
-                              setPasswordForm({
-                                ...passwordForm,
-                                confirmPassword: e.target.value,
-                              })
+                              setPasswordField("confirmPassword", e.target.value)
                             }
                             className="w-full px-3 py-2 pr-10 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                             placeholder="••••••••"
@@ -776,31 +820,52 @@ export default function ProfilePage() {
                     {/* Requirements */}
                     <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
                       <div className="flex items-start gap-2">
-                        <AlertCircle className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                        <AlertCircle className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                         <div>
                           <p className="text-xs font-medium text-blue-900 mb-1">
-                            Yêu cầu mật khẩu:
+                            Yêu cầu mật khẩu mới:
                           </p>
                           <ul className="space-y-0.5 text-xs text-gray-700">
                             <li>• Tối thiểu 8 ký tự</li>
                             <li>• Có chữ hoa, chữ thường và số</li>
-                            <li>• Có ký tự đặc biệt (!@#$%...)</li>
+                            <li>
+                              • Có ký tự đặc biệt (dấu câu / ký hiệu, ví dụ{" "}
+                              !@#$%, _)
+                            </li>
+                            <li>• Mật khẩu mới phải khác mật khẩu hiện tại</li>
                           </ul>
                         </div>
                       </div>
                     </div>
 
+                    {passwordSuccess && (
+                      <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800">
+                        {passwordSuccess}
+                      </div>
+                    )}
+                    {passwordApiError && (
+                      <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                        {passwordApiError}
+                      </div>
+                    )}
+
                     {/* Button */}
                     <button
+                      type="button"
                       onClick={handleChangePassword}
                       disabled={
-                        !passwordForm.currentPassword ||
-                        !passwordForm.newPassword ||
-                        !passwordForm.confirmPassword
+                        !changePasswordReady || changePasswordMutation.isPending
                       }
-                      className="w-full mt-5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded-xl transition-colors text-sm"
+                      className="w-full mt-5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded-xl transition-colors text-sm inline-flex items-center justify-center gap-2"
                     >
-                      Đổi mật khẩu
+                      {changePasswordMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Đang xử lý...
+                        </>
+                      ) : (
+                        "Đổi mật khẩu"
+                      )}
                     </button>
                   </div>
                 )}

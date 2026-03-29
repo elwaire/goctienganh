@@ -1,0 +1,102 @@
+{
+  "vocabulary": {
+    "back": "Back",
+    "copyToAccount": "Copy to my account",
+    "visibility": {
+      "public": "Public",
+      "private": "Private"
+    },
+    "detail": {
+      "loading": "Loading vocabulary set...",
+      "notFound": "Vocabulary set not found.",
+      "backToList": "Back to list",
+      "searchPlaceholder": "Search words...",
+      "addWord": "Add word",
+      "copyError": "Could not copy this set. Only public sets from other users can be copied.",
+      "confirmDeleteWord": "Delete this word?",
+      "confirmDeleteDeck": "Delete this vocabulary set? This cannot be undone.",
+      "words": "Words",
+      "noResults": "No results",
+      "searchWait": "Try a different keyword",
+      "noWords": "No words yet",
+      "noWordsDesc": "Add your first word to start learning!"
+    },
+    "list": {
+      "title": "Vocabulary sets",
+      "subtitle": "Manage and practice your vocabulary",
+      "createNew": "Create new set",
+      "searchPlaceholder": "Search sets...",
+      "tabMy": "Mine",
+      "tabPublic": "Public",
+      "loading": "Loading sets...",
+      "loadError": "Could not load vocabulary sets.",
+      "confirmDelete": "Delete this vocabulary set?"
+    },
+    "card": {
+      "edit": "Edit",
+      "delete": "Delete",
+      "createdOn": "Created"
+    },
+    "deckCard": {
+      "public": "Public",
+      "private": "Private",
+      "wordsCount": "{count} words",
+      "viewDetail": "View details",
+      "createdOn": "Created on {date}"
+    },
+    "deckEmpty": {
+      "noSearchResults": "No sets found",
+      "tryOtherKeyword": "Try a different search keyword",
+      "noSetsYet": "No vocabulary sets yet",
+      "noSetsDesc": "Create your first set to start learning!",
+      "createFirst": "Create new set",
+      "noPublicYet": "No public sets yet",
+      "checkBackLater": "Check back later!"
+    },
+    "deckModal": {
+      "editTitle": "Edit set",
+      "createTitle": "Create vocabulary set",
+      "nameLabel": "Set name",
+      "namePlaceholder": "e.g. TOEIC Vocabulary",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Short description of this set...",
+      "publicLabel": "Public",
+      "publicHint": "Allow others to view this set",
+      "cancel": "Cancel",
+      "save": "Save changes",
+      "create": "Create set"
+    },
+    "form": {
+      "editTitle": "Edit word",
+      "addTitle": "Add word",
+      "manualTab": "Manual entry",
+      "bulkTab": "Bulk (JSON)",
+      "term": "Word",
+      "phonetic": "Phonetic",
+      "wordType": "Word type",
+      "definition": "Definition",
+      "example": "Example sentence",
+      "exampleTranslation": "Example translation",
+      "cancel": "Cancel",
+      "save": "Save",
+      "add": "Add word",
+      "termPlaceholder": "e.g. Accomplish",
+      "phoneticPlaceholder": "e.g. əˈkʌmplɪʃ",
+      "definitionPlaceholder": "e.g. To complete successfully",
+      "examplePlaceholder": "e.g. She accomplished her goal",
+      "exampleTranslationPlaceholder": "e.g. She achieved her goal",
+      "autoTranslate": "Auto VN→EN",
+      "jsonGuideTitle": "How to build JSON data:",
+      "copyPrompt": "Copy prompt",
+      "copied": "Copied",
+      "jsonGuideBody": "Copy the prompt below into ChatGPT (or Claude, Gemini) to generate a valid JSON word list, then paste the JSON into the box below:",
+      "jsonPasteLabel": "Paste JSON here:",
+      "jsonBulkSubmit": "Import bulk",
+      "jsonErrorMustBeArray": "JSON data must be an array.",
+      "jsonErrorMissingAt": "Word at position {index} ('{term}') is missing required fields (term, definition).",
+      "jsonErrorInvalid": "Invalid JSON. Please check the syntax.",
+      "unnamed": "unnamed",
+      "bulkPrompt": "Please produce a JSON array of English vocabulary items. Each object must include:\n- \"term\" (string)\n- \"phonetic\" (string)\n- \"word_type\" (e.g. \"noun\", \"verb\", \"adjective\", \"adverb\")\n- \"definition\" (Vietnamese meaning, string)\n- \"example_sentence\" (English example, string)\n- \"example_translation\" (Vietnamese translation of the example, string).\nReturn only a valid JSON array with no extra text."
+    }
+  }
+}

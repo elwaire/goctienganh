@@ -1,3 +1,4 @@
+export { feedbackApi } from "./feedbackApi";
 export { subjectsApi } from "./subjectsApi";
 export { examsApi } from "./examsApi";
 export { vocabularyApi } from "./vocabularyApi";

@@ -1,14 +1,5 @@
-import {
-  BookOpen,
-  Globe,
-  Lock,
-  Eye,
-  Edit,
-  Trash2,
-  Plus,
-  Calendar,
-  TrendingUp,
-} from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
+import { BookOpen, Globe, Lock, Eye, Calendar } from "lucide-react";
 import Link from "next/link";
 import type { VocabularySet } from "@/types/vocabulary";
 
@@ -18,8 +9,12 @@ interface DeckCardProps {
   onDelete?: (deckId: string) => void;
 }
 
-export function DeckCard({ deck, onEdit, onDelete }: DeckCardProps) {
-  const isOwner = deck.is_owner;
+export function DeckCard({ deck }: DeckCardProps) {
+  const t = useTranslations("vocabulary.deckCard");
+  const locale = useLocale();
+  const dateStr = new Date(deck.created_at).toLocaleDateString(
+    locale === "vi" ? "vi-VN" : "en-US",
+  );
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 hover:shadow-lg transition-all p-4 group">
@@ -33,12 +28,12 @@ export function DeckCard({ deck, onEdit, onDelete }: DeckCardProps) {
             {deck.is_public ? (
               <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-medium">
                 <Globe className="w-3 h-3" />
-                Public
+                {t("public")}
               </div>
             ) : (
               <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium">
                 <Lock className="w-3 h-3" />
-                Private
+                {t("private")}
               </div>
             )}
           </div>
@@ -55,7 +50,7 @@ export function DeckCard({ deck, onEdit, onDelete }: DeckCardProps) {
         <div className="flex items-center gap-2">
           <BookOpen className="w-4 h-4 text-blue-600" />
           <span className="text-sm font-medium text-gray-900">
-            {deck.word_count} từ
+            {t("wordsCount", { count: deck.word_count })}
           </span>
         </div>
       </div>
@@ -65,7 +60,7 @@ export function DeckCard({ deck, onEdit, onDelete }: DeckCardProps) {
         <Link href={`/vocabulary-set/${deck.id}`} className="flex-1">
           <button className="w-full flex items-center cursor-pointer justify-center gap-2 px-4 h-[40px] bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
             <Eye className="w-4 h-4" />
-            Xem chi tiết
+            {t("viewDetail")}
           </button>
         </Link>
       </div>
@@ -73,7 +68,7 @@ export function DeckCard({ deck, onEdit, onDelete }: DeckCardProps) {
       {/* Date */}
       <div className="flex items-center gap-2 mt-4 text-xs text-gray-500">
         <Calendar className="w-3 h-3" />
-        Tạo ngày {new Date(deck.created_at).toLocaleDateString("vi-VN")}
+        {t("createdOn", { date: dateStr })}
       </div>
     </div>
   );

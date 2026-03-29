@@ -18,6 +18,8 @@ export default getRequestConfig(async () => {
     import(`../../messages/${locale}/common.json`),
     import(`../../messages/${locale}/flashcards.json`),
     import(`../../messages/${locale}/exam.json`),
+    import(`../../messages/${locale}/vocabulary.json`),
+    import(`../../messages/${locale}/feedback.json`),
   ]);
 
   const messages = messageModules.reduce(

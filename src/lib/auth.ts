@@ -60,6 +60,25 @@ export const authApi = {
    * Get current user profile (UserResponse phẳng — đồng bộ với Redux)
    */
   getMe: () => userApi.getMe(),
+
+  /**
+   * PUT /auth/password — đổi mật khẩu (JWT bắt buộc)
+   */
+  changePassword: async (body: {
+    current_password: string;
+    new_password: string;
+    confirm_password: string;
+  }): Promise<{ status: string }> => {
+    const response = await axiosInstance.put<{
+      success: boolean;
+      message?: string;
+      data: { status: string };
+    }>("/auth/password", body);
+    if (!response.data.success) {
+      throw new Error(response.data.message || "Đổi mật khẩu thất bại");
+    }
+    return response.data.data;
+  },
 };
 
 // Aliases for compatibility if needed (or we can update the callers)

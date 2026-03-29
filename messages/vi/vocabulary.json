@@ -1,0 +1,102 @@
+{
+  "vocabulary": {
+    "back": "Quay lại",
+    "copyToAccount": "Sao chép về tài khoản",
+    "visibility": {
+      "public": "Công khai",
+      "private": "Riêng tư"
+    },
+    "detail": {
+      "loading": "Đang tải bộ từ...",
+      "notFound": "Không tìm thấy bộ từ.",
+      "backToList": "Quay lại danh sách",
+      "searchPlaceholder": "Tìm từ vựng...",
+      "addWord": "Thêm từ",
+      "copyError": "Không thể sao chép bộ từ. Chỉ áp dụng với bộ công khai của người khác.",
+      "confirmDeleteWord": "Bạn có chắc muốn xóa từ này?",
+      "confirmDeleteDeck": "Bạn có chắc chắn muốn xoá bộ từ này không? Hành động này không thể hoàn tác.",
+      "words": "Từ",
+      "noResults": "Không có kết quả",
+      "searchWait": "Thử từ khóa khác",
+      "noWords": "Chưa có từ vựng",
+      "noWordsDesc": "Thêm từ đầu tiên để bắt đầu học!"
+    },
+    "list": {
+      "title": "Bộ từ vựng",
+      "subtitle": "Quản lý và luyện tập từ vựng của bạn",
+      "createNew": "Tạo bộ từ mới",
+      "searchPlaceholder": "Tìm kiếm bộ từ...",
+      "tabMy": "Của tôi",
+      "tabPublic": "Công khai",
+      "loading": "Đang tải bộ từ...",
+      "loadError": "Không thể tải danh sách bộ từ.",
+      "confirmDelete": "Bạn có chắc muốn xóa bộ từ này?"
+    },
+    "card": {
+      "edit": "Chỉnh sửa",
+      "delete": "Xóa",
+      "createdOn": "Ngày tạo"
+    },
+    "deckCard": {
+      "public": "Công khai",
+      "private": "Riêng tư",
+      "wordsCount": "{count} từ",
+      "viewDetail": "Xem chi tiết",
+      "createdOn": "Tạo ngày {date}"
+    },
+    "deckEmpty": {
+      "noSearchResults": "Không tìm thấy bộ từ nào",
+      "tryOtherKeyword": "Thử tìm kiếm với từ khóa khác",
+      "noSetsYet": "Chưa có bộ từ nào",
+      "noSetsDesc": "Tạo bộ từ đầu tiên để bắt đầu học ngay!",
+      "createFirst": "Tạo bộ từ mới",
+      "noPublicYet": "Chưa có bộ từ công khai",
+      "checkBackLater": "Hãy quay lại sau nhé!"
+    },
+    "deckModal": {
+      "editTitle": "Sửa bộ từ",
+      "createTitle": "Tạo bộ từ mới",
+      "nameLabel": "Tên bộ từ",
+      "namePlaceholder": "VD: TOEIC Vocabulary",
+      "descriptionLabel": "Mô tả",
+      "descriptionPlaceholder": "Mô tả ngắn về bộ từ này...",
+      "publicLabel": "Công khai",
+      "publicHint": "Cho phép người khác xem bộ từ này",
+      "cancel": "Hủy",
+      "save": "Lưu thay đổi",
+      "create": "Tạo bộ từ"
+    },
+    "form": {
+      "editTitle": "Sửa từ vựng",
+      "addTitle": "Thêm từ vựng",
+      "manualTab": "Nhập thủ công",
+      "bulkTab": "Nhập hàng loạt (JSON)",
+      "term": "Từ vựng",
+      "phonetic": "Phiên âm",
+      "wordType": "Loại từ",
+      "definition": "Nghĩa",
+      "example": "Câu ví dụ",
+      "exampleTranslation": "Dịch câu ví dụ",
+      "cancel": "Hủy",
+      "save": "Lưu",
+      "add": "Thêm từ",
+      "termPlaceholder": "VD: Accomplish",
+      "phoneticPlaceholder": "VD: əˈkʌmplɪʃ",
+      "definitionPlaceholder": "VD: Hoàn thành, đạt được",
+      "examplePlaceholder": "VD: She accomplished her goal",
+      "exampleTranslationPlaceholder": "VD: Cô ấy đã hoàn thành mục tiêu",
+      "autoTranslate": "Auto VN→EN",
+      "jsonGuideTitle": "Hướng dẫn tạo dữ liệu JSON:",
+      "copyPrompt": "Copy prompt",
+      "copied": "Đã chép",
+      "jsonGuideBody": "Bạn có thể copy đoạn yêu cầu (prompt) dưới đây và dán vào ChatGPT (hoặc Claude, Gemini) để sinh danh sách từ vựng đúng định dạng JSON. Sau đó dán JSON vào ô bên dưới:",
+      "jsonPasteLabel": "Dán mã JSON vào đây:",
+      "jsonBulkSubmit": "Tạo hàng loạt",
+      "jsonErrorMustBeArray": "Dữ liệu JSON phải là một mảng (Array).",
+      "jsonErrorMissingAt": "Từ vựng ở vị trí thứ {index} ('{term}') thiếu trường bắt buộc (term, definition).",
+      "jsonErrorInvalid": "JSON không hợp lệ. Vui lòng kiểm tra lại cú pháp.",
+      "unnamed": "không tên",
+      "bulkPrompt": "Hãy tạo cho tôi một mảng JSON các từ vựng tiếng Anh. Mỗi đối tượng phần tử bắt buộc phải có các trường sau:\n- \"term\" (từ vựng, kiểu String)\n- \"phonetic\" (phiên âm, kiểu String)\n- \"word_type\" (loại từ: \"noun\", \"verb\", \"adjective\", \"adverb\"...)\n- \"definition\" (nghĩa tiếng Việt, kiểu String)\n- \"example_sentence\" (câu ví dụ tiếng Anh, kiểu String)\n- \"example_translation\" (dịch câu ví dụ sang tiếng Việt, kiểu String).\nChỉ trả về định dạng JSON array chuẩn, không kèm theo bất kỳ văn bản giải thích nào khác."
+    }
+  }
+}

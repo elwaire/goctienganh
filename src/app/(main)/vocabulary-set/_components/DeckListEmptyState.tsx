@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { Search, BookOpen, Globe, Plus } from "lucide-react";
 
 interface DeckListEmptyStateProps {
@@ -11,6 +12,8 @@ export function DeckListEmptyState({
   activeTab,
   onCreateNew,
 }: DeckListEmptyStateProps) {
+  const t = useTranslations("vocabulary.deckEmpty");
+
   if (searchQuery) {
     return (
       <div className="text-center py-16">
@@ -18,9 +21,9 @@ export function DeckListEmptyState({
           <Search className="w-10 h-10 text-gray-400" />
         </div>
         <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          Không tìm thấy bộ từ nào
+          {t("noSearchResults")}
         </h3>
-        <p className="text-gray-600">Thử tìm kiếm với từ khóa khác</p>
+        <p className="text-gray-600">{t("tryOtherKeyword")}</p>
       </div>
     );
   }
@@ -32,17 +35,16 @@ export function DeckListEmptyState({
           <BookOpen className="w-10 h-10 text-blue-600" />
         </div>
         <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          Chưa có bộ từ nào
+          {t("noSetsYet")}
         </h3>
-        <p className="text-gray-600 mb-6">
-          Tạo bộ từ đầu tiên để bắt đầu học ngay!
-        </p>
+        <p className="text-gray-600 mb-6">{t("noSetsDesc")}</p>
         <button
+          type="button"
           onClick={onCreateNew}
           className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all"
         >
           <Plus className="w-5 h-5" />
-          Tạo bộ từ mới
+          {t("createFirst")}
         </button>
       </div>
     );
@@ -54,9 +56,9 @@ export function DeckListEmptyState({
         <Globe className="w-10 h-10 text-gray-400" />
       </div>
       <h3 className="text-lg font-semibold text-gray-900 mb-2">
-        Chưa có bộ từ công khai
+        {t("noPublicYet")}
       </h3>
-      <p className="text-gray-600">Hãy quay lại sau nhé!</p>
+      <p className="text-gray-600">{t("checkBackLater")}</p>
     </div>
   );
 }

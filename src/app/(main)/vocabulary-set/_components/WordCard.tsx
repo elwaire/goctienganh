@@ -1,6 +1,4 @@
-import { useState } from "react";
-import { useTranslations } from "next-intl";
-import { Volume2, Edit, Trash2, Check } from "lucide-react";
+import { Volume2, Edit, Trash2 } from "lucide-react";
 import type { VocabularyWord } from "@/types/vocabulary";
 
 interface WordCardProps {
@@ -18,8 +16,6 @@ export function WordCard({
   onDelete,
   onSpeak,
 }: WordCardProps) {
-  const t = useTranslations("vocabulary.card");
-
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-all">
       <div className="flex items-start gap-3">

@@ -11,7 +11,6 @@ export function WordListEmptyState({
   onAddWord,
 }: WordListEmptyStateProps) {
   const t = useTranslations("vocabulary.detail");
-  const tForm = useTranslations("vocabulary.form");
 
   if (searchQuery) {
     return (
@@ -22,7 +21,7 @@ export function WordListEmptyState({
         <h3 className="text-lg font-semibold text-gray-900 mb-2">
           {t("noResults")}
         </h3>
-        <p className="text-gray-600 text-sm">{t("searchWait") || "Try another keyword"}</p>
+        <p className="text-gray-600 text-sm">{t("searchWait")}</p>
       </div>
     );
   }
@@ -33,10 +32,10 @@ export function WordListEmptyState({
         <BookOpen className="w-8 h-8 text-blue-600" />
       </div>
       <h3 className="text-lg font-semibold text-gray-900 mb-2">
-        {t("noWords") || "No vocabulary yet"}
+        {t("noWords")}
       </h3>
       <p className="text-gray-600 mb-6 text-sm">
-        {t("noWordsDesc") || "Start building your vocabulary by adding your first word!"}
+        {t("noWordsDesc")}
       </p>
       <button
         onClick={onAddWord}

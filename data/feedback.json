@@ -1,0 +1,22 @@
+{
+  "items": [
+    {
+      "id": "aad7b7af-3799-418d-8613-922adaaec6fb",
+      "createdAt": "2026-03-29T03:17:32.511Z",
+      "category": "feature",
+      "subject": "test",
+      "message": "test\nzdsdsd",
+      "email": "phuc262002@gmail.com",
+      "displayName": "Phúc Nguyễn",
+      "replies": [
+        {
+          "id": "a45cbd96-5e7b-42fc-a8e3-8db8e51b32c5",
+          "createdAt": "2026-03-29T03:17:39.810Z",
+          "message": "sdasd",
+          "email": "phuc262002@gmail.com",
+          "displayName": "Phúc Nguyễn"
+        }
+      ]
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { X, Globe, Loader2 } from "lucide-react";
 
 interface CreateDeckModalProps {
@@ -16,6 +17,7 @@ export function CreateDeckModal({
   onClose,
   onSave,
 }: CreateDeckModalProps) {
+  const tm = useTranslations("vocabulary.deckModal");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [isPublic, setIsPublic] = useState(false);
@@ -51,7 +53,7 @@ export function CreateDeckModal({
       >
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-bold text-gray-900">
-            {editingDeck ? "Sửa bộ từ" : "Tạo bộ từ mới"}
+            {editingDeck ? tm("editTitle") : tm("createTitle")}
           </h3>
           <button
             onClick={onClose}
@@ -64,11 +66,11 @@ export function CreateDeckModal({
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tên bộ từ
+              {tm("nameLabel")}
             </label>
             <input
               type="text"
-              placeholder="VD: TOEIC Vocabulary"
+              placeholder={tm("namePlaceholder")}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -77,10 +79,10 @@ export function CreateDeckModal({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Mô tả
+              {tm("descriptionLabel")}
             </label>
             <textarea
-              placeholder="Mô tả ngắn về bộ từ này..."
+              placeholder={tm("descriptionPlaceholder")}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
@@ -92,10 +94,8 @@ export function CreateDeckModal({
             <div className="flex items-center gap-3">
               <Globe className="w-5 h-5 text-gray-600" />
               <div>
-                <p className="font-medium text-gray-900">Công khai</p>
-                <p className="text-sm text-gray-500">
-                  Cho phép người khác xem bộ từ này
-                </p>
+                <p className="font-medium text-gray-900">{tm("publicLabel")}</p>
+                <p className="text-sm text-gray-500">{tm("publicHint")}</p>
               </div>
             </div>
             <button
@@ -114,18 +114,20 @@ export function CreateDeckModal({
 
           <div className="flex gap-3 pt-4">
             <button
+              type="button"
               onClick={onClose}
               className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors"
             >
-              Hủy
+              {tm("cancel")}
             </button>
             <button
+              type="button"
               onClick={handleSubmit}
               disabled={!title.trim() || isCreating}
               className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isCreating && <Loader2 className="w-4 h-4 animate-spin" />}
-              {editingDeck ? "Lưu thay đổi" : "Tạo bộ từ"}
+              {editingDeck ? tm("save") : tm("create")}
             </button>
           </div>
         </div>

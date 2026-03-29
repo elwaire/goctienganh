@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { Plus, Search, Loader2, AlertCircle, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { vocabularyApi } from "@/api/vocabularyApi";
@@ -21,6 +22,7 @@ import { useSpeech } from "../_hooks";
 import { ButtonPrimary } from "@/components/ui";
 
 export default function VocabularySetDetailPage() {
+  const t = useTranslations("vocabulary.detail");
   const router = useRouter();
   const params = useParams();
   const deckId = params.slug as string;
@@ -147,7 +149,7 @@ export default function VocabularySetDetailPage() {
                 ?.message ?? "",
             )
           : "";
-      alert(msg || "Không thể sao chép bộ từ. Chỉ áp dụng với bộ công khai của người khác.");
+      alert(msg || t("copyError"));
     },
   });
 
@@ -175,7 +177,7 @@ export default function VocabularySetDetailPage() {
   };
 
   const handleDeleteWord = (cardId: string) => {
-    if (confirm("Bạn có chắc muốn xóa từ này?")) {
+    if (confirm(t("confirmDeleteWord"))) {
       deleteCardMutation.mutate(cardId);
     }
   };
@@ -193,11 +195,7 @@ export default function VocabularySetDetailPage() {
   };
 
   const handleDeleteDeck = () => {
-    if (
-      confirm(
-        "Bạn có chắc chắn muốn xoá bộ từ này không? Hành động này không thể hoàn tác.",
-      )
-    ) {
+    if (confirm(t("confirmDeleteDeck"))) {
       deleteDeckMutation.mutate();
     }
   };
@@ -207,7 +205,7 @@ export default function VocabularySetDetailPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-3">
         <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-        <p className="text-sm text-neutral-400">Đang tải bộ từ...</p>
+        <p className="text-sm text-neutral-400">{t("loading")}</p>
       </div>
     );
   }
@@ -216,13 +214,13 @@ export default function VocabularySetDetailPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <AlertCircle className="w-10 h-10 text-rose-400" />
-        <p className="text-sm text-neutral-500">Không tìm thấy bộ từ.</p>
+        <p className="text-sm text-neutral-500">{t("notFound")}</p>
         <button
           onClick={() => router.push("/vocabulary-set")}
           className="flex items-center gap-2 text-sm text-blue-600 hover:underline"
         >
           <ArrowLeft className="w-4 h-4" />
-          Quay lại danh sách
+          {t("backToList")}
         </button>
       </div>
     );
@@ -254,7 +252,7 @@ export default function VocabularySetDetailPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Tìm từ vựng..."
+                  placeholder={t("searchPlaceholder")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 h-[44px] bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
@@ -267,7 +265,7 @@ export default function VocabularySetDetailPage() {
                   rounded="md"
                 >
                   <Plus className="w-4 h-4" />
-                  Thêm từ
+                  {t("addWord")}
                 </ButtonPrimary>
               )}
             </div>

@@ -1,4 +1,4 @@
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState, useRef, useEffect } from "react";
 import {
   ArrowLeft,
@@ -37,6 +37,7 @@ export function DeckHeader({
   copyLoading,
 }: DeckHeaderProps) {
   const t = useTranslations("vocabulary");
+  const locale = useLocale();
   const router = useRouter();
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -61,7 +62,7 @@ export function DeckHeader({
         className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors text-sm"
       >
         <ArrowLeft className="w-4 h-4" />
-        <span className="font-medium">{t("back") || "Back"}</span>
+        <span className="font-medium">{t("back")}</span>
       </button>
 
       <div className="bg-white rounded-2xl border border-gray-200 p-6">
@@ -101,7 +102,7 @@ export function DeckHeader({
                 ) : (
                   <Copy className="w-4 h-4" />
                 )}
-                Sao chép về tài khoản
+                {t("copyToAccount")}
               </button>
             )}
             {deck.is_owner && (
@@ -125,7 +126,7 @@ export function DeckHeader({
                       className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors cursor-pointer"
                     >
                       <Edit className="w-4 h-4" />
-                      {t("card.edit") || "Edit"}
+                      {t("card.edit")}
                     </button>
                     <button
                       onClick={() => {
@@ -135,7 +136,7 @@ export function DeckHeader({
                       className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors cursor-pointer"
                     >
                       <Trash2 className="w-4 h-4" />
-                      {t("card.delete") || "Delete"}
+                      {t("card.delete")}
                     </button>
                   </div>
                 )}
@@ -149,13 +150,15 @@ export function DeckHeader({
           <StatCard
             icon={<BookOpen className="w-5 h-5 text-blue-600" />}
             value={deck.words.length}
-            label={t("detail.words") || "Words"}
+            label={t("detail.words")}
             bgColor="bg-blue-50"
             borderColor="border-blue-200"
           />
           <StatCard
             icon={<Clock className="w-5 h-5 text-purple-600" />}
-            value={new Date(deck.created_at).toLocaleDateString("vi-VN")}
+            value={new Date(deck.created_at).toLocaleDateString(
+              locale === "vi" ? "vi-VN" : "en-US",
+            )}
             label={t("card.createdOn")}
             bgColor="bg-purple-50"
             borderColor="border-purple-200"
