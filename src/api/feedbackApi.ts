@@ -1,9 +1,9 @@
+import { readPagedBody } from "@/lib/apiEnvelope";
 import { axiosInstance } from "@/lib/axios";
 import type {
   CreateFeedbackBody,
   FeedbackDetail,
   FeedbackListPayload,
-  FeedbackListPayloadRaw,
   FeedbackMetaPayload,
   FeedbackSummary,
   MessageListPayload,
@@ -14,26 +14,22 @@ type ApiResponse<T> = {
   success: boolean;
   message?: string;
   data: T;
+  metadata?: unknown;
 };
 
-/** BE có thể trả `items: null` khi chưa có dữ liệu */
-function normalizeFeedbackList(
-  raw: FeedbackListPayload | FeedbackListPayloadRaw,
-): FeedbackListPayload {
+function normalizeFeedbackList(envelope: ApiResponse<unknown>): FeedbackListPayload {
+  const { rows, meta } = readPagedBody<FeedbackSummary>(envelope);
   return {
-    items: Array.isArray(raw.items) ? raw.items : [],
-    total: typeof raw.total === "number" && !Number.isNaN(raw.total) ? raw.total : 0,
+    items: rows,
+    total: meta?.total_items ?? rows.length,
   };
 }
 
-type MessageListRaw = Omit<MessageListPayload, "messages"> & {
-  messages: MessageResponse[] | null;
-};
-
-function normalizeMessageList(raw: MessageListPayload | MessageListRaw): MessageListPayload {
+function normalizeMessageList(envelope: ApiResponse<unknown>): MessageListPayload {
+  const { rows, meta } = readPagedBody<MessageResponse>(envelope);
   return {
-    messages: Array.isArray(raw.messages) ? raw.messages : [],
-    total: typeof raw.total === "number" && !Number.isNaN(raw.total) ? raw.total : 0,
+    messages: rows,
+    total: meta?.total_items ?? rows.length,
   };
 }
 
@@ -84,22 +80,22 @@ export const feedbackApi = {
   listMine: async (
     params?: FeedbackListQuery,
   ): Promise<FeedbackListPayload> => {
-    const res = await axiosInstance.get<ApiResponse<FeedbackListPayloadRaw>>(
+    const res = await axiosInstance.get<ApiResponse<FeedbackSummary[]>>(
       "/feedbacks/mine",
       { params },
     );
-    return normalizeFeedbackList(res.data.data);
+    return normalizeFeedbackList(res.data);
   },
 
   /** GET /feedbacks/community */
   listCommunity: async (
     params?: FeedbackListQuery,
   ): Promise<FeedbackListPayload> => {
-    const res = await axiosInstance.get<ApiResponse<FeedbackListPayloadRaw>>(
+    const res = await axiosInstance.get<ApiResponse<FeedbackSummary[]>>(
       "/feedbacks/community",
       { params },
     );
-    return normalizeFeedbackList(res.data.data);
+    return normalizeFeedbackList(res.data);
   },
 
   /** GET /feedbacks/{id} */
@@ -115,11 +111,11 @@ export const feedbackApi = {
     id: string,
     params?: FeedbackMessagesQuery,
   ): Promise<MessageListPayload> => {
-    const res = await axiosInstance.get<ApiResponse<MessageListRaw>>(
+    const res = await axiosInstance.get<ApiResponse<MessageResponse[]>>(
       `/feedbacks/${id}/messages`,
       { params },
     );
-    return normalizeMessageList(res.data.data);
+    return normalizeMessageList(res.data);
   },
 
   /** POST /feedbacks/{id}/replies — chỉ chủ thread */

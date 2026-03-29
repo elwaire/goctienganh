@@ -1,3 +1,4 @@
+import { readPagedBody } from "@/lib/apiEnvelope";
 import { axiosInstance } from "@/lib/axios";
 import type { User, UpdateProfileRequest } from "@/types/auth";
 
@@ -5,6 +6,7 @@ type ApiResponse<T> = {
   success: boolean;
   message?: string;
   data: T;
+  metadata?: unknown;
 };
 
 /**
@@ -33,6 +35,9 @@ export type AvatarListQuery = {
 export type AvatarListPayload = {
   avatars: PublishedAvatar[];
   total: number;
+  page?: number;
+  limit?: number;
+  total_pages?: number;
 };
 
 /** Lấy URL hiển thị từ item avatar (ưu tiên `link` từ BE) */
@@ -64,20 +69,15 @@ export const userApi = {
     params?: AvatarListQuery,
   ): Promise<AvatarListPayload> => {
     const response = await axiosInstance.get<
-      ApiResponse<AvatarListPayload | PublishedAvatar[]>
+      ApiResponse<PublishedAvatar[]>
     >("/avatars", { params });
-    const raw = response.data.data;
-    if (raw && typeof raw === "object" && !Array.isArray(raw) && "avatars" in raw) {
-      const payload = raw as AvatarListPayload;
-      return {
-        avatars: Array.isArray(payload.avatars) ? payload.avatars : [],
-        total: typeof payload.total === "number" ? payload.total : payload.avatars?.length ?? 0,
-      };
-    }
-    if (Array.isArray(raw)) {
-      const list = raw as PublishedAvatar[];
-      return { avatars: list, total: list.length };
-    }
-    return { avatars: [], total: 0 };
+    const { rows, meta } = readPagedBody<PublishedAvatar>(response.data);
+    return {
+      avatars: rows,
+      total: meta?.total_items ?? rows.length,
+      page: meta?.page,
+      limit: meta?.limit,
+      total_pages: meta?.total_pages,
+    };
   },
 };

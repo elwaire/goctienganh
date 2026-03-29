@@ -42,11 +42,6 @@ export type FeedbackListPayload = {
   total: number;
 };
 
-/** Một số response BE trả `items: null` khi rỗng — `feedbackApi` chuẩn hóa về `[]`. */
-export type FeedbackListPayloadRaw = Omit<FeedbackListPayload, "items"> & {
-  items: FeedbackSummary[] | null;
-};
-
 /** GET /feedbacks/{id}/messages */
 export type MessageListPayload = {
   messages: MessageResponse[];

@@ -1,5 +1,8 @@
+import { readPagedBody } from "@/lib/apiEnvelope";
 import { axiosInstance } from "@/lib/axios";
+import type { PageMeta } from "@/types/api";
 import type {
+  ExamSet,
   ExamsResponse,
   ExamsQueryParams,
   ExamDetail,
@@ -12,7 +15,8 @@ import { AxiosError } from "axios";
 type ExamsApiResponse = {
   success: boolean;
   message: string;
-  data: ExamsResponse;
+  data: ExamSet[];
+  metadata?: PageMeta;
 };
 
 type ExamDetailApiResponse = {
@@ -84,7 +88,8 @@ export type AttemptHistoryParams = {
 type AttemptHistoryApiResponse = {
   success: boolean;
   message: string;
-  data: AttemptHistoryResponse;
+  data: AttemptHistoryItem[];
+  metadata?: PageMeta;
 };
 
 export type AttemptResultAnswer = {
@@ -136,13 +141,22 @@ export type LeaderboardParams = {
   limit?: number;
 };
 
+type LeaderboardMeta = PageMeta & {
+  user_entry?: LeaderboardEntry | null;
+};
+
 type LeaderboardApiResponse = {
   success: boolean;
   message: string;
-  data: LeaderboardResponse;
+  data: LeaderboardEntry[];
+  metadata?: LeaderboardMeta;
 };
 
-const EMPTY_EXAMS_RESPONSE: ExamsResponse = { exam_sets: [], total: 0 };
+const EMPTY_EXAMS_RESPONSE: ExamsResponse = {
+  exam_sets: [],
+  total: 0,
+  total_pages: 0,
+};
 
 export const examsApi = {
   /** GET /exams - Fetch paginated exam sets */
@@ -151,7 +165,14 @@ export const examsApi = {
       const response = await axiosInstance.get<ExamsApiResponse>("/exams", {
         params,
       });
-      return response.data.data;
+      const { rows, meta } = readPagedBody<ExamSet>(response.data);
+      return {
+        exam_sets: rows,
+        total: meta?.total_items ?? rows.length,
+        page: meta?.page,
+        limit: meta?.limit,
+        total_pages: meta?.total_pages,
+      };
     } catch (error) {
       // If searching and server returns 500, treat as empty results
       if (
@@ -209,7 +230,11 @@ export const examsApi = {
       "/exams/attempts",
       { params },
     );
-    return response.data.data;
+    const { rows, meta } = readPagedBody<AttemptHistoryItem>(response.data);
+    return {
+      attempts: rows,
+      total: meta?.total_items ?? rows.length,
+    };
   },
 
   /** GET /exams/attempts/:attemptId/result - Get attempt result details */
@@ -231,6 +256,15 @@ export const examsApi = {
       `/exams/${code}/leaderboard`,
       { params },
     );
-    return response.data.data;
+    const { rows, meta } = readPagedBody<LeaderboardEntry>(response.data);
+    const user_entry =
+      meta && "user_entry" in meta
+        ? (meta as LeaderboardMeta).user_entry
+        : undefined;
+    return {
+      entries: rows,
+      total: meta?.total_items ?? rows.length,
+      user_entry,
+    };
   },
 };

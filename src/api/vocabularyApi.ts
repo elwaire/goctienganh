@@ -1,3 +1,4 @@
+import { readPagedBody } from "@/lib/apiEnvelope";
 import { axiosInstance } from "@/lib/axios";
 import type {
   VocabularySet,
@@ -20,6 +21,7 @@ type ApiResponse<T> = {
   data: T;
   message?: string;
   success: boolean;
+  metadata?: unknown;
 };
 
 // ─── Vocabulary API Service ───
@@ -31,11 +33,18 @@ export const vocabularyApi = {
 
   /** GET /vocabulary-sets — Danh sách bộ từ vựng */
   getSets: async (params?: VocabularySetQueryParams): Promise<SetListPayload> => {
-    const response = await axiosInstance.get<ApiResponse<SetListPayload>>(
+    const response = await axiosInstance.get<ApiResponse<VocabularySet[]>>(
       "/vocabulary-sets",
       { params },
     );
-    return response.data.data;
+    const { rows, meta } = readPagedBody<VocabularySet>(response.data);
+    return {
+      sets: rows,
+      total: meta?.total_items ?? rows.length,
+      page: meta?.page,
+      limit: meta?.limit,
+      total_pages: meta?.total_pages,
+    };
   },
 
   /** POST /vocabulary-sets — Tạo bộ từ vựng */
@@ -96,11 +105,18 @@ export const vocabularyApi = {
     setId: string,
     params?: VocabularyWordQueryParams,
   ): Promise<WordListPayload> => {
-    const response = await axiosInstance.get<ApiResponse<WordListPayload>>(
+    const response = await axiosInstance.get<ApiResponse<VocabularyWord[]>>(
       `/vocabulary-sets/${setId}/words`,
       { params },
     );
-    return response.data.data;
+    const { rows, meta } = readPagedBody<VocabularyWord>(response.data);
+    return {
+      words: rows,
+      total: meta?.total_items ?? rows.length,
+      page: meta?.page,
+      limit: meta?.limit,
+      total_pages: meta?.total_pages,
+    };
   },
 
   /** POST /vocabulary-sets/:setId/words — Thêm 1 từ */

@@ -43,11 +43,17 @@ export interface VocabularyWord {
 export interface SetListPayload {
   sets: VocabularySet[];
   total: number;
+  page?: number;
+  limit?: number;
+  total_pages?: number;
 }
 
 export interface WordListPayload {
   words: VocabularyWord[];
   total: number;
+  page?: number;
+  limit?: number;
+  total_pages?: number;
 }
 
 // Params

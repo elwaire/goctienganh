@@ -19,4 +19,7 @@ export type Subject = {
 export type SubjectsResponse = {
   subjects: Subject[];
   total: number;
+  page?: number;
+  limit?: number;
+  total_pages?: number;
 };

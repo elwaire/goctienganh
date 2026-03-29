@@ -25,7 +25,11 @@ export type ExamSet = {
 
 export type ExamsResponse = {
   exam_sets: ExamSet[];
+  /** Tổng bản ghi — lấy từ `metadata.total_items` */
   total: number;
+  page?: number;
+  limit?: number;
+  total_pages?: number;
 };
 
 export type ExamsQueryParams = {

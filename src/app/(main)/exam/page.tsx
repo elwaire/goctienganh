@@ -55,7 +55,10 @@ export default function ExamPage() {
 
   const examSets = data?.exam_sets ?? [];
   const total = data?.total ?? 0;
-  const totalPages = Math.ceil(total / LIMIT);
+  const totalPages =
+    typeof data?.total_pages === "number" && data.total_pages > 0
+      ? data.total_pages
+      : Math.ceil(total / LIMIT);
 
   return (
     <div className="min-h-screen pb-12">
