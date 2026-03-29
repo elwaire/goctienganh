@@ -7,6 +7,11 @@
       "private": "Private"
     },
     "detail": {
+      "lessonCountSubtitle": "{count} lessons",
+      "wordsInThisSet": "Words in this set",
+      "loadingLessons": "Loading lessons…",
+      "childSetsTitle": "Parts in this set",
+      "childSetsEmptyHint": "No sub-sets at this level.",
       "loading": "Loading vocabulary set...",
       "notFound": "Vocabulary set not found.",
       "backToList": "Back to list",
@@ -30,7 +35,10 @@
       "tabPublic": "Public",
       "loading": "Loading sets...",
       "loadError": "Could not load vocabulary sets.",
-      "confirmDelete": "Delete this vocabulary set?"
+      "confirmDelete": "Delete this vocabulary set?",
+      "breadcrumbRoot": "All sets",
+      "breadcrumbInFolder": "Inside folder",
+      "createChild": "Create sub-set"
     },
     "card": {
       "edit": "Edit",
@@ -41,7 +49,9 @@
       "public": "Public",
       "private": "Private",
       "wordsCount": "{count} words",
+      "sectionsCount": "{count} parts",
       "viewDetail": "View details",
+      "openFolder": "Open sub-sets",
       "createdOn": "Created on {date}"
     },
     "deckEmpty": {

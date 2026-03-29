@@ -1,24 +1,59 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { Plus, Search, Loader2, AlertCircle } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { vocabularyApi } from "@/api/vocabularyApi";
-import { queryKeys } from "@/lib/queryKeys";
 import { DeckCard, CreateDeckModal, DeckListEmptyState } from "./_components";
-import { ButtonPrimary } from "@/components/ui";
+import { ButtonPrimary, FormInput } from "@/components/ui";
 import { useDebounce } from "./_hooks";
+
+const LIST_TAB_VALUES = ["my-sets", "public"] as const;
+type VocabularyListTab = (typeof LIST_TAB_VALUES)[number];
+
+function listTabFromParam(value: string | null): VocabularyListTab {
+  if (value === "public" || value === "my-sets") return value;
+  return "my-sets";
+}
+
+/** URL cũ `?folder=` → một trang chi tiết duy nhất */
+function useRedirectLegacyFolder(router: ReturnType<typeof useRouter>) {
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const fid = searchParams.get("folder");
+    if (fid) {
+      router.replace(`/vocabulary-set/${encodeURIComponent(fid)}`);
+    }
+  }, [searchParams, router]);
+}
 
 export default function VocabularySetPage() {
   const tl = useTranslations("vocabulary.list");
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<"my-sets" | "public">("my-sets");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const activeTab = listTabFromParam(searchParams.get("tab"));
+
+  useRedirectLegacyFolder(router);
+
+  const setListTab = useCallback(
+    (tab: VocabularyListTab) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("tab", tab);
+      params.delete("folder");
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
+
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const debouncedSearch = useDebounce(searchQuery, 500);
 
-  // ─── Fetch deck list ───
+  const legacyFolder = searchParams.get("folder");
   const {
     data: deckData,
     isLoading,
@@ -27,15 +62,22 @@ export default function VocabularySetPage() {
     queryKey: [
       "vocabularySets",
       "list",
-      { search: debouncedSearch || undefined },
+      {
+        search: debouncedSearch || undefined,
+        tab: activeTab,
+      },
     ],
     queryFn: () =>
-      vocabularyApi.getSets({ search: debouncedSearch || undefined }),
+      vocabularyApi.getSets({
+        search: debouncedSearch || undefined,
+        page: 1,
+        limit: 50,
+      }),
+    enabled: !legacyFolder,
   });
 
   const allDecks = deckData?.sets ?? [];
 
-  // Filter by tab
   const filteredDecks =
     activeTab === "my-sets"
       ? allDecks.filter((d) => d.is_owner)
@@ -65,7 +107,14 @@ export default function VocabularySetPage() {
     }
   };
 
-  // ─── Error state ───
+  if (legacyFolder) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3">
+        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+        <p className="text-sm text-neutral-400">{tl("loading")}</p>
+      </div>
+    );
+  }
 
   if (isError) {
     return (
@@ -77,9 +126,8 @@ export default function VocabularySetPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pb-12">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -98,53 +146,54 @@ export default function VocabularySetPage() {
             </ButtonPrimary>
           </div>
 
-          {/* Search & Filter */}
-          <div className="flex gap-4 max-w-[560px] relative">
-            <Search className=" w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder={tl("searchPlaceholder")}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+          <FormInput
+            type="text"
+            placeholder={tl("searchPlaceholder")}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            leftIcon={<Search className="w-5 h-5 text-neutral-400" />}
+            className="w-full max-w-lg"
+          />
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-2 mb-6 bg-white p-1 rounded-xl border border-gray-200 inline-flex">
+        <div className="flex gap-2 mb-6 bg-white p-1 rounded-xl border border-neutral-100 w-fit">
           <button
-            onClick={() => setActiveTab("my-sets")}
+            type="button"
+            onClick={() => setListTab("my-sets")}
             className={`px-6 py-2.5 rounded-lg font-medium transition-all ${
               activeTab === "my-sets"
-                ? "bg-blue-600 text-white shadow-sm"
-                : "text-gray-600 hover:text-gray-900"
+                ? "bg-primary-500 text-white shadow-sm"
+                : "text-neutral-600 hover:text-neutral-900"
             }`}
           >
             {tl("tabMy")} ({myCount})
           </button>
           <button
-            onClick={() => setActiveTab("public")}
+            type="button"
+            onClick={() => setListTab("public")}
             className={`px-6 py-2.5 rounded-lg font-medium transition-all ${
               activeTab === "public"
-                ? "bg-blue-600 text-white shadow-sm"
-                : "text-gray-600 hover:text-gray-900"
+                ? "bg-primary-500 text-white shadow-sm"
+                : "text-neutral-600 hover:text-neutral-900"
             }`}
           >
             {tl("tabPublic")} ({publicCount})
           </button>
         </div>
 
-        {/* Deck Grid */}
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+            <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
             <p className="text-sm text-neutral-400">{tl("loading")}</p>
           </div>
         ) : filteredDecks.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {filteredDecks.map((deck) => (
-              <DeckCard key={deck.id} deck={deck} onDelete={handleDeleteDeck} />
+              <DeckCard
+                key={deck.id}
+                deck={deck}
+                onDelete={handleDeleteDeck}
+              />
             ))}
           </div>
         ) : (
@@ -156,7 +205,6 @@ export default function VocabularySetPage() {
         )}
       </div>
 
-      {/* Create Modal */}
       <CreateDeckModal
         isOpen={showCreateModal}
         isCreating={createMutation.isPending}

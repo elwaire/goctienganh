@@ -8,10 +8,20 @@ export interface SetOwner {
   avatar: string;
 }
 
+export interface SetParentBrief {
+  id: UUID;
+  title: string;
+}
+
 export interface VocabularySet {
   id: UUID;
   user_id: UUID;
   subject_id?: UUID | null;
+  category_id?: UUID | null;
+  parent_id?: UUID | null;
+  parent?: SetParentBrief | null;
+  /** Số bộ con trực tiếp viewer được xem (theo BE; optional nếu chưa có field). */
+  child_count?: number;
   owner?: SetOwner; // thường có ở API admin list/detail
   title: string;
   description: string;
@@ -62,6 +72,11 @@ export interface VocabularySetQueryParams {
   limit?: number;
   search?: string;
   subject_id?: string;
+  category_id?: string;
+  /** Lọc danh sách con một cấp của bộ cha. */
+  parent_id?: string;
+  /** Mọi cấp trong một list (không dùng chung với parent_id). */
+  flat?: boolean;
 }
 
 export interface VocabularyWordQueryParams {
@@ -74,6 +89,8 @@ export interface CreateVocabularySetRequest {
   description?: string;
   is_public?: boolean;
   subject_id?: string | null;
+  category_id?: string | null;
+  parent_id?: string | null;
 }
 
 export interface UpdateVocabularySetRequest {
@@ -81,6 +98,9 @@ export interface UpdateVocabularySetRequest {
   description?: string;
   is_public?: boolean;
   subject_id?: string | null;
+  category_id?: string | null;
+  /** Bỏ qua key → giữ cha; `null` → đưa lên gốc. */
+  parent_id?: string | null;
 }
 
 export interface CreateVocabularyWordRequest {

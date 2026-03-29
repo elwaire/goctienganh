@@ -7,6 +7,11 @@
       "private": "Riêng tư"
     },
     "detail": {
+      "lessonCountSubtitle": "{count} bài học",
+      "wordsInThisSet": "Từ trong bộ này",
+      "loadingLessons": "Đang tải danh sách bài…",
+      "childSetsTitle": "Các phần trong bộ",
+      "childSetsEmptyHint": "Không có bộ con ở cấp này.",
       "loading": "Đang tải bộ từ...",
       "notFound": "Không tìm thấy bộ từ.",
       "backToList": "Quay lại danh sách",
@@ -30,7 +35,10 @@
       "tabPublic": "Công khai",
       "loading": "Đang tải bộ từ...",
       "loadError": "Không thể tải danh sách bộ từ.",
-      "confirmDelete": "Bạn có chắc muốn xóa bộ từ này?"
+      "confirmDelete": "Bạn có chắc muốn xóa bộ từ này?",
+      "breadcrumbRoot": "Tất cả bộ",
+      "breadcrumbInFolder": "Trong thư mục",
+      "createChild": "Tạo bộ con"
     },
     "card": {
       "edit": "Chỉnh sửa",
@@ -41,7 +49,9 @@
       "public": "Công khai",
       "private": "Riêng tư",
       "wordsCount": "{count} từ",
+      "sectionsCount": "{count} phần",
       "viewDetail": "Xem chi tiết",
+      "openFolder": "Vào các phần con",
       "createdOn": "Tạo ngày {date}"
     },
     "deckEmpty": {

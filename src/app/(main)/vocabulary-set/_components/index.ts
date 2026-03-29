@@ -2,6 +2,7 @@ export { DeckCard } from "./DeckCard";
 export { CreateDeckModal } from "./CreateDeckModal";
 export { DeckListEmptyState } from "./DeckListEmptyState";
 export { DeckHeader } from "./DeckHeader";
+export { ChildSetGrid } from "./ChildSetGrid";
 export { WordCard } from "./WordCard";
 export { WordFormModal } from "./WordFormModal";
 export { WordListEmptyState } from "./WordListEmptyState";

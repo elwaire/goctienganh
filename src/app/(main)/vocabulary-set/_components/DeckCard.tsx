@@ -1,5 +1,13 @@
 import { useLocale, useTranslations } from "next-intl";
-import { BookOpen, Globe, Lock, Eye, Calendar } from "lucide-react";
+import {
+  BookOpen,
+  Globe,
+  Lock,
+  Eye,
+  Calendar,
+  FolderOpen,
+  Trash2,
+} from "lucide-react";
 import Link from "next/link";
 import type { VocabularySet } from "@/types/vocabulary";
 
@@ -9,64 +17,91 @@ interface DeckCardProps {
   onDelete?: (deckId: string) => void;
 }
 
-export function DeckCard({ deck }: DeckCardProps) {
+export function DeckCard({ deck, onDelete }: DeckCardProps) {
   const t = useTranslations("vocabulary.deckCard");
+  const tc = useTranslations("vocabulary.card");
   const locale = useLocale();
   const dateStr = new Date(deck.created_at).toLocaleDateString(
     locale === "vi" ? "vi-VN" : "en-US",
   );
 
+  const childCount = deck.child_count ?? 0;
+  const hasChildren = childCount > 0;
+
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 hover:shadow-lg transition-all p-4 group">
-      {/* Header */}
-      <div className="flex flex-col mb-4">
-        <div className="flex items-center justify-between mb-1">
-          <h3 className="font-bold text-lg text-gray-900 mb-1 line-clamp-1  group-hover:text-blue-600 transition-colors ">
+    <div className="group relative bg-white rounded-2xl border border-neutral-100 p-4 hover:shadow-xl hover:border-primary-200 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-primary-50 rounded-full -mr-16 -mt-16 opacity-0 group-hover:opacity-40 transition-opacity duration-500 blur-2xl" />
+
+      <div className="flex flex-col mb-4 relative">
+        <div className="flex items-center justify-between mb-1 gap-2">
+          <h3 className="font-bold text-lg text-neutral-800 line-clamp-1 group-hover:text-primary-600 transition-colors">
             {deck.title}
           </h3>
-          <div className="ml-3 ">
+          <div className="flex items-center gap-1 shrink-0">
             {deck.is_public ? (
-              <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-medium whitespace-nowrap">
+              <div className="flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-medium whitespace-nowrap ring-1 ring-inset ring-emerald-100">
                 <Globe className="w-3 h-3" />
                 {t("public")}
               </div>
             ) : (
-              <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium whitespace-nowrap">
+              <div className="flex items-center gap-1 px-2 py-1 bg-neutral-100 text-neutral-700 rounded-lg text-xs font-medium whitespace-nowrap">
                 <Lock className="w-3 h-3" />
                 {t("private")}
               </div>
             )}
+            {deck.is_owner && onDelete && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onDelete(deck.id);
+                }}
+                className="p-1.5 rounded-lg text-neutral-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                aria-label={tc("delete")}
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
         {deck.description && (
-          <p className="text-sm text-gray-500 line-clamp-2">
+          <p className="text-sm text-neutral-400 line-clamp-2 leading-relaxed">
             {deck.description}
           </p>
         )}
       </div>
 
-      {/* Stats */}
-      <div className="flex items-center gap-4 mb-4 pb-4 border-b border-gray-100">
-        <div className="flex items-center gap-2">
-          <BookOpen className="w-4 h-4 text-blue-600" />
-          <span className="text-sm font-medium text-gray-900">
+      <div className="grid grid-cols-2 gap-3 mb-4 py-3 border-y border-neutral-50 relative">
+        <div className="flex items-center gap-2.5">
+          <div className="p-2.5 bg-blue-50 rounded-xl">
+            <BookOpen className="w-4 h-4 text-blue-500" />
+          </div>
+          <span className="text-sm font-semibold text-neutral-700">
             {t("wordsCount", { count: deck.word_count })}
           </span>
         </div>
+        {hasChildren && (
+          <div className="flex items-center gap-2.5">
+            <div className="p-2.5 bg-amber-50 rounded-xl">
+              <FolderOpen className="w-4 h-4 text-amber-600" />
+            </div>
+            <span className="text-sm font-semibold text-neutral-700">
+              {t("sectionsCount", { count: childCount })}
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* Actions */}
-      <div className="flex gap-2">
-        <Link href={`/vocabulary-set/${deck.id}`} className="flex-1">
-          <button className="w-full flex items-center cursor-pointer justify-center gap-2 px-4 h-[40px] bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
-            <Eye className="w-4 h-4" />
-            {t("viewDetail")}
-          </button>
-        </Link>
-      </div>
+      <Link
+        href={`/vocabulary-set/${deck.id}`}
+        className="relative flex w-full items-center justify-center gap-2 px-4 h-11 rounded-xl bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium transition-colors"
+      >
+        <Eye className="w-4 h-4" />
+        {t("viewDetail")}
+      </Link>
 
-      {/* Date */}
-      <div className="flex items-center gap-2 mt-4 text-xs text-gray-500">
+      <div className="flex items-center gap-2 mt-4 text-xs text-neutral-500 relative">
         <Calendar className="w-3 h-3" />
         {t("createdOn", { date: dateStr })}
       </div>

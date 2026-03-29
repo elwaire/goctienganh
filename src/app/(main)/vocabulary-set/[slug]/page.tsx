@@ -7,10 +7,15 @@ import { useTranslations } from "next-intl";
 import { Plus, Search, Loader2, AlertCircle, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { vocabularyApi } from "@/api/vocabularyApi";
-import { queryKeys } from "@/lib/queryKeys";
-import type { VocabularyWord, CreateVocabularyWordRequest, CreateVocabularySetRequest } from "@/types/vocabulary";
+import type {
+  VocabularyWord,
+  CreateVocabularyWordRequest,
+  CreateVocabularySetRequest,
+  UpdateVocabularySetRequest,
+} from "@/types/vocabulary";
 import {
   DeckHeader,
+  ChildSetGrid,
   WordCard,
   WordFormModal,
   WordListEmptyState,
@@ -31,6 +36,7 @@ export default function VocabularySetDetailPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showWordModal, setShowWordModal] = useState(false);
   const [showEditDeckModal, setShowEditDeckModal] = useState(false);
+  const [showCreateChildModal, setShowCreateChildModal] = useState(false);
   const [editingCard, setEditingCard] = useState<VocabularyWord | null>(null);
 
   const { speak } = useSpeech();
@@ -45,6 +51,22 @@ export default function VocabularySetDetailPage() {
     queryFn: () => vocabularyApi.getSet(deckId),
     enabled: !!deckId,
   });
+
+  const { data: childListPayload, isPending: childListPending } = useQuery({
+    queryKey: ["vocabularySets", "list", { parent_id: deckId }],
+    queryFn: () =>
+      vocabularyApi.getSets({ parent_id: deckId, page: 1, limit: 100 }),
+    enabled: !!deckId,
+  });
+
+  const childSets = childListPayload?.sets ?? [];
+  const useFolderLayout =
+    childSets.length > 0 ||
+    ((deckData?.child_count ?? 0) > 0 && childListPending);
+  const folderLessonsLoading =
+    (deckData?.child_count ?? 0) > 0 &&
+    childListPending &&
+    childSets.length === 0;
 
   // Study stats and history are currently not supported in new API.
   // We keep them as null for now or hide if they are missing.
@@ -113,7 +135,8 @@ export default function VocabularySetDetailPage() {
   });
 
   const updateDeckMutation = useMutation({
-    mutationFn: (data: CreateVocabularySetRequest) => vocabularyApi.updateSet(deckId, data),
+    mutationFn: (data: UpdateVocabularySetRequest) =>
+      vocabularyApi.updateSet(deckId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["vocabularySets", "detail", deckId],
@@ -122,6 +145,21 @@ export default function VocabularySetDetailPage() {
         queryKey: ["vocabularySets"],
       });
       setShowEditDeckModal(false);
+    },
+  });
+
+  const createChildMutation = useMutation({
+    mutationFn: (data: CreateVocabularySetRequest) =>
+      vocabularyApi.createSet({ ...data, parent_id: deckId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["vocabularySets"] });
+      queryClient.invalidateQueries({
+        queryKey: ["vocabularySets", "list", { parent_id: deckId }],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["vocabularySets", "detail", deckId],
+      });
+      setShowCreateChildModal(false);
     },
   });
 
@@ -135,6 +173,7 @@ export default function VocabularySetDetailPage() {
     },
   });
 
+  /** Sao chép bộ đang mở (trang phần / lá — không dùng trên bộ cha có lưới phần). */
   const copyDeckMutation = useMutation({
     mutationFn: () => vocabularyApi.copySet(deckId),
     onSuccess: (data) => {
@@ -226,78 +265,115 @@ export default function VocabularySetDetailPage() {
     );
   }
 
-  return (
-    <div className="min-h-screen ">
-      <div className="max-w-6xl mx-auto">
-        {/* Deck Header */}
-        <DeckHeader
-          deck={deckData}
-          stats={studyStats}
-          onEditDeck={handleEditDeck}
-          onDeleteDeck={handleDeleteDeck}
-          onCopyToMyAccount={
-            !deckData.is_owner && deckData.is_public
-              ? () => copyDeckMutation.mutate()
-              : undefined
-          }
-          copyLoading={copyDeckMutation.isPending}
-        />
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left — Word List */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Toolbar */}
-            <div className="flex items-center gap-3">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder={t("searchPlaceholder")}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 h-[44px] bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                />
-              </div>
-              {deckData.is_owner && (
-                <ButtonPrimary
-                  onClick={handleOpenAddModal}
-                  variant="outline"
-                  rounded="md"
-                >
-                  <Plus className="w-4 h-4" />
-                  {t("addWord")}
-                </ButtonPrimary>
-              )}
-            </div>
-
-            {/* Words */}
-            <div className="space-y-3">
-              {filteredCards.length > 0 ? (
-                filteredCards.map((card) => (
-                  <WordCard
-                    key={card.id}
-                    card={card}
-                    isOwner={deckData.is_owner}
-                    onEdit={handleOpenEditModal}
-                    onDelete={handleDeleteWord}
-                    onSpeak={speak}
-                  />
-                ))
-              ) : (
-                <WordListEmptyState
-                  searchQuery={searchQuery}
-                  onAddWord={handleOpenAddModal}
-                />
-              )}
-            </div>
-          </div>
-
-          {/* Right — Stats & History */}
-          <div className="space-y-6">
-            {historyData && <StudyHistoryPanel sessions={historyData?.sessions ?? []} />}
-            {studyStats && <StudyStatsPanel stats={studyStats} />}
-          </div>
+  const wordListSection = (
+    <>
+      <div className="flex items-center gap-3">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder={t("searchPlaceholder")}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 h-[44px] bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/30 text-sm"
+          />
         </div>
+        {deckData.is_owner && (
+          <ButtonPrimary
+            onClick={handleOpenAddModal}
+            variant="outline"
+            rounded="md"
+          >
+            <Plus className="w-4 h-4" />
+            {t("addWord")}
+          </ButtonPrimary>
+        )}
+      </div>
+      <div className="space-y-3">
+        {filteredCards.length > 0 ? (
+          filteredCards.map((card) => (
+            <WordCard
+              key={card.id}
+              card={card}
+              isOwner={deckData.is_owner}
+              onEdit={handleOpenEditModal}
+              onDelete={handleDeleteWord}
+              onSpeak={speak}
+            />
+          ))
+        ) : (
+          <WordListEmptyState
+            searchQuery={searchQuery}
+            onAddWord={handleOpenAddModal}
+          />
+        )}
+      </div>
+    </>
+  );
+
+  const folderSubtitle = useFolderLayout
+    ? folderLessonsLoading && childSets.length === 0
+      ? t("loadingLessons")
+      : t("lessonCountSubtitle", {
+          count: Math.max(childSets.length, deckData.child_count ?? 0),
+        })
+    : undefined;
+
+  return (
+    <div className="min-h-screen pb-12">
+      <div className="max-w-6xl mx-auto">
+        {useFolderLayout ? (
+          <>
+            <DeckHeader
+              deck={deckData}
+              stats={studyStats}
+              subtitle={folderSubtitle}
+              onEditDeck={handleEditDeck}
+              onDeleteDeck={handleDeleteDeck}
+              onCreateChild={
+                deckData.is_owner
+                  ? () => setShowCreateChildModal(true)
+                  : undefined
+              }
+            />
+            <ChildSetGrid
+              sets={childSets}
+              isLoading={folderLessonsLoading}
+            />
+            {deckData.words.length > 0 && (
+              <section className="mt-8 rounded-2xl border border-neutral-100 bg-white shadow-sm p-6">
+                <h2 className="text-lg font-semibold text-neutral-800 mb-4">
+                  {t("wordsInThisSet")}
+                </h2>
+                <div className="space-y-6">{wordListSection}</div>
+              </section>
+            )}
+          </>
+        ) : (
+          <>
+            <DeckHeader
+              deck={deckData}
+              stats={studyStats}
+              onEditDeck={handleEditDeck}
+              onDeleteDeck={handleDeleteDeck}
+              onCopyToMyAccount={
+                !deckData.is_owner && deckData.is_public
+                  ? () => copyDeckMutation.mutate()
+                  : undefined
+              }
+              copyLoading={copyDeckMutation.isPending}
+            />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 space-y-6">{wordListSection}</div>
+              <div className="space-y-6">
+                {historyData && (
+                  <StudyHistoryPanel sessions={historyData?.sessions ?? []} />
+                )}
+                {studyStats && <StudyStatsPanel stats={studyStats} />}
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Word Add/Edit Modal */}
@@ -329,6 +405,13 @@ export default function VocabularySetDetailPage() {
         }
         onClose={() => setShowEditDeckModal(false)}
         onSave={handleSaveDeck}
+      />
+
+      <CreateDeckModal
+        isOpen={showCreateChildModal}
+        isCreating={createChildMutation.isPending}
+        onClose={() => setShowCreateChildModal(false)}
+        onSave={(data) => createChildMutation.mutate(data)}
       />
     </div>
   );
