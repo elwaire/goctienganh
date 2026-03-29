@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { Search, Plus, BookOpen } from "lucide-react";
 
 interface WordListEmptyStateProps {
@@ -9,6 +10,9 @@ export function WordListEmptyState({
   searchQuery,
   onAddWord,
 }: WordListEmptyStateProps) {
+  const t = useTranslations("vocabulary.detail");
+  const tForm = useTranslations("vocabulary.form");
+
   if (searchQuery) {
     return (
       <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
