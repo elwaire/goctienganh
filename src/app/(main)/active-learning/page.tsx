@@ -35,13 +35,25 @@ const WRITING_MODE_ICONS: Record<WritingMode, ReactNode> = {
 export default function ActiveLearningPage() {
   const router = useRouter();
   const t = useTranslations("common.sidebar");
-  const [selectedDeck, setSelectedDeck] = useState<VocabularySet | null>(null);
+  const [selectedDeck, setSelectedDeck] = useState<VocabularySet | null>(null); // chỉ leaf deck
+  const [selectedParentDeck, setSelectedParentDeck] =
+    useState<VocabularySet | null>(null);
   const [showTutorial, setShowTutorial] = useState(false);
 
   // Fetch only decks that belong to the user (is_owner) or all available if preferred
   const { data: deckData, isLoading } = useQuery({
     queryKey: ["vocabularySets", "list", {}],
     queryFn: () => vocabularyApi.getSets({}),
+  });
+
+  const parentIdForChildren = selectedParentDeck?.id ?? null;
+  const { data: childDeckData, isLoading: isLoadingChildren } = useQuery({
+    queryKey: ["vocabularySets", "list", { parent_id: parentIdForChildren }],
+    queryFn: () =>
+      parentIdForChildren
+        ? vocabularyApi.getSets({ parent_id: parentIdForChildren })
+        : Promise.resolve({ sets: [], total: 0 }),
+    enabled: !!parentIdForChildren,
   });
 
   const { data: selectedDeckData, isLoading: isLoadingWords } = useQuery({
@@ -51,6 +63,8 @@ export default function ActiveLearningPage() {
   });
 
   const allDecks = deckData?.sets ?? [];
+  const rootDecks = allDecks.filter((d) => !d.parent_id);
+  const childDecks = childDeckData?.sets ?? [];
   const selectedWords = selectedDeckData?.words ?? [];
 
   const handleStartMode = (mode: GameModeConfig) => {
@@ -69,6 +83,17 @@ export default function ActiveLearningPage() {
     const listening = GAME_MODES.find((m) => m.id === "listening");
     if (!selectedDeck || !listening) return;
     router.push(`${listening.path}?deckId=${selectedDeck.id}`);
+  };
+
+  const handleSelectDeck = (deck: VocabularySet) => {
+    const hasChildren = (deck.child_count ?? 0) > 0;
+    if (hasChildren) {
+      setSelectedParentDeck(deck);
+      setSelectedDeck(null);
+      return;
+    }
+    setSelectedParentDeck(deck.parent_id ? deck.parent ?? null : null);
+    setSelectedDeck(deck);
   };
 
   return (
@@ -106,46 +131,125 @@ export default function ActiveLearningPage() {
                 <Loader2 className="w-6 h-6 animate-spin shrink-0" />
                 <p className="text-sm">Đang tải danh sách bộ từ...</p>
               </div>
-            ) : allDecks.length === 0 ? (
+            ) : rootDecks.length === 0 ? (
               <p className="text-sm text-gray-500 text-center py-8">
                 Chưa có bộ từ nào.
               </p>
             ) : (
               <div className="flex flex-col gap-2 max-h-[min(420px,55vh)] overflow-y-auto pr-1 custom-scrollbar">
-                {allDecks.map((deck) => {
+                {rootDecks.map((deck) => {
                   const isSelected = selectedDeck?.id === deck.id;
+                  const isParentSelected = selectedParentDeck?.id === deck.id;
+                  const hasChildren = (deck.child_count ?? 0) > 0;
                   return (
-                    <div
-                      key={deck.id}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => setSelectedDeck(deck)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          setSelectedDeck(deck);
-                        }
-                      }}
-                      className={`relative p-3.5 rounded-xl border transition-all cursor-pointer text-left ${
-                        isSelected
-                          ? "border-blue-600 bg-blue-50/50 shadow-sm ring-2 ring-blue-600/20"
-                          : "border-gray-100 bg-gray-50/50 hover:border-gray-300 hover:bg-white"
-                      }`}
-                    >
-                      {isSelected && (
-                        <div className="absolute top-2.5 right-2.5 text-blue-600">
-                          <CheckCircle2 className="w-5 h-5 fill-current bg-white rounded-full" />
+                    <div key={deck.id} className="flex flex-col gap-2">
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => handleSelectDeck(deck)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            handleSelectDeck(deck);
+                          }
+                        }}
+                        className={`relative p-3.5 rounded-xl border transition-all cursor-pointer text-left ${
+                          isSelected || isParentSelected
+                            ? "border-blue-600 bg-blue-50/50 shadow-sm ring-2 ring-blue-600/20"
+                            : "border-gray-100 bg-gray-50/50 hover:border-gray-300 hover:bg-white"
+                        }`}
+                      >
+                        {(isSelected || isParentSelected) && (
+                          <div className="absolute top-2.5 right-2.5 text-blue-600">
+                            <CheckCircle2 className="w-5 h-5 fill-current bg-white rounded-full" />
+                          </div>
+                        )}
+                        <h3
+                          className={`font-bold mb-1 line-clamp-2 pr-8 text-sm ${
+                            isSelected || isParentSelected
+                              ? "text-blue-700"
+                              : "text-gray-900"
+                          }`}
+                        >
+                          {deck.title}
+                        </h3>
+                        <div className="flex items-center justify-between gap-2 text-xs text-gray-500">
+                          <div className="flex items-center gap-2">
+                            <BookOpen className="w-3.5 h-3.5 shrink-0" />
+                            <span>{deck.word_count} từ</span>
+                          </div>
+                          {hasChildren && (
+                            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600">
+                              Có bộ con
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {isParentSelected && hasChildren && (
+                        <div className="pl-3 border-l border-gray-100">
+                          {isLoadingChildren ? (
+                            <div className="flex items-center gap-2 text-gray-500 py-2 text-sm">
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              Đang tải bộ con...
+                            </div>
+                          ) : childDecks.length === 0 ? (
+                            <p className="text-xs text-gray-500 py-1">
+                              Bộ này có bộ con, nhưng hiện chưa tải được danh sách bộ con.
+                            </p>
+                          ) : (
+                            <div className="flex flex-col gap-2">
+                              <p className="text-[11px] font-semibold text-gray-500">
+                                Chọn bộ con để học (bắt buộc)
+                              </p>
+                              {childDecks.map((child) => {
+                                const isChildSelected = selectedDeck?.id === child.id;
+                                const childHasChildren = (child.child_count ?? 0) > 0;
+                                return (
+                                  <div
+                                    key={child.id}
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={() => handleSelectDeck(child)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter" || e.key === " ") {
+                                        e.preventDefault();
+                                        handleSelectDeck(child);
+                                      }
+                                    }}
+                                    className={`relative p-3 rounded-xl border transition-all cursor-pointer text-left ${
+                                      isChildSelected
+                                        ? "border-blue-600 bg-blue-50/50 shadow-sm ring-2 ring-blue-600/20"
+                                        : "border-gray-100 bg-gray-50/50 hover:border-gray-300 hover:bg-white"
+                                    }`}
+                                  >
+                                    {isChildSelected && (
+                                      <div className="absolute top-2.5 right-2.5 text-blue-600">
+                                        <CheckCircle2 className="w-5 h-5 fill-current bg-white rounded-full" />
+                                      </div>
+                                    )}
+                                    <h4
+                                      className={`font-bold mb-1 line-clamp-2 pr-8 text-xs ${
+                                        isChildSelected ? "text-blue-700" : "text-gray-900"
+                                      }`}
+                                    >
+                                      {child.title}
+                                    </h4>
+                                    <div className="flex items-center justify-between gap-2 text-[11px] text-gray-500">
+                                      <span>{child.word_count} từ</span>
+                                      {childHasChildren && (
+                                        <span className="font-semibold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600">
+                                          Có bộ con
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
                       )}
-                      <h3
-                        className={`font-bold mb-1 line-clamp-2 pr-8 text-sm ${isSelected ? "text-blue-700" : "text-gray-900"}`}
-                      >
-                        {deck.title}
-                      </h3>
-                      <div className="flex items-center gap-2 text-xs text-gray-500">
-                        <BookOpen className="w-3.5 h-3.5 shrink-0" />
-                        <span>{deck.word_count} từ</span>
-                      </div>
                     </div>
                   );
                 })}
