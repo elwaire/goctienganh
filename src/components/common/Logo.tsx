@@ -20,7 +20,7 @@ export default function Logo({ className }: LogoProps) {
         priority
       />
       <span className="text-lg font-semibold text-primary-500 truncate">
-        Goc Tieng Anh
+        Goc Hoc Tap
       </span>
     </Link>
   );
