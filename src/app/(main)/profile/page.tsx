@@ -356,7 +356,9 @@ export default function ProfilePage() {
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-gray-400 text-lg font-medium bg-gray-200">
-                                {(profileForm.fullname || "?").slice(0, 1).toUpperCase()}
+                                {(profileForm.fullname || "?")
+                                  .slice(0, 1)
+                                  .toUpperCase()}
                               </div>
                             )}
                           </div>
@@ -736,7 +738,10 @@ export default function ProfilePage() {
                             type={showCurrentPassword ? "text" : "password"}
                             value={passwordForm.currentPassword}
                             onChange={(e) =>
-                              setPasswordField("currentPassword", e.target.value)
+                              setPasswordField(
+                                "currentPassword",
+                                e.target.value,
+                              )
                             }
                             className="w-full px-3 py-2 pr-10 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                             placeholder="••••••••"
@@ -795,7 +800,10 @@ export default function ProfilePage() {
                             type={showConfirmPassword ? "text" : "password"}
                             value={passwordForm.confirmPassword}
                             onChange={(e) =>
-                              setPasswordField("confirmPassword", e.target.value)
+                              setPasswordField(
+                                "confirmPassword",
+                                e.target.value,
+                              )
                             }
                             className="w-full px-3 py-2 pr-10 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                             placeholder="••••••••"
@@ -902,63 +910,11 @@ export default function ProfilePage() {
                 <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                   <span className="text-xs text-gray-600">Tham gia</span>
                   <span className="text-xs font-semibold text-gray-900">
-                    {userMe.created_at
-                      ? formatDate(userMe.created_at)
-                      : "—"}
+                    {userMe.created_at ? formatDate(userMe.created_at) : "—"}
                   </span>
                 </div>
               </div>
             </div>
-
-            {/* Learning Stats - Only on info tab */}
-            {activeTab === "info" && (
-              <div className="bg-blue-50 rounded-2xl border border-blue-200 p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <BookOpen className="w-4 h-4 text-blue-600" />
-                  <h3 className="font-bold text-gray-900 text-sm">Học tập</h3>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-700">Từ đã học</span>
-                    <span className="text-xs font-bold text-blue-900">
-                      1,245
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-700">Chuỗi ngày</span>
-                    <span className="text-xs font-bold text-orange-600">
-                      15 🔥
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-700">Độ chính xác</span>
-                    <span className="text-xs font-bold text-green-600">
-                      87%
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Security Tips (Only on security tab) */}
-            {activeTab === "security" && (
-              <div className="bg-blue-50 rounded-2xl border border-blue-200 p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Lock className="w-4 h-4 text-blue-600" />
-                  <h3 className="font-bold text-gray-900 text-sm">
-                    Tips bảo mật
-                  </h3>
-                </div>
-
-                <ul className="space-y-1.5 text-xs text-gray-700">
-                  <li>• Dùng mật khẩu mạnh</li>
-                  <li>• Không chia sẻ với ai</li>
-                  <li>• Đổi định kỳ 3-6 tháng</li>
-                  <li>• Kết hợp chữ, số, ký tự</li>
-                </ul>
-              </div>
-            )}
 
             {/* Help */}
             <div className="bg-gray-50 rounded-2xl border border-gray-200 p-4">
@@ -968,9 +924,14 @@ export default function ProfilePage() {
               <p className="text-xs text-gray-600 mb-3">
                 Liên hệ nếu gặp vấn đề
               </p>
-              <button className="w-full bg-white hover:bg-gray-100 border border-gray-200 text-gray-700 font-medium py-2 rounded-lg transition-colors text-xs">
-                Liên hệ
-              </button>
+              <Link
+                href={"https://www.facebook.com/groups/862643358866875"}
+                target="_blank"
+              >
+                <button className="w-full bg-white hover:bg-gray-100 border border-gray-200 text-gray-700 font-medium py-2 rounded-lg transition-colors text-xs">
+                  Liên hệ
+                </button>
+              </Link>
             </div>
           </div>
         </div>
