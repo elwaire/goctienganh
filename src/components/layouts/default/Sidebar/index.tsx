@@ -39,9 +39,9 @@ export default function Sidebar({
 
       <aside
         className={`
-        fixed inset-y-0 left-0 z-50 bg-white
+        fixed inset-y-0 left-0 z-50 bg-white/70 backdrop-blur-md
         lg:static lg:z-0
-        transform transition-all duration-300 ease-in-out border-r border-slate-200
+        transform transition-all duration-300 ease-in-out border-r-2 border-neutral-100
         ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         ${isCollapsed ? "lg:w-20" : "lg:w-64 w-72"}
       `}
@@ -57,7 +57,7 @@ export default function Sidebar({
             <div
               className={`${isCollapsed ? "lg:flex" : "hidden"} items-center justify-center w-full`}
             >
-              <Logo hideText />
+              <Logo hideText className="m-auto" />
             </div>
 
             {/* Mobile Close Button */}
@@ -66,25 +66,6 @@ export default function Sidebar({
               className="lg:hidden p-2  rounded-lg hover:bg-slate-100 transition-colors"
             >
               <X className="w-5 h-5 text-slate-500" />
-            </button>
-
-            {/* Desktop Collapse Toggle Button - Positioned absolutely or flexed */}
-            <button
-              onClick={onToggleCollapse}
-              className={`
-                hidden lg:flex absolute -right-12 cursor-pointer top-20 z-10
-                w-12 h-12 items-center justify-center
-                bg-white border-t border border-slate-200 
-                text-slate-400 hover:text-primary-500 hover:border-primary-200
-                transition-all duration-200
-                scale-0 group-hover/sidebar:scale-100
-              `}
-            >
-              {isCollapsed ? (
-                <ChevronRight className="w-6 h-6" />
-              ) : (
-                <ChevronLeft className="w-6 h-6" />
-              )}
             </button>
           </div>
 
@@ -150,6 +131,33 @@ export default function Sidebar({
                 </div>
               </div>
             </nav>
+          </div>
+
+          {/* Sidebar Footer - Collapse Toggle */}
+          <div className="p-4 border-t border-neutral-100 hidden lg:block">
+            <button
+              onClick={onToggleCollapse}
+              className={`
+                flex items-center gap-3 cursor-pointer w-full px-3 py-3 rounded-lg
+                text-neutral-500 hover:bg-neutral-100 hover:text-black
+                transition-all duration-200
+                ${isCollapsed ? "justify-center px-0" : ""}
+              `}
+              title={isCollapsed ? t("expand") : t("collapse")}
+            >
+              <div className="shrink-0">
+                {isCollapsed ? (
+                  <ChevronRight className="w-5 h-5" />
+                ) : (
+                  <ChevronLeft className="w-5 h-5" />
+                )}
+              </div>
+              {!isCollapsed && (
+                <span className="text-sm font-medium whitespace-nowrap overflow-hidden">
+                  {t("collapse")}
+                </span>
+              )}
+            </button>
           </div>
         </div>
       </aside>

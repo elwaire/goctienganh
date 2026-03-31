@@ -156,11 +156,11 @@ export default function VocabularySetPage() {
           />
         </div>
 
-        <div className="flex gap-2 mb-6 bg-white p-1 rounded-xl border border-neutral-100 w-fit">
+        <div className="flex gap-2 mb-6 bg-white p-1 rounded-xl border w-full border-neutral-200 lg:w-fit">
           <button
             type="button"
             onClick={() => setListTab("my-sets")}
-            className={`px-6 py-2.5 rounded-lg font-medium transition-all ${
+            className={`px-6 py-2.5 rounded-lg flex-1 lg:flex-none font-medium transition-all ${
               activeTab === "my-sets"
                 ? "bg-primary-500 text-white shadow-sm"
                 : "text-neutral-600 hover:text-neutral-900"
@@ -171,7 +171,7 @@ export default function VocabularySetPage() {
           <button
             type="button"
             onClick={() => setListTab("public")}
-            className={`px-6 py-2.5 rounded-lg font-medium transition-all ${
+            className={`px-6 py-2.5 rounded-lg flex-1 lg:flex-none font-medium transition-all ${
               activeTab === "public"
                 ? "bg-primary-500 text-white shadow-sm"
                 : "text-neutral-600 hover:text-neutral-900"
@@ -189,11 +189,7 @@ export default function VocabularySetPage() {
         ) : filteredDecks.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {filteredDecks.map((deck) => (
-              <DeckCard
-                key={deck.id}
-                deck={deck}
-                onDelete={handleDeleteDeck}
-              />
+              <DeckCard key={deck.id} deck={deck} onDelete={handleDeleteDeck} />
             ))}
           </div>
         ) : (

@@ -9,7 +9,9 @@
       "exam": "Bài thi",
       "ratings": "Xếp hạng",
       "activeLearning": "Học chủ động",
-      "feedback": "Đóng góp ý kiến"
+      "feedback": "Đóng góp ý kiến",
+      "collapse": "Thu nhỏ",
+      "expand": "Mở rộng"
     }
   }
 }

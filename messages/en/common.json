@@ -9,7 +9,9 @@
       "exam": "Exam",
       "ratings": "Rankings",
       "activeLearning": "Active Learning",
-      "feedback": "Feedback"
+      "feedback": "Feedback",
+      "collapse": "Collapse",
+      "expand": "Expand"
     }
   }
 }

@@ -43,7 +43,7 @@ export default function Header({
   };
 
   return (
-    <header className="px-4 py-2 bg-white border-b border-slate-200 flex items-center justify-between lg:justify-end sticky top-0 z-30 h-16 shrink-0">
+    <header className="px-4 py-2 bg-white/80 backdrop-blur-md border-b-2 border-slate-100 flex items-center justify-between lg:justify-end sticky top-0 z-30 h-16 shrink-0 transition-all">
       <div className="flex items-center lg:hidden">
         <button
           onClick={onToggleSidebar}
