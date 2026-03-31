@@ -16,7 +16,10 @@ import * as z from "zod";
 import { GoogleLogin } from "@react-oauth/google";
 
 const loginSchema = z.object({
-  email: z.string().min(1, "Email is required").email("Please enter a valid email address"),
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Please enter a valid email address"),
   password: z.string().min(1, "Password is required"),
   rememberMe: z.boolean().optional(),
 });
@@ -55,7 +58,10 @@ export default function LoginPage() {
     },
     onError: (error: unknown) => {
       if (error instanceof AxiosError) {
-        setServerError(error.response?.data?.message || "Login failed. Please check your credentials.");
+        setServerError(
+          error.response?.data?.message ||
+            "Login failed. Please check your credentials.",
+        );
       } else if (error instanceof ApiError) {
         setServerError(error.message);
       } else {
@@ -139,12 +145,12 @@ export default function LoginPage() {
             />
             <span className="text-sm text-gray-500">Remember me</span>
           </label>
-          <Link
+          {/* <Link
             href="/forgot-password"
             className="text-sm text-[#2855F7] font-medium hover:underline"
           >
             Forgot password?
-          </Link>
+          </Link> */}
         </div>
 
         {/* Server Error */}
