@@ -29,7 +29,7 @@ function getSubjectStyles(subject: Subject) {
   };
 }
 
-export function CourseSelector() {
+export function CourseSelector({ isCollapsed }: { isCollapsed?: boolean }) {
   const [selectedId, setSelectedId] = useState<string>(() => {
     return Cookies.get(SUBJECT_COOKIE) || "";
   });
@@ -83,14 +83,18 @@ export function CourseSelector() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="flex items-center gap-3 p-2 rounded-xl bg-neutral-50">
-        <div className="w-9 h-9 bg-neutral-200 rounded-lg flex items-center justify-center animate-pulse">
+      <div
+        className={`flex items-center gap-3 p-2 rounded-xl bg-neutral-50 ${isCollapsed ? "justify-center" : ""}`}
+      >
+        <div className="w-9 h-9 bg-neutral-200 rounded-lg flex items-center justify-center animate-pulse shrink-0">
           <Loader2 className="w-4 h-4 text-neutral-400 animate-spin" />
         </div>
-        <div className="flex-1">
-          <div className="h-4 w-20 bg-neutral-200 rounded animate-pulse" />
-          <div className="h-3 w-14 bg-neutral-100 rounded mt-1 animate-pulse" />
-        </div>
+        {!isCollapsed && (
+          <div className="flex-1">
+            <div className="h-4 w-20 bg-neutral-200 rounded animate-pulse" />
+            <div className="h-3 w-14 bg-neutral-100 rounded mt-1 animate-pulse" />
+          </div>
+        )}
       </div>
     );
   }
@@ -98,15 +102,19 @@ export function CourseSelector() {
   // Error or empty state
   if (isError || subjects.length === 0) {
     return (
-      <div className="flex items-center gap-3 p-2 rounded-xl bg-neutral-50">
-        <div className="w-9 h-9 bg-neutral-200 rounded-lg flex items-center justify-center">
+      <div
+        className={`flex items-center gap-3 p-2 rounded-xl bg-neutral-50 ${isCollapsed ? "justify-center" : ""}`}
+      >
+        <div className="w-9 h-9 bg-neutral-200 rounded-lg flex items-center justify-center shrink-0">
           <BookOpen className="w-5 h-5 text-neutral-400" />
         </div>
-        <div className="flex-1 text-left">
-          <p className="text-sm font-medium text-neutral-500">
-            {isError ? "Lỗi tải môn học" : "Chưa có môn học"}
-          </p>
-        </div>
+        {!isCollapsed && (
+          <div className="flex-1 text-left">
+            <p className="text-sm font-medium text-neutral-500">
+              {isError ? "Lỗi tải môn học" : "Chưa có môn học"}
+            </p>
+          </div>
+        )}
       </div>
     );
   }
@@ -125,18 +133,21 @@ export function CourseSelector() {
           if (isMultiple) setIsOpen(!isOpen);
         }}
         disabled={!isMultiple}
-        className={`w-full flex items-center gap-3 p-2 rounded-xl border-2 border-transparent transition-all duration-200 ${
+        title={isCollapsed ? selectedSubject?.name : ""}
+        className={`flex items-center gap-3 rounded-xl  border-2 border-transparent transition-all duration-200 ${
           isMultiple ? "cursor-pointer hover:opacity-90" : "cursor-default"
-        }`}
+        } ${isCollapsed ? "justify-center " : "p-2 w-full "}`}
         style={{
           backgroundColor: currentStyles
-            ? selectedSubject!.bg_color
+            ? isCollapsed
+              ? ""
+              : selectedSubject!.bg_color
             : "#f5f5f5",
           ...(isOpen && currentStyles ? currentStyles.ring : {}),
         }}
       >
         <div
-          className="w-9 h-9 rounded-lg flex items-center justify-center"
+          className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
           style={currentStyles?.iconBg ?? { backgroundColor: "#d4d4d4" }}
         >
           {selectedSubject?.icon ? (
@@ -148,21 +159,25 @@ export function CourseSelector() {
             <BookOpen className="w-5 h-5 text-white" />
           )}
         </div>
-        <div className="flex-1 text-left">
-          <p
-            className="text-sm font-semibold"
-            style={currentStyles?.text ?? { color: "#525252" }}
-          >
-            {selectedSubject?.name ?? "Chọn môn"}
-          </p>
-          <p className="text-xs text-neutral-500">Đang học</p>
-        </div>
-        {isMultiple && (
-          <ChevronDown
-            className={`w-4 h-4 text-neutral-400 transition-transform duration-200 ${
-              isOpen ? "rotate-180" : ""
-            }`}
-          />
+        {!isCollapsed && (
+          <>
+            <div className="flex-1 text-left truncate">
+              <p
+                className="text-sm font-semibold truncate"
+                style={currentStyles?.text ?? { color: "#525252" }}
+              >
+                {selectedSubject?.name ?? "Chọn môn"}
+              </p>
+              <p className="text-xs text-neutral-500">Đang học</p>
+            </div>
+            {isMultiple && (
+              <ChevronDown
+                className={`w-4 h-4 text-neutral-400 transition-transform duration-200 ${
+                  isOpen ? "rotate-180" : ""
+                }`}
+              />
+            )}
+          </>
         )}
       </button>
 

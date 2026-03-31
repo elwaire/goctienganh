@@ -29,7 +29,10 @@ export function DeckCard({ deck, onDelete }: DeckCardProps) {
   const hasChildren = childCount > 0;
 
   return (
-    <div className="group relative bg-white rounded-2xl border border-neutral-100 p-4 hover:shadow-xl hover:border-primary-200 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+    <Link
+      href={`/vocabulary-set/${deck.id}`}
+      className="group relative bg-white rounded-2xl border-4 border-primary-50 p-4 hover:shadow-xl hover:border-primary-200 transition-all duration-300 hover:-translate-y-1 overflow-hidden"
+    >
       <div className="absolute top-0 right-0 w-32 h-32 bg-primary-50 rounded-full -mr-16 -mt-16 opacity-0 group-hover:opacity-40 transition-opacity duration-500 blur-2xl" />
 
       <div className="flex flex-col mb-4 relative">
@@ -93,18 +96,10 @@ export function DeckCard({ deck, onDelete }: DeckCardProps) {
         )}
       </div>
 
-      <Link
-        href={`/vocabulary-set/${deck.id}`}
-        className="relative flex w-full items-center justify-center gap-2 px-4 h-11 rounded-xl bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium transition-colors"
-      >
-        <Eye className="w-4 h-4" />
-        {t("viewDetail")}
-      </Link>
-
       <div className="flex items-center gap-2 mt-4 text-xs text-neutral-500 relative">
         <Calendar className="w-3 h-3" />
         {t("createdOn", { date: dateStr })}
       </div>
-    </div>
+    </Link>
   );
 }

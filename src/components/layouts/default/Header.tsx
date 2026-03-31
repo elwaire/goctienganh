@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, ChevronDown, LogOut, User } from "lucide-react";
+import { Search, ChevronDown, LogOut, User, Menu } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
@@ -19,7 +19,11 @@ function getInitials(name: string): string {
     .slice(0, 2);
 }
 
-export default function Header() {
+export default function Header({
+  onToggleSidebar,
+}: {
+  onToggleSidebar?: () => void;
+}) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const router = useRouter();
   const { user, isAuthenticated } = useSelector(
@@ -39,9 +43,19 @@ export default function Header() {
   };
 
   return (
-    <header className="p-3 bg-white rounded-2xl border border-slate-200  flex items-center justify-end sticky top-0 z-40">
+    <header className="px-4 py-2 bg-white border-b border-slate-200 flex items-center justify-between lg:justify-end sticky top-0 z-30 h-16 shrink-0">
+      <div className="flex items-center lg:hidden">
+        <button
+          onClick={onToggleSidebar}
+          className="p-2 -ml-2 rounded-lg hover:bg-neutral-100 transition-colors"
+          title="Toggle Sidebar"
+        >
+          <Menu className="w-5 h-5 text-neutral-600" />
+        </button>
+      </div>
+
       {/* Right - Actions & Profile */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-4">
         {/* Streak */}
         {isAuthenticated && streak && (
           <div
@@ -60,20 +74,20 @@ export default function Header() {
         <div className="w-px h-8 bg-neutral-200 mx-2 hidden sm:block" />
 
         {/* Profile Dropdown */}
-        <div className="relative">
+        <div className="relative ">
           <button
             onClick={() => setIsProfileOpen(!isProfileOpen)}
-            className="flex items-center gap-3 p-1.5 pr-3 hover:bg-neutral-50 rounded-xl transition-colors"
+            className="flex items-center gap-3 cursor-pointer p-1.5 pr-3 hover:bg-neutral-50 rounded-xl transition-colors"
           >
             {/* Avatar */}
             {user?.avatar ? (
               <img
                 src={user.avatar}
                 alt={displayName}
-                className="w-9 h-9 rounded-full object-cover shadow-sm"
+                className="w-10 h-10 rounded-full object-cover shadow-sm"
               />
             ) : (
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 flex items-center justify-center text-white font-medium text-sm shadow-sm">
+              <div className="w-10  h-10 rounded-full bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 flex items-center justify-center text-white font-medium text-sm shadow-sm">
                 {isLoading ? "..." : initials}
               </div>
             )}
