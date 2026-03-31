@@ -3,7 +3,7 @@
 import { WRITING_MODES } from "@/app/(main)/practice/writing/_types";
 import { vocabularyApi } from "@/api/vocabularyApi";
 import { GAME_MODES, type GameModeConfig } from "@/constants/gameModes";
-import type { VocabularySet, WritingMode } from "@/types/vocabulary";
+import type { VocabularySet, WritingMode, SetParentBrief } from "@/types/vocabulary";
 import { useQuery } from "@tanstack/react-query";
 import {
   Book,
@@ -37,7 +37,7 @@ export default function ActiveLearningPage() {
   const t = useTranslations("common.sidebar");
   const [selectedDeck, setSelectedDeck] = useState<VocabularySet | null>(null); // chỉ leaf deck
   const [selectedParentDeck, setSelectedParentDeck] =
-    useState<VocabularySet | null>(null);
+    useState<VocabularySet | SetParentBrief | null>(null);
   const [showTutorial, setShowTutorial] = useState(false);
 
   // Fetch only decks that belong to the user (is_owner) or all available if preferred
