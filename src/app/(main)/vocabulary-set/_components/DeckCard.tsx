@@ -31,7 +31,7 @@ export function DeckCard({ deck, onDelete }: DeckCardProps) {
   return (
     <Link
       href={`/vocabulary-set/${deck.id}`}
-      className="group relative bg-white rounded-2xl border-4 border-primary-50 p-4 hover:shadow-xl hover:border-primary-200 transition-all duration-300 hover:-translate-y-1 overflow-hidden"
+      className="group relative bg-white rounded-2xl border-4 border-primary-100 p-4 hover:shadow-xl hover:border-primary-200 transition-all duration-300 hover:-translate-y-1 overflow-hidden"
     >
       <div className="absolute top-0 right-0 w-32 h-32 bg-primary-50 rounded-full -mr-16 -mt-16 opacity-0 group-hover:opacity-40 transition-opacity duration-500 blur-2xl" />
 

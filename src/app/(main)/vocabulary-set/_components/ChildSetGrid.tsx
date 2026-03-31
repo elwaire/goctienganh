@@ -11,15 +11,12 @@ interface ChildSetGridProps {
 }
 
 /** Lưới bộ con — cùng ngôn ngữ hình với ExamCard (neutral + hover). */
-export function ChildSetGrid({
-  sets,
-  isLoading,
-}: ChildSetGridProps) {
+export function ChildSetGrid({ sets, isLoading }: ChildSetGridProps) {
   const tc = useTranslations("vocabulary.deckCard");
 
   if (isLoading && sets.length === 0) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
@@ -33,12 +30,12 @@ export function ChildSetGrid({
   if (sets.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
       {sets.map((s) => {
         return (
           <div
             key={s.id}
-            className="group relative bg-white rounded-2xl border border-neutral-100 overflow-hidden hover:shadow-xl hover:border-primary-200 transition-all duration-300 hover:-translate-y-1 flex flex-col"
+            className="group relative bg-white rounded-2xl border-4 border-primary-100 overflow-hidden hover:shadow-xl hover:border-primary-200 transition-all duration-300 hover:-translate-y-1 flex flex-col"
           >
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary-50 rounded-full -mr-16 -mt-16 opacity-0 group-hover:opacity-40 transition-opacity duration-500 blur-2xl pointer-events-none" />
 
@@ -63,7 +60,7 @@ export function ChildSetGrid({
               </div>
             </Link>
 
-            <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-t border-neutral-50 mt-auto">
+            <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-t border-neutral-100 mt-auto">
               <span className="text-sm font-semibold text-neutral-600">
                 {tc("wordsCount", { count: s.word_count })}
               </span>

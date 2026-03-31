@@ -28,6 +28,7 @@ import { ButtonPrimary } from "@/components/ui";
 
 export default function VocabularySetDetailPage() {
   const t = useTranslations("vocabulary.detail");
+  const tVocab = useTranslations("vocabulary");
   const router = useRouter();
   const params = useParams();
   const deckId = params.slug as string;
@@ -184,8 +185,8 @@ export default function VocabularySetDetailPage() {
       const msg =
         err && typeof err === "object" && "response" in err
           ? String(
-              (err as { response?: { data?: { message?: string } } }).response?.data
-                ?.message ?? "",
+              (err as { response?: { data?: { message?: string } } }).response
+                ?.data?.message ?? "",
             )
           : "";
       alert(msg || t("copyError"));
@@ -275,7 +276,7 @@ export default function VocabularySetDetailPage() {
             placeholder={t("searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 h-[44px] bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/30 text-sm"
+            className="w-full pl-10 pr-4 h-[44px] bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/30 text-sm"
           />
         </div>
         {deckData.is_owner && (
@@ -321,58 +322,90 @@ export default function VocabularySetDetailPage() {
 
   return (
     <div className="min-h-screen pb-12">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto px-4 lg:px-0">
+        <button
+          type="button"
+          onClick={() => {
+            const pid = deckData.parent_id;
+            const href =
+              pid != null && pid !== ""
+                ? `/vocabulary-set/${encodeURIComponent(pid)}`
+                : "/vocabulary-set";
+            router.push(href);
+          }}
+          className="flex items-center cursor-pointer gap-2 text-neutral-500 hover:text-neutral-900 transition-colors mb-6 text-sm font-semibold group"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          {tVocab("back")}
+        </button>
+
         {useFolderLayout ? (
-          <>
-            <DeckHeader
-              deck={deckData}
-              stats={studyStats}
-              subtitle={folderSubtitle}
-              onEditDeck={handleEditDeck}
-              onDeleteDeck={handleDeleteDeck}
-              onCreateChild={
-                deckData.is_owner
-                  ? () => setShowCreateChildModal(true)
-                  : undefined
-              }
-            />
-            <ChildSetGrid
-              sets={childSets}
-              isLoading={folderLessonsLoading}
-            />
-            {deckData.words.length > 0 && (
-              <section className="mt-8 rounded-2xl border border-neutral-100 bg-white shadow-sm p-6">
-                <h2 className="text-lg font-semibold text-neutral-800 mb-4">
-                  {t("wordsInThisSet")}
-                </h2>
-                <div className="space-y-6">{wordListSection}</div>
-              </section>
-            )}
-          </>
+          <div className="flex flex-col lg:flex-row items-start gap-8 px-4 lg:px-0">
+            {/* Child Sets - Left Column */}
+            <div className="flex-1 min-w-0 w-full order-2 lg:order-1">
+              <ChildSetGrid sets={childSets} isLoading={folderLessonsLoading} />
+
+              {deckData.words.length > 0 && (
+                <section className="mt-8 rounded-3xl border border-neutral-100 bg-white shadow-sm p-6 lg:p-8">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-1.5 h-6 bg-primary-500 rounded-full" />
+                    <h2 className="text-xl font-bold text-neutral-800">
+                      {t("wordsInThisSet")}
+                    </h2>
+                  </div>
+                  <div className="space-y-6">{wordListSection}</div>
+                </section>
+              )}
+            </div>
+
+            {/* Header / Sidebar - Right Column */}
+            <aside className="w-full lg:w-[380px] shrink-0 order-1 lg:order-2">
+              <DeckHeader
+                deck={deckData}
+                stats={studyStats}
+                subtitle={folderSubtitle}
+                layout="sidebar"
+                onEditDeck={handleEditDeck}
+                onDeleteDeck={handleDeleteDeck}
+                onCreateChild={
+                  deckData.is_owner
+                    ? () => setShowCreateChildModal(true)
+                    : undefined
+                }
+              />
+            </aside>
+          </div>
         ) : (
-          <>
-            <DeckHeader
-              deck={deckData}
-              stats={studyStats}
-              onEditDeck={handleEditDeck}
-              onDeleteDeck={handleDeleteDeck}
-              onCopyToMyAccount={
-                !deckData.is_owner && deckData.is_public
-                  ? () => copyDeckMutation.mutate()
-                  : undefined
-              }
-              copyLoading={copyDeckMutation.isPending}
-            />
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-6">{wordListSection}</div>
-              <div className="space-y-6">
+          <div className="flex flex-col lg:flex-row items-start gap-8 px-4 lg:px-0">
+            {/* Word List - Left Column */}
+            <div className="flex-1 min-w-0 w-full order-2 lg:order-1 space-y-6">
+              {wordListSection}
+            </div>
+
+            {/* Header & Stats - Right Column */}
+            <aside className="w-full lg:w-[380px] shrink-0 order-1 lg:order-2 space-y-6">
+              <DeckHeader
+                deck={deckData}
+                stats={studyStats}
+                onEditDeck={handleEditDeck}
+                onDeleteDeck={handleDeleteDeck}
+                layout="sidebar"
+                onCopyToMyAccount={
+                  !deckData.is_owner && deckData.is_public
+                    ? () => copyDeckMutation.mutate()
+                    : undefined
+                }
+                copyLoading={copyDeckMutation.isPending}
+              />
+
+              <div className="space-y-6 lg:sticky lg:top-4">
                 {historyData && (
                   <StudyHistoryPanel sessions={historyData?.sessions ?? []} />
                 )}
                 {studyStats && <StudyStatsPanel stats={studyStats} />}
               </div>
-            </div>
-          </>
+            </aside>
+          </div>
         )}
       </div>
 

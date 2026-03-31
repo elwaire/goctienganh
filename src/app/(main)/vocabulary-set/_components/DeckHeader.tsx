@@ -1,7 +1,6 @@
 import { useLocale, useTranslations } from "next-intl";
 import { useState, useRef, useEffect } from "react";
 import {
-  ArrowLeft,
   BookOpen,
   Clock,
   MoreVertical,
@@ -13,11 +12,7 @@ import {
   Loader2,
   Plus,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import type {
-  VocabularySetWithWords,
-} from "@/types/vocabulary";
-
+import type { VocabularySetWithWords } from "@/types/vocabulary";
 
 interface DeckHeaderProps {
   deck: VocabularySetWithWords;
@@ -31,6 +26,7 @@ interface DeckHeaderProps {
   copyLoading?: boolean;
   /** Chủ bộ — tạo bộ con (bộ có nhánh). */
   onCreateChild?: () => void;
+  layout?: "default" | "sidebar";
 }
 
 export function DeckHeader({
@@ -42,17 +38,22 @@ export function DeckHeader({
   onCopyToMyAccount,
   copyLoading,
   onCreateChild,
+  layout = "default",
 }: DeckHeaderProps) {
   const t = useTranslations("vocabulary");
   const tl = useTranslations("vocabulary.list");
   const locale = useLocale();
-  const router = useRouter();
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const isSidebar = layout === "sidebar";
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setShowDropdown(false);
       }
     }
@@ -61,58 +62,54 @@ export function DeckHeader({
   }, []);
 
   return (
-    <div className="mb-6">
-      <button
-        type="button"
-        onClick={() => {
-          const pid = deck.parent_id;
-          const href =
-            pid != null && pid !== ""
-              ? `/vocabulary-set/${encodeURIComponent(pid)}`
-              : "/vocabulary-set";
-          router.push(href);
-        }}
-        className="flex items-center gap-2 text-neutral-600 hover:text-neutral-900 mb-4 transition-colors text-sm"
+    <div className={isSidebar ? "" : "mb-6"}>
+      <div
+        className={`bg-white rounded-2xl border-4 border-neutral-100 p-6 shadow-sm ${isSidebar ? "sticky top-4" : ""}`}
       >
-        <ArrowLeft className="w-4 h-4" />
-        <span className="font-medium">{t("back")}</span>
-      </button>
-
-      <div className="bg-white rounded-2xl border border-neutral-100 p-6">
         {/* Title & Meta */}
-        <div className="flex items-start justify-between mb-5">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <h1 className="text-2xl font-bold text-neutral-800">
+        <div
+          className={`flex items-start justify-between ${isSidebar ? "flex-col gap-4 mb-6" : "mb-5"}`}
+        >
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center flex-wrap gap-2 mb-2">
+              <h1
+                className={`${isSidebar ? "text-xl" : "text-2xl"} font-bold text-neutral-800 leading-tight`}
+              >
                 {deck.title}
               </h1>
               {deck.is_public ? (
-                <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-md">
+                <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-600 text-[10px] uppercase tracking-wider font-bold rounded-lg border border-blue-100">
                   <Globe className="w-3 h-3" />
                   {t("visibility.public")}
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 px-2 py-1 bg-neutral-100 text-neutral-700 text-xs font-medium rounded-md">
+                <span className="inline-flex items-center gap-1 px-2 py-1 bg-neutral-50 text-neutral-600 text-[10px] uppercase tracking-wider font-bold rounded-lg border border-neutral-100">
                   <Lock className="w-3 h-3" />
                   {t("visibility.private")}
                 </span>
               )}
             </div>
             {deck.description && (
-              <p className="text-neutral-600 text-sm">{deck.description}</p>
+              <p className="text-neutral-500 text-sm line-clamp-3 leading-relaxed">
+                {deck.description}
+              </p>
             )}
             {subtitle && (
-              <p className="text-sm text-neutral-500 mt-2">{subtitle}</p>
+              <p className="text-sm text-primary-600 font-medium mt-2">
+                {subtitle}
+              </p>
             )}
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-2 ml-4 flex-shrink-0">
+          <div
+            className={`flex items-center gap-2 ${isSidebar ? "w-full" : "ml-4 flex-shrink-0"}`}
+          >
             {deck.is_owner && onCreateChild && (
               <button
                 type="button"
                 onClick={onCreateChild}
-                className="inline-flex items-center gap-2 h-11 px-4 rounded-xl border border-neutral-200 bg-white hover:bg-neutral-50 text-sm font-medium text-neutral-800 transition-colors"
+                className={`inline-flex items-center justify-center gap-2 h-10 px-4 cursor-pointer rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-sm font-semibold text-neutral-700 transition-all flex-1`}
               >
                 <Plus className="w-4 h-4" />
                 {tl("createChild")}
@@ -123,7 +120,7 @@ export function DeckHeader({
                 type="button"
                 onClick={onCopyToMyAccount}
                 disabled={copyLoading}
-                className="inline-flex items-center gap-2 h-[44px] px-4 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-medium transition-colors"
+                className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-semibold transition-all shadow-md shadow-blue-200/50 flex-1"
               >
                 {copyLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -138,24 +135,28 @@ export function DeckHeader({
                 <button
                   type="button"
                   onClick={() => setShowDropdown(!showDropdown)}
-                  className={`h-[44px] w-[44px] rounded-full justify-center items-center flex transition-colors ${
-                    showDropdown ? "bg-neutral-200" : "bg-neutral-100 hover:bg-neutral-200"
+                  className={`h-10 w-10 rounded-lg cursor-pointer justify-center items-center flex transition-all border border-neutral-200 ${
+                    showDropdown
+                      ? "bg-neutral-100"
+                      : "bg-white hover:bg-neutral-50"
                   }`}
                 >
-                  <MoreVertical className="w-4 h-4 text-neutral-700" />
+                  <MoreVertical className="w-4 h-4 text-neutral-600" />
                 </button>
-                
+
                 {showDropdown && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-20 py-1">
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-neutral-100 overflow-hidden z-20 p-1.5 animate-in fade-in zoom-in duration-150">
                     <button
                       type="button"
                       onClick={() => {
                         setShowDropdown(false);
                         onEditDeck?.();
                       }}
-                      className="w-full text-left px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50 flex items-center gap-2 transition-colors cursor-pointer"
+                      className="w-full text-left px-3  py-2 text-sm text-neutral-700 hover:bg-neutral-50 rounded-xl flex items-center gap-2 transition-colors cursor-pointer"
                     >
-                      <Edit className="w-4 h-4" />
+                      <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
+                        <Edit className="w-3.5 h-3.5" />
+                      </div>
                       {t("card.edit")}
                     </button>
                     <button
@@ -164,9 +165,11 @@ export function DeckHeader({
                         setShowDropdown(false);
                         onDeleteDeck?.();
                       }}
-                      className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors cursor-pointer"
+                      className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-xl flex items-center gap-2 transition-colors cursor-pointer mt-0.5"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <div className="p-1.5 bg-red-50 text-red-600 rounded-lg">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </div>
                       {t("card.delete")}
                     </button>
                   </div>
@@ -177,29 +180,30 @@ export function DeckHeader({
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div
+          className={`grid ${isSidebar ? "grid-cols-1 " : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"} gap-4`}
+        >
           <StatCard
-            icon={<BookOpen className="w-5 h-5 text-blue-600" />}
-            value={deck.words.length}
+            icon={<BookOpen className="w-5 h-5 text-blue-500" />}
+            value={deck.word_count}
             label={t("detail.words")}
-            bgColor="bg-blue-50"
-            borderColor="border-blue-200"
+            bgColor="bg-blue-50/50"
+            borderColor="border-blue-100"
           />
           <StatCard
-            icon={<Clock className="w-5 h-5 text-purple-600" />}
+            icon={<Clock className="w-5 h-5 text-purple-500" />}
             value={new Date(deck.created_at).toLocaleDateString(
               locale === "vi" ? "vi-VN" : "en-US",
             )}
             label={t("card.createdOn")}
-            bgColor="bg-purple-50"
-            borderColor="border-purple-200"
+            bgColor="bg-purple-50/50"
+            borderColor="border-purple-100"
           />
         </div>
       </div>
     </div>
   );
 }
-
 
 function StatCard({
   icon,
@@ -215,13 +219,19 @@ function StatCard({
   borderColor: string;
 }) {
   return (
-    <div className={`${bgColor} border ${borderColor} rounded-xl p-4`}>
-      <div className="flex items-center gap-3">
-        <div className="flex-shrink-0">{icon}</div>
-        <div className="min-w-0">
-          <p className="text-xl font-bold text-neutral-800 truncate">{value}</p>
-          <p className="text-xs text-neutral-600 truncate">{label}</p>
-        </div>
+    <div
+      className={`${bgColor} border-2 ${borderColor} rounded-xl p-4 flex items-center gap-4 transition-all hover:shadow-sm`}
+    >
+      <div className="p-2.5 bg-white rounded-lg border border-inherit">
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <p className="text-lg font-semibold text-neutral-800 truncate leading-none">
+          {value}
+        </p>
+        <p className="text-[10px] text-neutral-400 uppercase tracking-widest font-bold mt-1 truncate">
+          {label}
+        </p>
       </div>
     </div>
   );
