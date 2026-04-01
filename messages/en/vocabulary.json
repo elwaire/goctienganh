@@ -107,6 +107,60 @@
       "jsonErrorInvalid": "Invalid JSON. Please check the syntax.",
       "unnamed": "unnamed",
       "bulkPrompt": "Please produce a JSON array of English vocabulary items. Each object must include:\n- \"term\" (string)\n- \"phonetic\" (string)\n- \"word_type\" (e.g. \"noun\", \"verb\", \"adjective\", \"adverb\")\n- \"definition\" (Vietnamese meaning, string)\n- \"example_sentence\" (English example, string)\n- \"example_translation\" (Vietnamese translation of the example, string).\nReturn only a valid JSON array with no extra text."
+    },
+    "activeLearning": {
+      "title": "Active Learning",
+      "description": "Master your vocabulary today step-by-step.",
+      "tutorialButton": "User Guide",
+      "step1": {
+        "title": "Choose Vocabulary Set",
+        "description": "Find the vocabulary set you want to conquer.",
+        "foldersTitle": "Vocabulary Folders",
+        "foldersCount": "{count} folders",
+        "standaloneTitle": "Standalone Sets",
+        "standaloneCount": "{count} sets",
+        "noFoldersFound": "No folders found.",
+        "noStandaloneFound": "No vocabulary sets found.",
+        "childCount": "{count} sub-sets",
+        "wordCount": "{count} words"
+      },
+      "step2": {
+        "title": "Preview Vocabulary",
+        "description": "Review your knowledge before you start.",
+        "count": "{count} words",
+        "loading": "Loading list of words..."
+      },
+      "step3": {
+        "title": "Learning Methods",
+        "description": "Choose the most suitable way to memorize.",
+        "writingGroup": "Writing & Memorization",
+        "listeningGroup": "Listening & Reflexes",
+        "listeningMethodTitle": "Listen and write words",
+        "listeningMethodDesc": "Listen to standard pronunciation and practice reflex skills combined with spelling.",
+        "quickReviewGroup": "Quick Review",
+        "startNow": "Start",
+        "learnNow": "Learn Now",
+        "fastReflex": "Fast Reflex",
+        "ipaStandard": "IPA Standard",
+        "relaxing": "Relaxing",
+        "noPressure": "No Pressure"
+      },
+      "folderModal": {
+        "description": "Choose a sub-set to start learning",
+        "close": "Close",
+        "empty": "This folder is currently empty",
+        "loading": "Loading sub-sets..."
+      },
+      "tutorial": {
+        "title": "Active Learning",
+        "confirm": "I understand, start learning now!",
+        "step1Title": "Choose Set",
+        "step1Desc": "Browse for a vocabulary set in folders or the standalone list. If you choose a folder, a sub-set selector will open.",
+        "step2Title": "Preview",
+        "step2Desc": "The system will automatically display the word list. You should skim through it to jog your memory.",
+        "step3Title": "Conquer",
+        "step3Desc": "Pick your favorite learning method: Writing, Listening, or Flashcards."
+      }
     }
   }
 }

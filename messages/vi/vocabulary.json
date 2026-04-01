@@ -107,6 +107,60 @@
       "jsonErrorInvalid": "JSON không hợp lệ. Vui lòng kiểm tra lại cú pháp.",
       "unnamed": "không tên",
       "bulkPrompt": "Hãy tạo cho tôi một mảng JSON các từ vựng tiếng Anh. Mỗi đối tượng phần tử bắt buộc phải có các trường sau:\n- \"term\" (từ vựng, kiểu String)\n- \"phonetic\" (phiên âm, kiểu String)\n- \"word_type\" (loại từ: \"noun\", \"verb\", \"adjective\", \"adverb\"...)\n- \"definition\" (nghĩa tiếng Việt, kiểu String)\n- \"example_sentence\" (câu ví dụ tiếng Anh, kiểu String)\n- \"example_translation\" (dịch câu ví dụ sang tiếng Việt, kiểu String).\nChỉ trả về định dạng JSON array chuẩn, không kèm theo bất kỳ văn bản giải thích nào khác."
+    },
+    "activeLearning": {
+      "title": "Học chủ động",
+      "description": "Thực hiện từng bước để làm chủ vốn từ của bạn ngay hôm nay.",
+      "tutorialButton": "Hướng dẫn sử dụng",
+      "step1": {
+        "title": "Chọn bộ từ vựng",
+        "description": "Tìm bộ từ bạn muốn chinh phục.",
+        "foldersTitle": "Thư mục bộ từ",
+        "foldersCount": "{count} thư mục",
+        "standaloneTitle": "Bộ từ học tập lẻ",
+        "standaloneCount": "{count} bộ",
+        "noFoldersFound": "Không tìm thấy thư mục nào.",
+        "noStandaloneFound": "Không tìm thấy bộ từ nào.",
+        "childCount": "{count} bộ con",
+        "wordCount": "{count} từ"
+      },
+      "step2": {
+        "title": "Xem trước từ vựng",
+        "description": "Điểm lại một lượt kiến thức trước khi bắt đầu.",
+        "count": "{count} từ vựng",
+        "loading": "Đang tải danh sách từ..."
+      },
+      "step3": {
+        "title": "Phương pháp học",
+        "description": "Lựa chọn cách thức phù hợp để ghi nhớ tốt nhất.",
+        "writingGroup": "Luyện viết & Ghi nhớ",
+        "listeningGroup": "Nghe & Phản xạ",
+        "listeningMethodTitle": "Nghe và viết từ",
+        "listeningMethodDesc": "Nghe phát âm chuẩn và luyện tập kỹ năng phản xạ âm thanh kết hợp chính tả.",
+        "quickReviewGroup": "Ôn tập nhanh",
+        "startNow": "Bắt đầu",
+        "learnNow": "Học ngay",
+        "fastReflex": "Phản xạ nhanh",
+        "ipaStandard": "Chuẩn IPA",
+        "relaxing": "Thư giãn",
+        "noPressure": "Không áp lực"
+      },
+      "folderModal": {
+        "description": "Chọn một bộ từ con để bắt đầu học",
+        "close": "Đóng",
+        "empty": "Thư mục này hiện đang trống",
+        "loading": "Đang tải bộ con..."
+      },
+      "tutorial": {
+        "title": "Học chủ động",
+        "confirm": "Đã hiểu, bắt đầu học ngay!",
+        "step1Title": "Chọn bộ từ",
+        "step1Desc": "Duyệt tìm bộ từ trong thư mục hoặc danh sách lẻ. Nếu chọn thư mục, hệ thống sẽ mở bảng chọn bộ con.",
+        "step2Title": "Xem trước (Preview)",
+        "step2Desc": "Hệ thống sẽ tự động hiển thị danh sách từ vựng. Bạn nên lướt qua một lượt để khơi gợi trí nhớ.",
+        "step3Title": "Chinh phục",
+        "step3Desc": "Chọn phương pháp học bạn thích: Gõ phím, Nghe phản xạ hoặc Flashcard ôn nhanh."
+      }
     }
   }
 }
