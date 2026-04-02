@@ -36,11 +36,8 @@ export function DeckCard({ deck, onDelete }: DeckCardProps) {
       <div className="absolute top-0 right-0 w-32 h-32 bg-primary-50 rounded-full -mr-16 -mt-16 opacity-0 group-hover:opacity-40 transition-opacity duration-500 blur-2xl" />
 
       <div className="flex flex-col mb-4 relative">
-        <div className="flex items-center justify-between mb-1 gap-2">
-          <h3 className="font-bold text-lg text-neutral-800 line-clamp-1 group-hover:text-primary-600 transition-colors">
-            {deck.title}
-          </h3>
-          <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center flex-col justify-between mb-1 gap-2">
+          <div className="flex  items-center gap-1 w-full justify-between shrink-0">
             {deck.is_public ? (
               <div className="flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-medium whitespace-nowrap ring-1 ring-inset ring-emerald-100">
                 <Globe className="w-3 h-3" />
@@ -67,6 +64,9 @@ export function DeckCard({ deck, onDelete }: DeckCardProps) {
               </button>
             )}
           </div>
+          <h3 className="font-bold text-lg text-neutral-800  w-full  group-hover:text-primary-600 transition-colors">
+            {deck.title}
+          </h3>
         </div>
         {deck.description && (
           <p className="text-sm text-neutral-400 line-clamp-2 leading-relaxed">
