@@ -38,7 +38,9 @@
       "confirmDelete": "Delete this vocabulary set?",
       "breadcrumbRoot": "All sets",
       "breadcrumbInFolder": "Inside folder",
-      "createChild": "Create sub-set"
+      "createChild": "Create sub-set",
+      "foldersTitle": "Folder sets",
+      "standaloneTitle": "Individual sets"
     },
     "card": {
       "edit": "Edit",

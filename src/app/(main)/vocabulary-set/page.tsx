@@ -3,7 +3,14 @@
 import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { Plus, Search, Loader2, AlertCircle } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Loader2,
+  AlertCircle,
+  FolderOpen,
+  BookOpen,
+} from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { vocabularyApi } from "@/api/vocabularyApi";
 import { DeckCard, CreateDeckModal, DeckListEmptyState } from "./_components";
@@ -187,10 +194,83 @@ export default function VocabularySetPage() {
             <p className="text-sm text-neutral-400">{tl("loading")}</p>
           </div>
         ) : filteredDecks.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredDecks.map((deck) => (
-              <DeckCard key={deck.id} deck={deck} onDelete={handleDeleteDeck} />
-            ))}
+          <div className="space-y-12">
+            {activeTab === "public" ? (
+              <>
+                {(() => {
+                  const folders = filteredDecks.filter(
+                    (d) => (d.child_count ?? 0) > 0,
+                  );
+                  const standalone = filteredDecks.filter(
+                    (d) => (d.child_count ?? 0) === 0,
+                  );
+
+                  return (
+                    <div className="flex flex-col gap-12">
+                      {folders.length > 0 && (
+                        <section aria-labelledby="folders-section">
+                          <div className="flex items-center gap-2 mb-6">
+                            <div className="p-2 bg-amber-50 rounded-lg">
+                              <FolderOpen className="w-5 h-5 text-amber-600" />
+                            </div>
+                            <h2
+                              id="folders-section"
+                              className="text-lg font-semibold text-neutral-800"
+                            >
+                              {tl("foldersTitle")} ({folders.length})
+                            </h2>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                            {folders.map((deck) => (
+                              <DeckCard
+                                key={deck.id}
+                                deck={deck}
+                                onDelete={handleDeleteDeck}
+                              />
+                            ))}
+                          </div>
+                        </section>
+                      )}
+
+                      {standalone.length > 0 && (
+                        <section aria-labelledby="standalone-section">
+                          <div className="flex items-center gap-2 mb-6">
+                            <div className="p-2 bg-blue-50 rounded-lg">
+                              <BookOpen className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <h2
+                              id="standalone-section"
+                              className="text-lg font-semibold text-neutral-800"
+                            >
+                              {tl("standaloneTitle")} ({standalone.length})
+                            </h2>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                            {standalone.map((deck) => (
+                              <DeckCard
+                                key={deck.id}
+                                deck={deck}
+                                onDelete={handleDeleteDeck}
+                              />
+                            ))}
+                          </div>
+                        </section>
+                      )}
+                    </div>
+                  );
+                })()}
+              </>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {filteredDecks.map((deck) => (
+                  <DeckCard
+                    key={deck.id}
+                    deck={deck}
+                    onDelete={handleDeleteDeck}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           <DeckListEmptyState

@@ -38,7 +38,9 @@
       "confirmDelete": "Bạn có chắc muốn xóa bộ từ này?",
       "breadcrumbRoot": "Tất cả bộ",
       "breadcrumbInFolder": "Trong thư mục",
-      "createChild": "Tạo bộ con"
+      "createChild": "Tạo bộ con",
+      "foldersTitle": "Thư mục bộ từ",
+      "standaloneTitle": "Bộ từ vựng lẻ"
     },
     "card": {
       "edit": "Chỉnh sửa",
