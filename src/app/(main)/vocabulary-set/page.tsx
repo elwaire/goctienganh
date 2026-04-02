@@ -58,52 +58,35 @@ export default function VocabularySetPage() {
 
   const searchParamsApi = debouncedSearch || undefined;
 
-  const mySetsQuery = useQuery({
-    queryKey: ["vocabularySets", "list", "mine", { search: searchParamsApi }],
+  const setsQuery = useQuery({
+    queryKey: ["vocabularySets", "list", activeTab, { search: searchParamsApi }],
     queryFn: () =>
       vocabularyApi.getSets({
         search: searchParamsApi,
         page: 1,
         limit: 50,
-        vocabulary: "me",
+        vocabulary: activeTab === "my-sets" ? "me" : "public",
       }),
-    enabled: !legacyFolder && activeTab === "my-sets",
+    enabled: !legacyFolder,
   });
 
-  const publicSetsQuery = useQuery({
-    queryKey: ["vocabularySets", "list", "public", { search: searchParamsApi }],
-    queryFn: () =>
-      vocabularyApi.getSets({
-        search: searchParamsApi,
-        page: 1,
-        limit: 50,
-        vocabulary: "public",
-      }),
-    enabled: !legacyFolder && activeTab === "public",
-  });
-
-  const deckData =
-    activeTab === "my-sets" ? mySetsQuery.data : publicSetsQuery.data;
-  const isLoading =
-    activeTab === "my-sets"
-      ? mySetsQuery.isLoading
-      : publicSetsQuery.isLoading;
-  const isError =
-    activeTab === "my-sets" ? mySetsQuery.isError : publicSetsQuery.isError;
+  const deckData = setsQuery.data;
+  const isLoading = setsQuery.isLoading;
+  const isError = setsQuery.isError;
 
   const listSections = useMemo(
     () => (deckData ? buildVocabularyListSections(deckData) : []),
     [deckData],
   );
 
-  /** Cả hai số có trong mọi response list; ưu tiên query đã có data (doc §1.1). */
-  const mineTotal =
-    mySetsQuery.data?.mine_total ?? publicSetsQuery.data?.mine_total;
-  const publicTotal =
-    publicSetsQuery.data?.public_total ?? mySetsQuery.data?.public_total;
+  /**
+   * Cả hai số mine_total và public_total đều được BE trả về trong metadata của bất kỳ tab nào.
+   * Ta lấy trực tiếp từ data hiện tại của query để hiển thị count trên tab.
+   */
+  const mineTotal = deckData?.mine_total;
+  const publicTotal = deckData?.public_total;
 
-  const myTabCountSuffix =
-    mineTotal !== undefined ? ` (${mineTotal})` : "";
+  const myTabCountSuffix = mineTotal !== undefined ? ` (${mineTotal})` : "";
   const publicTabCountSuffix =
     publicTotal !== undefined ? ` (${publicTotal})` : "";
 
@@ -219,25 +202,27 @@ export default function VocabularySetPage() {
                   aria-labelledby={`vocab-cat-${catId}`}
                   className="space-y-6"
                 >
-                  <div className="flex items-start gap-3">
-                    <div
-                      className="w-1 self-stretch min-h-10 rounded-full bg-primary-500 shrink-0"
-                      aria-hidden
-                    />
-                    <div className="min-w-0">
-                      <h2
-                        id={`vocab-cat-${catId}`}
-                        className="text-2xl font-bold text-neutral-900 tracking-tight"
-                      >
-                        {section.category?.name ?? tl("categoryOther")}
-                      </h2>
-                      {section.category?.description ? (
-                        <p className="text-neutral-600 mt-1 text-sm leading-relaxed">
-                          {section.category.description}
-                        </p>
-                      ) : null}
+                  { (activeTab !== "my-sets" || listSections.length > 1) && (
+                    <div className="flex items-start gap-3">
+                      <div
+                        className="w-1 self-stretch min-h-10 rounded-full bg-primary-500 shrink-0"
+                        aria-hidden
+                      />
+                      <div className="min-w-0">
+                        <h2
+                          id={`vocab-cat-${catId}`}
+                          className="text-xl font-bold text-neutral-900 tracking-tight"
+                        >
+                          {section.category?.name ?? tl("categoryOther")}
+                        </h2>
+                        {section.category?.description ? (
+                          <p className="text-neutral-600 mt-1 text-sm leading-relaxed">
+                            {section.category.description}
+                          </p>
+                        ) : null}
+                      </div>
                     </div>
-                  </div>
+                  )}
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     {section.sets.map((deck) => (
                       <DeckCard

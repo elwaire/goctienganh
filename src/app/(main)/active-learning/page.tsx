@@ -27,6 +27,7 @@ import {
   Volume2,
   Zap,
   HelpCircle,
+  Plus,
   X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -134,9 +135,7 @@ export default function ActiveLearningPage() {
             <h1 className="text-2xl font-bold text-neutral-800 mb-2">
               {t("title")}
             </h1>
-            <p className="text-neutral-500">
-              {t("description")}
-            </p>
+            <p className="text-neutral-500">{t("description")}</p>
           </div>
 
           <ButtonPrimary
@@ -157,142 +156,118 @@ export default function ActiveLearningPage() {
             1
           </div>
           <div>
-            <h2 className="text-lg font-bold text-gray-900">{t("step1.title")}</h2>
-            <p className="text-sm text-gray-500">
-              {t("step1.description")}
-            </p>
+            <h2 className="text-lg font-bold text-gray-900">
+              {t("step1.title")}
+            </h2>
+            <p className="text-sm text-gray-500">{t("step1.description")}</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-          {/* Section 1: Folder Sets */}
-          <div className="space-y-4">
-            <div className="bg-white rounded-2xl border-4 border-neutral-100 p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] min-h-[100px] max-h-[480px] overflow-y-auto custom-scrollbar">
-              {isLoading ? (
-                <div className="flex flex-col items-center py-12 text-gray-400 gap-3">
-                  <Loader2 className="w-8 h-8 animate-spin" />
-                  <p className="text-sm">{t("step1.loading") || "Loading..."}</p>
-                </div>
-              ) : parentDecks.length === 0 ? (
-                <div className="py-12 text-center text-gray-400 text-sm">
-                  {t("step1.noFoldersFound")}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-gray-700 mb-6 px-1">
-                    <Folder className="w-5 h-5 text-amber-500" />
-                    <h3 className="font-semibold">{t("step1.foldersTitle")}</h3>
-                    <span className="text-xs bg-amber-50 text-amber-600 px-3 py-1 rounded-full border border-amber-200 ml-auto">
-                      {t("step1.foldersCount", { count: parentDecks.length })}
-                    </span>
-                  </div>
-
-                  {parentDecks.map((deck) => {
-                    const isParentSelected = selectedParentDeck?.id === deck.id;
-                    const isAnyChildSelected =
-                      selectedDeck?.parent_id === deck.id;
-                    return (
-                      <div key={deck.id} className="space-y-2">
-                        <div
-                          role="button"
-                          onClick={() => handleSelectDeck(deck)}
-                          className={`group relative p-4 rounded-xl border transition-all cursor-pointer ${
-                            isAnyChildSelected
-                              ? "border-blue-200 bg-blue-50/50 ring-1 ring-blue-100"
-                              : "border-gray-200 bg-gray-50/30 hover:border-primary-300 hover:bg-white"
-                          }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div
-                              className={`p-2 rounded-lg ${isAnyChildSelected ? "bg-blue-100 text-blue-600" : "bg-white text-amber-500 "}`}
-                            >
-                              <Folder className="w-5 h-5" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h4
-                                className={`font-bold text-sm truncate ${isAnyChildSelected ? "text-blue-700" : "text-gray-900"}`}
-                              >
-                                {deck.title}
-                              </h4>
-                              <p className="text-[11px] text-gray-500">
-                                {t("step1.childCount", { count: deck.child_count || 0 })} · {t("step1.wordCount", { count: deck.word_count || 0 })}
-                              </p>
-                            </div>
-                            <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-gray-500" />
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+        <div className="bg-white rounded-2xl border-4 border-neutral-100 p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] min-h-[300px]">
+          {isLoading ? (
+            <div className="flex flex-col items-center py-24 text-gray-400 gap-4">
+              <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
+              <p className="text-sm font-medium tracking-wide uppercase">
+                {t("step1.loading") || "Đang tải dữ liệu..."}
+              </p>
             </div>
-          </div>
+          ) : rootDecks.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center gap-6 animate-in fade-in zoom-in-95 duration-500">
+              <div className="w-24 h-24 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shadow-inner">
+                <Book className="w-12 h-12" />
+              </div>
+              <div className="max-w-xs">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  {t("step1.emptyTitle") || "Chưa có bộ từ vựng nào"}
+                </h3>
+                <p className="text-sm text-gray-500 leading-relaxed">
+                  {t("step1.emptyDesc") ||
+                    "Hãy tạo bộ từ đầu tiên để bắt đầu hành trình chinh phục tiếng Anh của bạn!"}
+                </p>
+              </div>
+              <ButtonPrimary
+                onClick={() => router.push("/vocabulary-set")}
+                rounded="md"
+                className="px-8"
+              >
+                <Plus className="w-5 h-5" />
+                {t("step1.createNow") || "Tạo bộ từ ngay"}
+              </ButtonPrimary>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {rootDecks.map((deck) => {
+                const hasChildren = (deck.child_count ?? 0) > 0;
+                const isSelected = selectedDeck?.id === deck.id;
+                const isAnyChildSelected = selectedDeck?.parent_id === deck.id;
 
-          {/* Section 2: Standalone Sets */}
-          <div className="space-y-4">
-            <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-[0_8px_30px_rgb(0,0,0,0.04)] min-h-[100px] max-h-[480px] overflow-y-auto custom-scrollbar">
-              {isLoading ? (
-                <div className="flex flex-col items-center py-12 text-gray-400 gap-3">
-                  <Loader2 className="w-8 h-8 animate-spin" />
-                  <p className="text-sm">{t("step1.loading") || "Loading..."}</p>
-                </div>
-              ) : standaloneDecks.length === 0 ? (
-                <div className="py-12 text-center text-gray-400 text-sm">
-                  {t("step1.noStandaloneFound")}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-gray-700 mb-6  px-1">
-                    <Library className="w-5 h-5 text-blue-500" />
-                    <h3 className="font-semibold">{t("step1.standaloneTitle")}</h3>
-                    <span className="text-xs bg-blue-50 text-blue-600 px-3 py-1 rounded-full border border-blue-200 ml-auto">
-                      {t("step1.standaloneCount", { count: standaloneDecks.length })}
-                    </span>
-                  </div>
-
-                  {standaloneDecks.map((deck) => {
-                    const isSelected = selectedDeck?.id === deck.id;
-                    return (
+                return (
+                  <div
+                    key={deck.id}
+                    role="button"
+                    onClick={() => handleSelectDeck(deck)}
+                    className={`group relative p-4 rounded-xl border-2 transition-all cursor-pointer flex flex-col h-full ${
+                      isSelected || isAnyChildSelected
+                        ? "border-blue-600 bg-blue-50/50 shadow-xl shadow-blue-100/50 -translate-y-1"
+                        : "border-gray-100 bg-white hover:border-primary-300 hover:shadow-lg hover:-translate-y-0.5"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-4">
                       <div
-                        key={deck.id}
-                        role="button"
-                        onClick={() => handleSelectDeck(deck)}
-                        className={`group relative p-4 rounded-xl border transition-all cursor-pointer ${
-                          isSelected
-                            ? "border-blue-600 bg-blue-600 text-white shadow-lg shadow-blue-100"
-                            : "border-gray-100 bg-gray-50/30 hover:border-primary-300 hover:bg-white"
+                        className={` ${
+                          isSelected || isAnyChildSelected
+                            ? " text-blue-600"
+                            : hasChildren
+                              ? " text-amber-500"
+                              : " text-blue-500"
                         }`}
                       >
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={`p-2 rounded-lg ${isSelected ? "bg-white/20 text-white" : "bg-white text-blue-500"}`}
-                          >
-                            <BookOpen className="w-5 h-5" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4
-                              className={`font-bold text-sm truncate ${isSelected ? "text-white" : "text-gray-900"}`}
-                            >
-                              {deck.title}
-                            </h4>
-                            <p
-                              className={`text-[11px] ${isSelected ? "text-blue-100" : "text-gray-500"}`}
-                            >
-                              {t("step1.wordCount", { count: deck.word_count || 0 })}
-                            </p>
-                          </div>
-                          {isSelected && (
-                            <CheckCircle2 className="w-5 h-5 text-white" />
-                          )}
-                        </div>
+                        {hasChildren ? (
+                          <Folder className="w-6 h-6" />
+                        ) : (
+                          <BookOpen className="w-6 h-6" />
+                        )}
                       </div>
-                    );
-                  })}
-                </div>
-              )}
+
+                      <div className="flex flex-wrap gap-2 text-[11px] font-semibold tracking-wider">
+                        {hasChildren && (
+                          <span className="px-2 py-1 bg-amber-50 text-amber-500 rounded-md border border-amber-200">
+                            {t("step1.childCount", {
+                              count: deck.child_count || 0,
+                            })}
+                          </span>
+                        )}
+                        <span className="px-2 py-1 bg-gray-50 text-gray-600 rounded-md border border-gray-200">
+                          {t("step1.wordCount", {
+                            count: deck.word_count || 0,
+                          })}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex-1">
+                      <h4
+                        className={`font-semibold text-base mb-2  leading-snug ${
+                          isSelected || isAnyChildSelected
+                            ? "text-blue-700"
+                            : "text-gray-900"
+                        }`}
+                      >
+                        {deck.title}
+                      </h4>
+                    </div>
+
+                    <div className="mt-6 flex items-center justify-between">
+                      <span className="text-[12px] text-gray-400 font-base">
+                        {hasChildren ? "Thư mục" : "Bộ từ lẻ"}
+                      </span>
+                      <ChevronRight className="w-5 h-5 text-gray-300 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          </div>
+          )}
         </div>
       </section>
 
@@ -309,9 +284,7 @@ export default function ActiveLearningPage() {
             <h2 className="text-lg font-semibold text-gray-900">
               {t("step2.title")}
             </h2>
-            <p className="text-sm text-gray-500">
-              {t("step2.description")}
-            </p>
+            <p className="text-sm text-gray-500">{t("step2.description")}</p>
           </div>
         </div>
 
@@ -370,9 +343,7 @@ export default function ActiveLearningPage() {
             <h2 className="text-lg font-semibold text-gray-900">
               {t("step3.title")}
             </h2>
-            <p className="text-sm text-gray-500">
-              {t("step3.description")}
-            </p>
+            <p className="text-sm text-gray-500">{t("step3.description")}</p>
           </div>
         </div>
 
@@ -486,10 +457,12 @@ export default function ActiveLearningPage() {
                     </p>
                     <div className="flex items-center justify-center md:justify-start gap-4 text-xs text-gray-500 font-medium">
                       <span className="flex items-center gap-1.5">
-                        <Zap className="w-3.5 h-3.5 text-amber-500" /> {t("step3.relaxing")}
+                        <Zap className="w-3.5 h-3.5 text-amber-500" />{" "}
+                        {t("step3.relaxing")}
                       </span>
                       <span className="flex items-center gap-1.5">
-                        <X className="w-3.5 h-3.5 text-red-400" /> {t("step3.noPressure")}
+                        <X className="w-3.5 h-3.5 text-red-400" />{" "}
+                        {t("step3.noPressure")}
                       </span>
                     </div>
                   </div>
@@ -578,7 +551,9 @@ export default function ActiveLearningPage() {
                           {child.title}
                         </h4>
                         <p className="text-[11px] text-gray-400 mt-auto font-semibold uppercase tracking-wider">
-                          {t("step1.wordCount", { count: child.word_count || 0 })}
+                          {t("step1.wordCount", {
+                            count: child.word_count || 0,
+                          })}
                         </p>
                       </div>
                     );

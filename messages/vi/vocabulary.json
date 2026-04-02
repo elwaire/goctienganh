@@ -125,7 +125,11 @@
         "noFoldersFound": "Không tìm thấy thư mục nào.",
         "noStandaloneFound": "Không tìm thấy bộ từ nào.",
         "childCount": "{count} bộ con",
-        "wordCount": "{count} từ"
+        "wordCount": "{count} từ",
+        "loading": "Đang tải danh sách bộ từ...",
+        "emptyTitle": "Bạn chưa có bộ từ nào",
+        "emptyDesc": "Hãy tạo bộ từ vựng đầu tiên để có thể bắt đầu rèn luyện kỹ năng của mình nhé!",
+        "createNow": "Tạo bộ từ ngay"
       },
       "step2": {
         "title": "Xem trước từ vựng",

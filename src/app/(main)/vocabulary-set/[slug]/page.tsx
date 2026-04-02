@@ -4,7 +4,18 @@ import { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { Plus, Search, Loader2, AlertCircle, ArrowLeft } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Loader2,
+  AlertCircle,
+  ArrowLeft,
+  ChevronRight,
+  BookOpen,
+  PenTool,
+  Headphones,
+  CreditCard,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { vocabularyApi } from "@/api/vocabularyApi";
 import type {
@@ -359,7 +370,7 @@ export default function VocabularySetDetailPage() {
             </div>
 
             {/* Header / Sidebar - Right Column */}
-            <aside className="w-full lg:w-[380px] shrink-0 order-1 lg:order-2">
+            <aside className="w-full lg:w-[380px] shrink-0 order-1 lg:order-2 space-y-6">
               <DeckHeader
                 deck={deckData}
                 stats={studyStats}
@@ -397,6 +408,73 @@ export default function VocabularySetDetailPage() {
                 }
                 copyLoading={copyDeckMutation.isPending}
               />
+
+              {deckData.word_count > 0 && (
+                <div className="bg-white rounded-2xl border-4 border-neutral-100 shadow-sm p-6 space-y-4 animate-in slide-in-from-right-4 duration-500">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-1 h-4 bg-primary-500 rounded-full" />
+                    <h3 className="text-lg font-semibold text-neutral-800  ">
+                      {tVocab("activeLearning.title")}
+                    </h3>
+                  </div>
+
+                  <div className="grid gap-2.5 mt-4">
+                    {[
+                      {
+                        id: "writing",
+                        name: "Writing & Memorization",
+                        icon: <PenTool className="w-5 h-5" />,
+                        path: "/practice/writing",
+                        color: "text-emerald-600",
+                        bgColor: "bg-emerald-50",
+                        hoverBorder: "hover:border-emerald-400",
+                        query: "?mode=random",
+                      },
+                      {
+                        id: "listening",
+                        name: "Listening and write words",
+                        icon: <Headphones className="w-5 h-5" />,
+                        path: "/practice/listening",
+                        color: "text-amber-600",
+                        bgColor: "bg-amber-50",
+                        hoverBorder: "hover:border-amber-400",
+                      },
+                      {
+                        id: "flashcard",
+                        name: "Flashcard",
+                        icon: <CreditCard className="w-5 h-5" />,
+                        path: "/practice/flashcard",
+                        color: "text-blue-600",
+                        bgColor: "bg-blue-50",
+                        hoverBorder: "hover:border-blue-400",
+                      },
+                    ].map((mode) => (
+                      <button
+                        key={mode.id}
+                        type="button"
+                        onClick={() =>
+                          router.push(
+                            `${mode.path}${mode.query || ""}${mode.query ? "&" : "?"}deckId=${deckData.id}`,
+                          )
+                        }
+                        className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 border-neutral-100 bg-white cursor-pointer  transition-all group ${mode.hoverBorder}`}
+                      >
+                        <div
+                          className={`w-10 h-10 rounded-lg ${mode.bgColor} ${mode.color} flex items-center justify-center group-hover:scale-110 transition-transform`}
+                        >
+                          {mode.icon}
+                        </div>
+                        <div className="flex-1 text-left">
+                          <h4 className="font-bold text-neutral-800 text-sm">
+                            {mode.name}
+                          </h4>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-neutral-300 group-hover:text-neutral-500 group-hover:translate-x-0.5 transition-all" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-6 lg:sticky lg:top-4">
                 {historyData && (

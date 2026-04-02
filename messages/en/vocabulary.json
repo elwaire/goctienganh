@@ -125,7 +125,8 @@
         "noFoldersFound": "No folders found.",
         "noStandaloneFound": "No vocabulary sets found.",
         "childCount": "{count} sub-sets",
-        "wordCount": "{count} words"
+        "wordCount": "{count} words",
+        "loading": "Loading sets..."
       },
       "step2": {
         "title": "Preview Vocabulary",
