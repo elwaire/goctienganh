@@ -40,7 +40,8 @@
       "breadcrumbInFolder": "Inside folder",
       "createChild": "Create sub-set",
       "foldersTitle": "Folder sets",
-      "standaloneTitle": "Individual sets"
+      "standaloneTitle": "Individual sets",
+      "categoryOther": "Other"
     },
     "card": {
       "edit": "Edit",

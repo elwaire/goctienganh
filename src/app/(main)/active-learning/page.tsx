@@ -7,6 +7,7 @@ import type {
   VocabularySet,
   WritingMode,
   SetParentBrief,
+  SetListPayload,
 } from "@/types/vocabulary";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -32,6 +33,12 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { ButtonPrimary } from "@/components/ui";
+
+const EMPTY_VOCAB_SET_LIST: SetListPayload = {
+  mode: "flat",
+  sets: [],
+  total: 0,
+};
 
 const WRITING_MODE_ICONS: Record<WritingMode, ReactNode> = {
   en_to_vi: <FileText className="w-5 h-5" />,
@@ -62,7 +69,7 @@ export default function ActiveLearningPage() {
     queryFn: () =>
       parentIdForChildren
         ? vocabularyApi.getSets({ parent_id: parentIdForChildren })
-        : Promise.resolve({ sets: [], total: 0 }),
+        : Promise.resolve(EMPTY_VOCAB_SET_LIST),
     enabled: !!parentIdForChildren,
   });
 

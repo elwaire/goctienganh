@@ -5,7 +5,7 @@ type EnvelopeData = {
   metadata?: unknown;
 };
 
-function isPageMeta(m: unknown): m is PageMeta {
+export function isPageMeta(m: unknown): m is PageMeta {
   if (typeof m !== "object" || m === null) return false;
   const o = m as Record<string, unknown>;
   return (
@@ -16,6 +16,11 @@ function isPageMeta(m: unknown): m is PageMeta {
   );
 }
 
+/** Đọc `metadata` phân trang từ envelope (nếu hợp lệ). */
+export function readPageMeta(envelope: EnvelopeData): PageMeta | undefined {
+  return isPageMeta(envelope.metadata) ? envelope.metadata : undefined;
+}
+
 /** Đọc `data` (mảng) + `metadata` (PageMeta) từ envelope chuẩn sau khi unwrap axios `response.data`. */
 export function readPagedBody<T>(envelope: EnvelopeData): {
   rows: T[];
@@ -23,6 +28,6 @@ export function readPagedBody<T>(envelope: EnvelopeData): {
 } {
   const raw = envelope.data;
   const rows = Array.isArray(raw) ? (raw as T[]) : [];
-  const meta = isPageMeta(envelope.metadata) ? envelope.metadata : undefined;
+  const meta = readPageMeta(envelope);
   return { rows, meta };
 }

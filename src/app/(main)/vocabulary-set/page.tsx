@@ -1,21 +1,15 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import {
-  Plus,
-  Search,
-  Loader2,
-  AlertCircle,
-  FolderOpen,
-  BookOpen,
-} from "lucide-react";
+import { Plus, Search, Loader2, AlertCircle } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { vocabularyApi } from "@/api/vocabularyApi";
 import { DeckCard, CreateDeckModal, DeckListEmptyState } from "./_components";
 import { ButtonPrimary, FormInput } from "@/components/ui";
 import { useDebounce } from "./_hooks";
+import { buildVocabularyListSections } from "./_lib/buildListSections";
 
 const LIST_TAB_VALUES = ["my-sets", "public"] as const;
 type VocabularyListTab = (typeof LIST_TAB_VALUES)[number];
@@ -61,37 +55,58 @@ export default function VocabularySetPage() {
   const debouncedSearch = useDebounce(searchQuery, 500);
 
   const legacyFolder = searchParams.get("folder");
-  const {
-    data: deckData,
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: [
-      "vocabularySets",
-      "list",
-      {
-        search: debouncedSearch || undefined,
-        tab: activeTab,
-      },
-    ],
+
+  const searchParamsApi = debouncedSearch || undefined;
+
+  const mySetsQuery = useQuery({
+    queryKey: ["vocabularySets", "list", "mine", { search: searchParamsApi }],
     queryFn: () =>
       vocabularyApi.getSets({
-        search: debouncedSearch || undefined,
+        search: searchParamsApi,
         page: 1,
         limit: 50,
+        vocabulary: "me",
       }),
-    enabled: !legacyFolder,
+    enabled: !legacyFolder && activeTab === "my-sets",
   });
 
-  const allDecks = deckData?.sets ?? [];
+  const publicSetsQuery = useQuery({
+    queryKey: ["vocabularySets", "list", "public", { search: searchParamsApi }],
+    queryFn: () =>
+      vocabularyApi.getSets({
+        search: searchParamsApi,
+        page: 1,
+        limit: 50,
+        vocabulary: "public",
+      }),
+    enabled: !legacyFolder && activeTab === "public",
+  });
 
-  const filteredDecks =
+  const deckData =
+    activeTab === "my-sets" ? mySetsQuery.data : publicSetsQuery.data;
+  const isLoading =
     activeTab === "my-sets"
-      ? allDecks.filter((d) => d.is_owner)
-      : allDecks.filter((d) => d.is_public && !d.is_owner);
+      ? mySetsQuery.isLoading
+      : publicSetsQuery.isLoading;
+  const isError =
+    activeTab === "my-sets" ? mySetsQuery.isError : publicSetsQuery.isError;
 
-  const myCount = allDecks.filter((d) => d.is_owner).length;
-  const publicCount = allDecks.filter((d) => d.is_public && !d.is_owner).length;
+  const listSections = useMemo(
+    () =>
+      deckData ? buildVocabularyListSections(deckData, activeTab) : [],
+    [deckData, activeTab],
+  );
+
+  /** Cả hai số có trong mọi response list; ưu tiên query đã có data (doc §1.1). */
+  const mineTotal =
+    mySetsQuery.data?.mine_total ?? publicSetsQuery.data?.mine_total;
+  const publicTotal =
+    publicSetsQuery.data?.public_total ?? mySetsQuery.data?.public_total;
+
+  const myTabCountSuffix =
+    mineTotal !== undefined ? ` (${mineTotal})` : "";
+  const publicTabCountSuffix =
+    publicTotal !== undefined ? ` (${publicTotal})` : "";
 
   const createMutation = useMutation({
     mutationFn: vocabularyApi.createSet,
@@ -173,7 +188,8 @@ export default function VocabularySetPage() {
                 : "text-neutral-600 hover:text-neutral-900"
             }`}
           >
-            {tl("tabMy")} ({myCount})
+            {tl("tabMy")}
+            {myTabCountSuffix}
           </button>
           <button
             type="button"
@@ -184,7 +200,8 @@ export default function VocabularySetPage() {
                 : "text-neutral-600 hover:text-neutral-900"
             }`}
           >
-            {tl("tabPublic")} ({publicCount})
+            {tl("tabPublic")}
+            {publicTabCountSuffix}
           </button>
         </div>
 
@@ -193,84 +210,47 @@ export default function VocabularySetPage() {
             <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
             <p className="text-sm text-neutral-400">{tl("loading")}</p>
           </div>
-        ) : filteredDecks.length > 0 ? (
-          <div className="space-y-12">
-            {activeTab === "public" ? (
-              <>
-                {(() => {
-                  const folders = filteredDecks.filter(
-                    (d) => (d.child_count ?? 0) > 0,
-                  );
-                  const standalone = filteredDecks.filter(
-                    (d) => (d.child_count ?? 0) === 0,
-                  );
-
-                  return (
-                    <div className="flex flex-col gap-12">
-                      {folders.length > 0 && (
-                        <section aria-labelledby="folders-section">
-                          <div className="flex items-center gap-2 mb-6">
-                            <div className="p-2 bg-amber-50 rounded-lg">
-                              <FolderOpen className="w-5 h-5 text-amber-600" />
-                            </div>
-                            <h2
-                              id="folders-section"
-                              className="text-lg font-semibold text-neutral-800"
-                            >
-                              {tl("foldersTitle")} ({folders.length})
-                            </h2>
-                          </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                            {folders.map((deck) => (
-                              <DeckCard
-                                key={deck.id}
-                                deck={deck}
-                                onDelete={handleDeleteDeck}
-                              />
-                            ))}
-                          </div>
-                        </section>
-                      )}
-
-                      {standalone.length > 0 && (
-                        <section aria-labelledby="standalone-section">
-                          <div className="flex items-center gap-2 mb-6">
-                            <div className="p-2 bg-blue-50 rounded-lg">
-                              <BookOpen className="w-5 h-5 text-blue-600" />
-                            </div>
-                            <h2
-                              id="standalone-section"
-                              className="text-lg font-semibold text-neutral-800"
-                            >
-                              {tl("standaloneTitle")} ({standalone.length})
-                            </h2>
-                          </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                            {standalone.map((deck) => (
-                              <DeckCard
-                                key={deck.id}
-                                deck={deck}
-                                onDelete={handleDeleteDeck}
-                              />
-                            ))}
-                          </div>
-                        </section>
-                      )}
+        ) : listSections.length > 0 ? (
+          <div className="space-y-14">
+            {listSections.map((section) => {
+              const catId = section.category?.id ?? "none";
+              return (
+                <section
+                  key={catId}
+                  aria-labelledby={`vocab-cat-${catId}`}
+                  className="space-y-6"
+                >
+                  <div className="flex items-start gap-3">
+                    <div
+                      className="w-1 self-stretch min-h-10 rounded-full bg-primary-500 shrink-0"
+                      aria-hidden
+                    />
+                    <div className="min-w-0">
+                      <h2
+                        id={`vocab-cat-${catId}`}
+                        className="text-2xl font-bold text-neutral-900 tracking-tight"
+                      >
+                        {section.category?.name ?? tl("categoryOther")}
+                      </h2>
+                      {section.category?.description ? (
+                        <p className="text-neutral-600 mt-1 text-sm leading-relaxed">
+                          {section.category.description}
+                        </p>
+                      ) : null}
                     </div>
-                  );
-                })()}
-              </>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {filteredDecks.map((deck) => (
-                  <DeckCard
-                    key={deck.id}
-                    deck={deck}
-                    onDelete={handleDeleteDeck}
-                  />
-                ))}
-              </div>
-            )}
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {section.sets.map((deck) => (
+                      <DeckCard
+                        key={deck.id}
+                        deck={deck}
+                        onDelete={handleDeleteDeck}
+                      />
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
           </div>
         ) : (
           <DeckListEmptyState

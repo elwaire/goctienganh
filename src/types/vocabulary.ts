@@ -13,11 +13,22 @@ export interface SetParentBrief {
   title: string;
 }
 
+/** Category gắn với bộ (populate từ BE khi có category_id hợp lệ). */
+export interface SetCategoryBrief {
+  id: UUID;
+  subject_id: UUID;
+  name: string;
+  description: string;
+  thumbnail: string;
+  order: number;
+}
+
 export interface VocabularySet {
   id: UUID;
   user_id: UUID;
   subject_id?: UUID | null;
   category_id?: UUID | null;
+  category?: SetCategoryBrief | null;
   parent_id?: UUID | null;
   parent?: SetParentBrief | null;
   /** Số bộ con trực tiếp viewer được xem (theo BE; optional nếu chưa có field). */
@@ -50,12 +61,28 @@ export interface VocabularyWord {
   updated_at: string;
 }
 
-export interface SetListPayload {
+/** Một nhóm danh mục + các bộ cha có con (response mặc định không flat). */
+export interface SetsByCategoryGroup {
+  category: SetCategoryBrief | null;
   sets: VocabularySet[];
+}
+
+export type VocabularySetsListMode = "grouped" | "flat";
+
+export interface SetListPayload {
+  mode: VocabularySetsListMode;
+  /** Luôn có: toàn bộ bộ trên trang hiện tại (để tương thích & đếm tab). */
+  sets: VocabularySet[];
+  grouped_parents?: SetsByCategoryGroup[];
+  standalone?: VocabularySet[];
   total: number;
   page?: number;
   limit?: number;
   total_pages?: number;
+  /** `metadata.mine_total` — tổng bộ của user (badge tab, không phụ thuộc search). */
+  mine_total?: number;
+  /** `metadata.public_total` — tổng bộ công khai (badge tab). */
+  public_total?: number;
 }
 
 export interface WordListPayload {
@@ -77,6 +104,11 @@ export interface VocabularySetQueryParams {
   parent_id?: string;
   /** Mọi cấp trong một list (không dùng chung với parent_id). */
   flat?: boolean;
+  /**
+   * Bắt buộc trên BE: `me` | `public`. Client mặc định `me` nếu bỏ qua.
+   * @see docs/VOCABULARY_SETS_LIST_FE_INTEGRATION.md
+   */
+  vocabulary?: "me" | "public";
 }
 
 export interface VocabularyWordQueryParams {

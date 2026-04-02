@@ -1,10 +1,11 @@
-import { readPagedBody } from "@/lib/apiEnvelope";
+import { readPagedBody, readPageMeta } from "@/lib/apiEnvelope";
 import { axiosInstance } from "@/lib/axios";
 import type {
   VocabularySet,
   VocabularySetWithWords,
   VocabularyWord,
   SetListPayload,
+  SetsByCategoryGroup,
   WordListPayload,
   VocabularySetQueryParams,
   VocabularyWordQueryParams,
@@ -24,6 +25,81 @@ type ApiResponse<T> = {
   metadata?: unknown;
 };
 
+function isGroupedSetsData(raw: unknown): raw is {
+  grouped_parents: SetsByCategoryGroup[];
+  standalone: VocabularySet[];
+} {
+  if (typeof raw !== "object" || raw === null) return false;
+  const o = raw as Record<string, unknown>;
+  return Array.isArray(o.grouped_parents) && Array.isArray(o.standalone);
+}
+
+/** `metadata.mine_total` / `metadata.public_total` — xem VOCABULARY_SETS_LIST_FE_INTEGRATION.md §1.1 */
+function readVocabularyTabTotals(metadata: unknown): {
+  mine_total?: number;
+  public_total?: number;
+} {
+  if (typeof metadata !== "object" || metadata === null) return {};
+  const o = metadata as Record<string, unknown>;
+  const mine = o.mine_total;
+  const pub = o.public_total;
+  return {
+    mine_total:
+      typeof mine === "number" && Number.isFinite(mine) ? mine : undefined,
+    public_total:
+      typeof pub === "number" && Number.isFinite(pub) ? pub : undefined,
+  };
+}
+
+function parseSetListPayload(envelope: ApiResponse<unknown>): SetListPayload {
+  const meta = readPageMeta(envelope);
+  const tabTotals = readVocabularyTabTotals(envelope.metadata);
+  const raw = envelope.data;
+
+  if (Array.isArray(raw)) {
+    const sets = raw as VocabularySet[];
+    return {
+      mode: "flat",
+      sets,
+      total: meta?.total_items ?? sets.length,
+      page: meta?.page,
+      limit: meta?.limit,
+      total_pages: meta?.total_pages,
+      ...tabTotals,
+    };
+  }
+
+  if (isGroupedSetsData(raw)) {
+    const grouped_parents = raw.grouped_parents;
+    const standalone = raw.standalone;
+    const sets = [
+      ...grouped_parents.flatMap((g) => g.sets),
+      ...standalone,
+    ];
+    return {
+      mode: "grouped",
+      grouped_parents,
+      standalone,
+      sets,
+      total: meta?.total_items ?? sets.length,
+      page: meta?.page,
+      limit: meta?.limit,
+      total_pages: meta?.total_pages,
+      ...tabTotals,
+    };
+  }
+
+  return {
+    mode: "flat",
+    sets: [],
+    total: meta?.total_items ?? 0,
+    page: meta?.page,
+    limit: meta?.limit,
+    total_pages: meta?.total_pages,
+    ...tabTotals,
+  };
+}
+
 // ─── Vocabulary API Service ───
 
 export const vocabularyApi = {
@@ -31,20 +107,19 @@ export const vocabularyApi = {
   //  Vocabulary Sets — Bộ từ vựng
   // ════════════════════════════════
 
-  /** GET /vocabulary-sets — Danh sách bộ từ vựng */
+  /**
+   * GET /vocabulary-sets — Danh sách bộ từ vựng.
+   * Bắt buộc `vocabulary=me|public` (mặc định `me`). `flat=true` → data mảng; không flat → grouped_parents + standalone.
+   */
   getSets: async (params?: VocabularySetQueryParams): Promise<SetListPayload> => {
-    const response = await axiosInstance.get<ApiResponse<VocabularySet[]>>(
-      "/vocabulary-sets",
-      { params },
-    );
-    const { rows, meta } = readPagedBody<VocabularySet>(response.data);
-    return {
-      sets: rows,
-      total: meta?.total_items ?? rows.length,
-      page: meta?.page,
-      limit: meta?.limit,
-      total_pages: meta?.total_pages,
-    };
+    const { vocabulary: vocabularyMode, ...rest } = params ?? {};
+    const response = await axiosInstance.get<ApiResponse<unknown>>("/vocabulary-sets", {
+      params: {
+        ...rest,
+        vocabulary: vocabularyMode ?? "me",
+      },
+    });
+    return parseSetListPayload(response.data);
   },
 
   /** POST /vocabulary-sets — Tạo bộ từ vựng */
