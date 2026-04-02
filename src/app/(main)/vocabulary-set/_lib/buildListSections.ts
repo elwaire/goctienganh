@@ -4,26 +4,18 @@ import type {
   VocabularySet,
 } from "@/types/vocabulary";
 
-export type VocabularyListTabId = "my-sets" | "public";
-
 export type VocabularyListSection = {
   category: SetCategoryBrief | null;
   sets: VocabularySet[];
   order: number;
 };
 
-function tabFilter(deck: VocabularySet, tab: VocabularyListTabId): boolean {
-  if (tab === "my-sets") return deck.is_owner;
-  /** Tab cộng đồng: mọi bộ công khai, kể cả của chính mình. */
-  return deck.is_public;
-}
-
 /**
  * Gom bộ theo category cho UI (nhóm từ grouped_parents + standalone, hoặc flat).
+ * Không lọc thêm — phạm vi đã do API (`vocabulary=me` | `public`) quyết định.
  */
 export function buildVocabularyListSections(
   payload: SetListPayload,
-  tab: VocabularyListTabId,
 ): VocabularyListSection[] {
   const map = new Map<
     string,
@@ -31,7 +23,6 @@ export function buildVocabularyListSections(
   >();
 
   const add = (category: SetCategoryBrief | null, set: VocabularySet) => {
-    if (!tabFilter(set, tab)) return;
     const key = category?.id ?? "__none__";
     const order = category?.order ?? 999_999;
     const cur = map.get(key);

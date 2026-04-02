@@ -92,9 +92,8 @@ export default function VocabularySetPage() {
     activeTab === "my-sets" ? mySetsQuery.isError : publicSetsQuery.isError;
 
   const listSections = useMemo(
-    () =>
-      deckData ? buildVocabularyListSections(deckData, activeTab) : [],
-    [deckData, activeTab],
+    () => (deckData ? buildVocabularyListSections(deckData) : []),
+    [deckData],
   );
 
   /** Cả hai số có trong mọi response list; ưu tiên query đã có data (doc §1.1). */

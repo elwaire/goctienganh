@@ -25,13 +25,28 @@ type ApiResponse<T> = {
   metadata?: unknown;
 };
 
-function isGroupedSetsData(raw: unknown): raw is {
+/**
+ * `data` nhóm: có `grouped_parents` và/hoặc `standalone`. Key thiếu coi như mảng rỗng
+ * (tránh BE chỉ gửi một nhánh → parse fail → list trống).
+ */
+function extractGroupedSetsData(raw: unknown): {
   grouped_parents: SetsByCategoryGroup[];
   standalone: VocabularySet[];
-} {
-  if (typeof raw !== "object" || raw === null) return false;
+} | null {
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
+    return null;
+  }
   const o = raw as Record<string, unknown>;
-  return Array.isArray(o.grouped_parents) && Array.isArray(o.standalone);
+  if (!("grouped_parents" in o) && !("standalone" in o)) {
+    return null;
+  }
+  const grouped_parents = Array.isArray(o.grouped_parents)
+    ? (o.grouped_parents as SetsByCategoryGroup[])
+    : [];
+  const standalone = Array.isArray(o.standalone)
+    ? (o.standalone as VocabularySet[])
+    : [];
+  return { grouped_parents, standalone };
 }
 
 /** `metadata.mine_total` / `metadata.public_total` — xem VOCABULARY_SETS_LIST_FE_INTEGRATION.md §1.1 */
@@ -69,9 +84,9 @@ function parseSetListPayload(envelope: ApiResponse<unknown>): SetListPayload {
     };
   }
 
-  if (isGroupedSetsData(raw)) {
-    const grouped_parents = raw.grouped_parents;
-    const standalone = raw.standalone;
+  const grouped = extractGroupedSetsData(raw);
+  if (grouped) {
+    const { grouped_parents, standalone } = grouped;
     const sets = [
       ...grouped_parents.flatMap((g) => g.sets),
       ...standalone,
