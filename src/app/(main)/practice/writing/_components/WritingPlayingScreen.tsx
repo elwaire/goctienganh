@@ -143,7 +143,7 @@ export function WritingPlayingScreen({
           {/* Input Form */}
           <form onSubmit={(e) => {
             e.preventDefault();
-            if (!showFeedback) onSubmit();
+            onSubmit();
           }}>
             <input
               ref={inputRef}

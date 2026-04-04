@@ -24,11 +24,10 @@ export default function ExamCard({ exam }: ExamCardProps) {
   return (
     <Link
       href={`/exam/${exam.code}`}
-      className="group relative bg-white rounded-2xl border border-neutral-100 p-4 hover:shadow-xl hover:border-primary-200 transition-all duration-300 hover:-translate-y-1 block overflow-hidden"
+      className="group relative bg-white rounded-2xl border-4 border-primary-100 p-4 hover:shadow-xl hover:border-primary-200 transition-all duration-300 hover:-translate-y-1 block overflow-hidden"
     >
       {/* Background patterns */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-primary-50 rounded-full -mr-16 -mt-16 opacity-0 group-hover:opacity-40 transition-opacity duration-500 blur-2xl" />
-
       {/* Top badges */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex gap-2">
@@ -56,7 +55,6 @@ export default function ExamCard({ exam }: ExamCardProps) {
           {exam.total_score}đ
         </div>
       </div>
-
       {/* Content */}
       <div className="mb-5">
         <h3 className="text-lg font-bold text-neutral-800 group-hover:text-primary-600 transition-colors leading-tight">
@@ -68,7 +66,6 @@ export default function ExamCard({ exam }: ExamCardProps) {
           </p>
         )}
       </div>
-
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-3 mb-5 py-4 border-y border-neutral-50">
         <div className="flex items-center gap-2.5">
@@ -98,7 +95,6 @@ export default function ExamCard({ exam }: ExamCardProps) {
           </div>
         </div>
       </div>
-
       {/* Tags */}
       <div className="flex flex-wrap gap-1.5 overflow-hidden max-h-6">
         {exam.tags?.map((tag, idx) => (
