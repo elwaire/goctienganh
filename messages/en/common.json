@@ -4,7 +4,9 @@
     "sidebar": {
       "sectionTitle": "Learning",
       "dashboard": "Dashboard",
+      "home": "Explore",
       "vocabularySet": "Vocabulary Set",
+      "myVocabularySet": "My Sets",
       "practice": "Practice",
       "exam": "Exam",
       "ratings": "Rankings",

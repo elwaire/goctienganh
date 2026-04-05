@@ -275,10 +275,28 @@ function CoverPickerModal({
   );
 }
 
+
+const STORAGE_KEY = "hero_banner_cover_id";
+
+function getSavedCoverId(): number {
+  if (typeof window === "undefined") return 1;
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (!saved) return 1;
+  const parsed = parseInt(saved, 10);
+  return ALL_COVERS.some((c) => c.id === parsed) ? parsed : 1;
+}
+
 // ── HeroBanner ────────────────────────────────────────────────────────────
 export function HeroBanner() {
-  const [activeCoverId, setActiveCoverId] = useState(1);
+  const [activeCoverId, setActiveCoverId] = useState<number>(() =>
+    getSavedCoverId(),
+  );
   const [modalOpen, setModalOpen] = useState(false);
+
+  const handleSelectCover = (id: number) => {
+    setActiveCoverId(id);
+    localStorage.setItem(STORAGE_KEY, String(id));
+  };
 
   const cover = ALL_COVERS.find((o) => o.id === activeCoverId) ?? ALL_COVERS[0];
   const isGif = GIF_COVERS.some((c) => c.id === activeCoverId);
@@ -320,7 +338,7 @@ export function HeroBanner() {
       {modalOpen && (
         <CoverPickerModal
           currentId={activeCoverId}
-          onSelect={setActiveCoverId}
+          onSelect={handleSelectCover}
           onClose={() => setModalOpen(false)}
         />
       )}

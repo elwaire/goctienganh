@@ -27,8 +27,10 @@
       "noWordsDesc": "Thêm từ đầu tiên để bắt đầu học!"
     },
     "list": {
-      "title": "Bộ từ vựng",
-      "subtitle": "Quản lý và luyện tập từ vựng của bạn",
+      "title": "Khám phá bộ từ vựng",
+      "subtitle": "Tìm kiếm và khám phá bộ từ từ cộng đồng",
+      "mySetTitle": "Bộ từ của tôi",
+      "mySetSubtitle": "Quản lý và luyện tập từ vựng riêng của bạn",
       "createNew": "Tạo bộ từ mới",
       "searchPlaceholder": "Tìm kiếm bộ từ...",
       "tabMy": "Của tôi",

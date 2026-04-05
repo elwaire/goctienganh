@@ -267,7 +267,7 @@ export default function VocabularySetDetailPage() {
         <AlertCircle className="w-10 h-10 text-rose-400" />
         <p className="text-sm text-neutral-500">{t("notFound")}</p>
         <button
-          onClick={() => router.push("/vocabulary-set")}
+          onClick={() => router.back()}
           className="flex items-center gap-2 text-sm text-blue-600 hover:underline"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -336,14 +336,7 @@ export default function VocabularySetDetailPage() {
       <div className="max-w-6xl mx-auto px-4 lg:px-0">
         <button
           type="button"
-          onClick={() => {
-            const pid = deckData.parent_id;
-            const href =
-              pid != null && pid !== ""
-                ? `/vocabulary-set/${encodeURIComponent(pid)}`
-                : "/vocabulary-set";
-            router.push(href);
-          }}
+          onClick={() => router.back()}
           className="flex items-center cursor-pointer gap-2 text-neutral-500 hover:text-neutral-900 transition-colors mb-6 text-sm font-semibold group"
         >
           <ArrowLeft className="w-4 h-4" />

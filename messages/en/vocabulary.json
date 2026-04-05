@@ -27,8 +27,10 @@
       "noWordsDesc": "Add your first word to start learning!"
     },
     "list": {
-      "title": "Vocabulary sets",
-      "subtitle": "Manage and practice your vocabulary",
+      "title": "Explore Vocabulary Sets",
+      "subtitle": "Discover vocabulary sets from our community",
+      "mySetTitle": "My Vocabulary Sets",
+      "mySetSubtitle": "Manage and practice your personal vocabulary",
       "createNew": "Create new set",
       "searchPlaceholder": "Search sets...",
       "tabMy": "Mine",
