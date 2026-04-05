@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { Plus, Search, Loader2, AlertCircle } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { vocabularyApi } from "@/api/vocabularyApi";
-import { DeckCard, CreateDeckModal, DeckListEmptyState } from "./_components";
+import { DeckCard, CreateDeckModal, DeckListEmptyState, HeroBanner } from "./_components";
 import { ButtonPrimary, FormInput } from "@/components/ui";
 import { useDebounce } from "./_hooks";
 import { buildVocabularyListSections } from "./_lib/buildListSections";
@@ -59,7 +59,12 @@ export default function VocabularySetPage() {
   const searchParamsApi = debouncedSearch || undefined;
 
   const setsQuery = useQuery({
-    queryKey: ["vocabularySets", "list", activeTab, { search: searchParamsApi }],
+    queryKey: [
+      "vocabularySets",
+      "list",
+      activeTab,
+      { search: searchParamsApi },
+    ],
     queryFn: () =>
       vocabularyApi.getSets({
         search: searchParamsApi,
@@ -132,6 +137,11 @@ export default function VocabularySetPage() {
   return (
     <div className="min-h-screen pb-12">
       <div className="max-w-7xl mx-auto">
+        {/* Hero banner */}
+        <div className="mb-8">
+          <HeroBanner />
+        </div>
+
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -202,7 +212,7 @@ export default function VocabularySetPage() {
                   aria-labelledby={`vocab-cat-${catId}`}
                   className="space-y-6"
                 >
-                  { (activeTab !== "my-sets" || listSections.length > 1) && (
+                  {(activeTab !== "my-sets" || listSections.length > 1) && (
                     <div className="flex items-start gap-3">
                       <div
                         className="w-1 self-stretch min-h-10 rounded-full bg-primary-500 shrink-0"
@@ -244,7 +254,6 @@ export default function VocabularySetPage() {
           />
         )}
       </div>
-
       <CreateDeckModal
         isOpen={showCreateModal}
         isCreating={createMutation.isPending}

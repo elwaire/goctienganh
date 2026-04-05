@@ -9,3 +9,4 @@ export { WordListEmptyState } from "./WordListEmptyState";
 export { GameModeModal } from "./GameModeModal";
 export { StudyHistoryPanel } from "./StudyHistoryPanel";
 export { StudyStatsPanel } from "./StudyStatsPanel";
+export { HeroBanner } from "./HeroBanner";
